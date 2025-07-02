@@ -1,0 +1,19 @@
+{
+  "name": "geograph",
+  "version": "1.0.0",
+  "description": "Geography game to play with friends",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ianjmacintosh/geograph.git"
+  },
+  "author": "Ian J. MacIntosh",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ianjmacintosh/geograph/issues"
+  },
+  "homepage": "https://github.com/ianjmacintosh/geograph#readme"
+}
