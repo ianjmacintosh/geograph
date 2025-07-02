@@ -1,19 +1,31 @@
 {
   "name": "geograph",
-  "version": "1.0.0",
-  "description": "Geography game to play with friends",
-  "main": "index.js",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "test"
+    "build": "react-router build",
+    "dev": "react-router dev",
+    "dev:network": "react-router dev --host",
+    "start": "react-router-serve ./build/server/index.js",
+    "typecheck": "react-router typegen && tsc"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ianjmacintosh/geograph.git"
+  "dependencies": {
+    "@react-router/node": "^7.5.3",
+    "@react-router/serve": "^7.5.3",
+    "isbot": "^5.1.27",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router": "^7.5.3"
   },
-  "author": "Ian J. MacIntosh",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/ianjmacintosh/geograph/issues"
-  },
-  "homepage": "https://github.com/ianjmacintosh/geograph#readme"
+  "devDependencies": {
+    "@react-router/dev": "^7.5.3",
+    "@tailwindcss/vite": "^4.1.4",
+    "@types/node": "^20",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "tailwindcss": "^4.1.4",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.3",
+    "vite-tsconfig-paths": "^5.1.4"
+  }
 }
