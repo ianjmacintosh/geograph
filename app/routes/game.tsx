@@ -130,8 +130,11 @@ export default function Game() {
     };
     
     console.log('Final results:', finalResults);
+    console.log('Calling finishGame...');
     
     finishGame(finalResults);
+    
+    console.log('Navigating to results...');
     navigate("/results");
   };
 
@@ -271,26 +274,29 @@ export default function Game() {
         };
       });
 
-      setCurrentRound(prev => {
-        if (!prev) return null;
-        const newRound = { ...prev, guesses: [...prev.guesses, ...computerGuesses] };
-        
-        // Check if all players have now guessed
-        const totalPlayers = currentGame.players.length;
-        const totalGuesses = newRound.guesses.length;
-        
-        if (totalGuesses >= totalPlayers) {
-          // All players have guessed, calculate placements and end round
-          setTimeout(() => {
-            const updatedRoundWithPlacements = updateRoundWithPlacements(newRound);
-            setCurrentRound(updatedRoundWithPlacements);
-            setShowResults(true);
-            setTimeout(() => handleRoundEnd(), 500);
-          }, 1500);
-        }
-        
-        return newRound;
-      });
+      // Add computer guesses and check if round is complete
+      const newRoundWithComputerGuesses = currentRound ? { 
+        ...currentRound, 
+        guesses: [...currentRound.guesses, ...computerGuesses] 
+      } : null;
+      
+      if (!newRoundWithComputerGuesses) return;
+      
+      const totalPlayers = currentGame.players.length;
+      const totalGuesses = newRoundWithComputerGuesses.guesses.length;
+      
+      if (totalGuesses >= totalPlayers) {
+        // All players have guessed, calculate placements and show results
+        setTimeout(() => {
+          const updatedRoundWithPlacements = updateRoundWithPlacements(newRoundWithComputerGuesses);
+          setCurrentRound(updatedRoundWithPlacements);
+          setShowResults(true);
+          setTimeout(() => handleRoundEnd(), 500);
+        }, 1500);
+      } else {
+        // Not all players have guessed yet, just update with computer guesses
+        setCurrentRound(newRoundWithComputerGuesses);
+      }
     }, 2000 + Math.random() * 3000); // Computers guess between 2-5 seconds
 
     return () => clearTimeout(timer);

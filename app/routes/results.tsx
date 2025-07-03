@@ -16,10 +16,29 @@ export default function Results() {
   const [animateIn, setAnimateIn] = useState(false);
 
   useEffect(() => {
-    if (!currentGame || !currentGame.finalResults) {
+    console.log('Results page - currentGame:', currentGame);
+    console.log('Results page - finalResults:', currentGame?.finalResults);
+    
+    if (!currentGame) {
+      console.log('No current game, navigating to home');
       navigate("/");
       return;
     }
+    
+    if (!currentGame.finalResults) {
+      console.log('No final results yet, waiting...');
+      // Don't navigate immediately - give it a moment for the context to update
+      const timeout = setTimeout(() => {
+        if (!currentGame.finalResults) {
+          console.log('Still no final results after timeout, navigating to home');
+          navigate("/");
+        }
+      }, 2000);
+      
+      return () => clearTimeout(timeout);
+    }
+    
+    console.log('Final results found, showing page');
     
     // Trigger animations
     setTimeout(() => setAnimateIn(true), 100);
