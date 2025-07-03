@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useGame } from "../contexts/GameContext";
 import { WorldMap } from "../components/WorldMap";
@@ -38,8 +38,13 @@ export default function Game() {
       return;
     }
 
+    console.log('🔄 Moving to next round:', roundNumber + 1);
     setRoundNumber(prev => prev + 1);
-    startNewRound();
+    
+    // Add small delay to ensure state updates properly
+    setTimeout(() => {
+      startNewRound();
+    }, 100);
   };
 
   const handleGameEnd = () => {
@@ -48,18 +53,41 @@ export default function Game() {
     navigate("/");
   };
 
-  const handleMapClick = (lat: number, lng: number) => {
-    if (!currentRound || hasGuessed || showResults || !currentGame) return;
+  const handleMapClick = useCallback((lat: number, lng: number) => {
+    console.log('🎯 handleMapClick called - State check:', {
+      hasCurrentRound: !!currentRound,
+      hasGuessed,
+      showResults,
+      roundCity: currentRound?.city?.name,
+      roundId: currentRound?.id
+    });
+
+    if (!currentRound || hasGuessed || showResults || !currentGame) {
+      console.log('🚫 Click rejected - state check failed');
+      return;
+    }
 
     const humanPlayer = currentGame.players.find(p => !p.isComputer);
-    if (!humanPlayer) return;
+    if (!humanPlayer) {
+      console.log('🚫 Click rejected - no human player');
+      return;
+    }
 
     // Check if this player has already guessed
     const existingGuess = currentRound.guesses.find(g => g.playerId === humanPlayer.id);
-    if (existingGuess) return; // Player already guessed
+    if (existingGuess) {
+      console.log('🚫 Click rejected - player already guessed');
+      return;
+    }
 
     const distance = calculateDistance(currentRound.city.lat, currentRound.city.lng, lat, lng);
     const points = calculatePoints(distance);
+
+    console.log('🎯 Processing valid guess:');
+    console.log('Target:', currentRound.city.name, 'at', currentRound.city.lat, currentRound.city.lng);
+    console.log('Your guess:', lat, lng);
+    console.log('Distance:', Math.round(distance), 'km');
+    console.log('Points:', points);
 
     const guess: Guess = {
       playerId: humanPlayer.id,
@@ -69,12 +97,12 @@ export default function Game() {
       points,
       timestamp: Date.now(),
     };
-
+    
     setCurrentRound(prev => prev ? { ...prev, guesses: [...prev.guesses, guess] } : null);
     setHasGuessed(true);
 
-    // Don't auto-end the round here - let the computer players guess and timer handle it
-  };
+    console.log('✅ Guess processed, hasGuessed set to true');
+  }, [currentRound, hasGuessed, showResults, currentGame]);
 
   // Start new round
   const startNewRound = () => {
@@ -87,6 +115,12 @@ export default function Game() {
       completed: false,
       startTime: Date.now(),
     };
+    
+    console.log('🔄 Starting new round:', {
+      city: city.name,
+      roundId: newRound.id,
+      resettingHasGuessed: true
+    });
     
     setCurrentRound(newRound);
     setTimeLeft(30);
@@ -256,6 +290,7 @@ export default function Game() {
 
               <div className="mb-6">
                 <WorldMap
+                  key={currentRound.id} // Force re-render when round changes
                   targetCity={currentRound.city}
                   onMapClick={showResults ? undefined : handleMapClick}
                   guesses={currentRound.guesses.map(guess => {
