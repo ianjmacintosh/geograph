@@ -38,7 +38,7 @@ export default function Game() {
       return;
     }
 
-    console.log('🔄 Moving to next round:', roundNumber + 1);
+    // Moving to next round
     setRoundNumber(prev => prev + 1);
     
     // Add small delay to ensure state updates properly
@@ -54,40 +54,23 @@ export default function Game() {
   };
 
   const handleMapClick = useCallback((lat: number, lng: number) => {
-    console.log('🎯 handleMapClick called - State check:', {
-      hasCurrentRound: !!currentRound,
-      hasGuessed,
-      showResults,
-      roundCity: currentRound?.city?.name,
-      roundId: currentRound?.id
-    });
-
     if (!currentRound || hasGuessed || showResults || !currentGame) {
-      console.log('🚫 Click rejected - state check failed');
       return;
     }
 
     const humanPlayer = currentGame.players.find(p => !p.isComputer);
     if (!humanPlayer) {
-      console.log('🚫 Click rejected - no human player');
       return;
     }
 
     // Check if this player has already guessed
     const existingGuess = currentRound.guesses.find(g => g.playerId === humanPlayer.id);
     if (existingGuess) {
-      console.log('🚫 Click rejected - player already guessed');
       return;
     }
 
     const distance = calculateDistance(currentRound.city.lat, currentRound.city.lng, lat, lng);
     const points = calculatePoints(distance);
-
-    console.log('🎯 Processing valid guess:');
-    console.log('Target:', currentRound.city.name, 'at', currentRound.city.lat, currentRound.city.lng);
-    console.log('Your guess:', lat, lng);
-    console.log('Distance:', Math.round(distance), 'km');
-    console.log('Points:', points);
 
     const guess: Guess = {
       playerId: humanPlayer.id,
@@ -100,8 +83,6 @@ export default function Game() {
     
     setCurrentRound(prev => prev ? { ...prev, guesses: [...prev.guesses, guess] } : null);
     setHasGuessed(true);
-
-    console.log('✅ Guess processed, hasGuessed set to true');
   }, [currentRound, hasGuessed, showResults, currentGame]);
 
   // Start new round
@@ -116,11 +97,7 @@ export default function Game() {
       startTime: Date.now(),
     };
     
-    console.log('🔄 Starting new round:', {
-      city: city.name,
-      roundId: newRound.id,
-      resettingHasGuessed: true
-    });
+    // Starting new round with fresh state
     
     setCurrentRound(newRound);
     setTimeLeft(30);

@@ -40,9 +40,9 @@ export function WorldMap({ onMapClick, targetCity, guesses = [], showTarget = fa
         // Using default CRS (EPSG3857/Web Mercator) - standard for web maps
       });
 
-      // Add tile layer with OpenStreetMap
-      leafletLib.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+      // Add tile layer with Carto Light (no labels) for geography game
+      leafletLib.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap, © CARTO',
         noWrap: true,
         bounds: [[-90, -180], [90, 180]]
       }).addTo(leafletMap);
@@ -56,12 +56,7 @@ export function WorldMap({ onMapClick, targetCity, guesses = [], showTarget = fa
             lat: e.latlng.lat,
             lng: e.latlng.lng
           };
-          console.log('🗺️ Map click event #' + clickId + ':', {
-            ...coords,
-            zoom: leafletMap.getZoom(),
-            center: leafletMap.getCenter(),
-            timestamp: clickId
-          });
+          // Map click successfully captured
           // Use Leaflet's native coordinate system - no conversion needed
           currentCallback(coords.lat, coords.lng);
         }
