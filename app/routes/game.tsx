@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useGame } from "../contexts/GameContext";
 import { WorldMap } from "../components/WorldMap";
-import { getRandomCity } from "../data/cities";
+import { getRandomCityByDifficulty } from "../data/cities";
 import { calculateDistance, calculatePoints, generateComputerGuess } from "../utils/game";
 import type { City, GameRound, Guess } from "../types/game";
 
@@ -87,7 +87,7 @@ export default function Game() {
 
   // Start new round
   const startNewRound = () => {
-    const city = getRandomCity();
+    const city = getRandomCityByDifficulty(currentGame!.settings.cityDifficulty);
     const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
     const newRound: GameRound = {
       id: generateId(),

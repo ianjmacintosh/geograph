@@ -46,6 +46,7 @@ export interface Game {
     maxPlayers: number;
     roundTimeLimit: number;
     totalRounds: number;
+    cityDifficulty: 'easy' | 'medium' | 'hard';
   };
   createdAt: number;
 }

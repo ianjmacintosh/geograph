@@ -9,7 +9,8 @@ type GameAction =
   | { type: 'START_GAME' }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'CLEAR_GAME' };
+  | { type: 'CLEAR_GAME' }
+  | { type: 'UPDATE_SETTINGS'; payload: Partial<Game['settings']> };
 
 const initialState: GameState = {
   currentGame: null,
@@ -64,6 +65,18 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       };
     case 'CLEAR_GAME':
       return initialState;
+    case 'UPDATE_SETTINGS':
+      if (!state.currentGame) return state;
+      return {
+        ...state,
+        currentGame: {
+          ...state.currentGame,
+          settings: {
+            ...state.currentGame.settings,
+            ...action.payload,
+          },
+        },
+      };
     default:
       return state;
   }
@@ -119,6 +132,7 @@ export function useGame() {
           maxPlayers: 8,
           roundTimeLimit: 30000,
           totalRounds: 5,
+          cityDifficulty: 'easy',
         },
         createdAt: Date.now(),
       };
@@ -166,6 +180,10 @@ export function useGame() {
     dispatch({ type: 'CLEAR_GAME' });
   };
 
+  const updateSettings = (settings: Partial<Game['settings']>) => {
+    dispatch({ type: 'UPDATE_SETTINGS', payload: settings });
+  };
+
   return {
     ...state,
     createGame,
@@ -173,5 +191,6 @@ export function useGame() {
     addComputerPlayers,
     startGame,
     clearGame,
+    updateSettings,
   };
 }

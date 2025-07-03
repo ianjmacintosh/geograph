@@ -10,7 +10,7 @@ export function meta() {
 }
 
 export default function Lobby() {
-  const { currentGame, addComputerPlayers, startGame, clearGame } = useGame();
+  const { currentGame, addComputerPlayers, startGame, clearGame, updateSettings } = useGame();
   const navigate = useNavigate();
 
   if (!currentGame) {
@@ -106,6 +106,41 @@ export default function Lobby() {
                   <span className="text-gray-600">Max players:</span>
                   <span className="font-semibold">{currentGame.settings.maxPlayers}</span>
                 </div>
+                
+                {isHost && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      City Difficulty
+                    </label>
+                    <div className="space-y-2">
+                      {(['easy', 'medium', 'hard'] as const).map((difficulty) => (
+                        <label key={difficulty} className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="difficulty"
+                            value={difficulty}
+                            checked={currentGame.settings.cityDifficulty === difficulty}
+                            onChange={(e) => updateSettings({ cityDifficulty: e.target.value as 'easy' | 'medium' | 'hard' })}
+                            className="mr-3 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm text-gray-700 capitalize">
+                            {difficulty}
+                            {difficulty === 'easy' && ' - Famous world cities'}
+                            {difficulty === 'medium' && ' - Regional capitals'}
+                            {difficulty === 'hard' && ' - Lesser-known cities'}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {!isHost && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">City difficulty:</span>
+                    <span className="font-semibold capitalize">{currentGame.settings.cityDifficulty}</span>
+                  </div>
+                )}
               </div>
 
               {isHost && (
