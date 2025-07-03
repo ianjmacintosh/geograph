@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, type ReactNode } from 'react';
-import type { Game, GameState, Player } from '../types/game';
+import type { Game, GameState, Player, FinalResults } from '../types/game';
 import { createComputerPlayer } from '../utils/game';
 
 type GameAction =
@@ -10,7 +10,8 @@ type GameAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'CLEAR_GAME' }
-  | { type: 'UPDATE_SETTINGS'; payload: Partial<Game['settings']> };
+  | { type: 'UPDATE_SETTINGS'; payload: Partial<Game['settings']> }
+  | { type: 'FINISH_GAME'; payload: FinalResults };
 
 const initialState: GameState = {
   currentGame: null,
@@ -75,6 +76,16 @@ function gameReducer(state: GameState, action: GameAction): GameState {
             ...state.currentGame.settings,
             ...action.payload,
           },
+        },
+      };
+    case 'FINISH_GAME':
+      if (!state.currentGame) return state;
+      return {
+        ...state,
+        currentGame: {
+          ...state.currentGame,
+          status: 'finished',
+          finalResults: action.payload,
         },
       };
     default:
@@ -171,7 +182,7 @@ export function useGame() {
   };
 
   const startGame = () => {
-    if (state.currentGame && state.currentGame.players.length >= 2) {
+    if (state.currentGame && state.currentGame.players.length >= 1) {
       dispatch({ type: 'START_GAME' });
     }
   };
@@ -184,6 +195,10 @@ export function useGame() {
     dispatch({ type: 'UPDATE_SETTINGS', payload: settings });
   };
 
+  const finishGame = (finalResults: FinalResults) => {
+    dispatch({ type: 'FINISH_GAME', payload: finalResults });
+  };
+
   return {
     ...state,
     createGame,
@@ -192,5 +207,6 @@ export function useGame() {
     startGame,
     clearGame,
     updateSettings,
+    finishGame,
   };
 }

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { useGame } from "../contexts/GameContext";
 import { WorldMap } from "../components/WorldMap";
 import { getRandomCityByDifficulty } from "../data/cities";
-import { calculateDistance, calculatePoints, generateComputerGuess } from "../utils/game";
+import { calculateDistance, calculateBonusPoints, calculatePlacementPoints, generateComputerGuess } from "../utils/game";
 import type { City, GameRound, Guess } from "../types/game";
 
 export function meta() {
@@ -14,23 +14,57 @@ export function meta() {
 }
 
 export default function Game() {
-  const { currentGame, clearGame } = useGame();
+  const { currentGame, clearGame, finishGame } = useGame();
   const navigate = useNavigate();
   const [currentRound, setCurrentRound] = useState<GameRound | null>(null);
   const [timeLeft, setTimeLeft] = useState(30);
   const [hasGuessed, setHasGuessed] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [roundNumber, setRoundNumber] = useState(1);
+  const [completedRounds, setCompletedRounds] = useState<GameRound[]>([]);
+
+  const updateRoundWithPlacements = (round: GameRound) => {
+    if (!currentGame) return round;
+    
+    const guessData = round.guesses.map(guess => ({
+      playerId: guess.playerId,
+      distance: guess.distance
+    }));
+    
+    const placements = calculatePlacementPoints(guessData, currentGame.players.length);
+    
+    const updatedGuesses = round.guesses.map(guess => {
+      const placement = placements.find(p => p.playerId === guess.playerId);
+      if (placement) {
+        return {
+          ...guess,
+          placementPoints: placement.placementPoints,
+          placement: placement.placement,
+          totalPoints: placement.placementPoints + guess.bonusPoints
+        };
+      }
+      return guess;
+    });
+    
+    return { ...round, guesses: updatedGuesses };
+  };
 
   const handleRoundEnd = () => {
     if (!currentRound) return;
     
-    setCurrentRound(prev => prev ? { ...prev, completed: true, endTime: Date.now() } : null);
+    // Calculate placements before showing results
+    const updatedRound = updateRoundWithPlacements(currentRound);
+    setCurrentRound({ ...updatedRound, completed: true, endTime: Date.now() });
     setShowResults(true);
   };
 
   const handleNextRound = () => {
     if (!currentGame) return;
+    
+    // Save the current round to completed rounds (with placements calculated)
+    if (currentRound && currentRound.completed) {
+      setCompletedRounds(prev => [...prev, currentRound]);
+    }
     
     if (roundNumber >= currentGame.settings.totalRounds) {
       // Game finished
@@ -49,8 +83,56 @@ export default function Game() {
 
   const handleGameEnd = () => {
     // Calculate final scores and navigate to results
-    clearGame();
-    navigate("/");
+    if (!currentGame) return;
+    
+    // Include the current round if it's completed and has placements calculated
+    let allRounds = [...completedRounds];
+    if (currentRound && currentRound.completed) {
+      allRounds = [...allRounds, currentRound];
+    }
+    
+    console.log('Game ending with rounds:', allRounds.length);
+    console.log('Completed rounds:', completedRounds.length);
+    console.log('Current round completed:', currentRound?.completed);
+    
+    // Calculate total scores for each player
+    const playerScores = currentGame.players.map(player => {
+      let totalScore = 0;
+      
+      allRounds.forEach(round => {
+        const playerGuess = round.guesses.find(g => g.playerId === player.id);
+        if (playerGuess) {
+          totalScore += playerGuess.totalPoints;
+        }
+      });
+      
+      console.log(`Player ${player.name} total score:`, totalScore);
+      
+      return {
+        playerId: player.id,
+        playerName: player.name,
+        isComputer: player.isComputer,
+        totalScore,
+        finalPlacement: 0 // Will be set after sorting
+      };
+    });
+    
+    // Sort by score and assign placements
+    const sortedScores = playerScores.sort((a, b) => b.totalScore - a.totalScore);
+    sortedScores.forEach((player, index) => {
+      player.finalPlacement = index + 1;
+    });
+    
+    const finalResults = {
+      playerScores: sortedScores,
+      winnerId: sortedScores[0].playerId,
+      gameEndTime: Date.now()
+    };
+    
+    console.log('Final results:', finalResults);
+    
+    finishGame(finalResults);
+    navigate("/results");
   };
 
   const handleMapClick = useCallback((lat: number, lng: number) => {
@@ -70,14 +152,17 @@ export default function Game() {
     }
 
     const distance = calculateDistance(currentRound.city.lat, currentRound.city.lng, lat, lng);
-    const points = calculatePoints(distance);
+    const bonusPoints = calculateBonusPoints(distance);
 
     const guess: Guess = {
       playerId: humanPlayer.id,
       lat,
       lng,
       distance,
-      points,
+      placementPoints: 0, // Will be calculated after all guesses are in
+      bonusPoints,
+      totalPoints: 0, // Will be calculated after all players guess
+      placement: 0, // Will be calculated after all guesses are in
       timestamp: Date.now(),
     };
     
@@ -146,6 +231,9 @@ export default function Game() {
   // Separate effect to handle round end when timer reaches 0
   useEffect(() => {
     if (timeLeft === 0 && currentRound && !showResults) {
+      // Calculate placements before showing results
+      const updatedRound = updateRoundWithPlacements(currentRound);
+      setCurrentRound(updatedRound);
       setShowResults(true);
       setTimeout(() => handleRoundEnd(), 500);
     }
@@ -169,12 +257,16 @@ export default function Game() {
       const computerGuesses: Guess[] = computersWhoHaventGuessed.map(player => {
         const guess = generateComputerGuess(currentRound.city, player.accuracy || 0.5);
         const distance = calculateDistance(currentRound.city.lat, currentRound.city.lng, guess.lat, guess.lng);
+        const bonusPoints = calculateBonusPoints(distance);
         return {
           playerId: player.id,
           lat: guess.lat,
           lng: guess.lng,
           distance,
-          points: calculatePoints(distance),
+          placementPoints: 0, // Will be calculated after all guesses are in
+          bonusPoints,
+          totalPoints: 0, // Will be calculated after all players guess
+          placement: 0, // Will be calculated after all guesses are in
           timestamp: Date.now() + Math.random() * 1000, // Small random delay
         };
       });
@@ -188,8 +280,10 @@ export default function Game() {
         const totalGuesses = newRound.guesses.length;
         
         if (totalGuesses >= totalPlayers) {
-          // All players have guessed, end round after short delay to show the guesses
+          // All players have guessed, calculate placements and end round
           setTimeout(() => {
+            const updatedRoundWithPlacements = updateRoundWithPlacements(newRound);
+            setCurrentRound(updatedRoundWithPlacements);
             setShowResults(true);
             setTimeout(() => handleRoundEnd(), 500);
           }, 1500);
@@ -210,11 +304,18 @@ export default function Game() {
       let totalScore = 0;
       
       // Add scores from all completed rounds
-      // For now, we'll track scores in state - in a real app you'd persist this
+      completedRounds.forEach(round => {
+        const playerGuess = round.guesses.find(g => g.playerId === player.id);
+        if (playerGuess) {
+          totalScore += playerGuess.totalPoints;
+        }
+      });
+      
+      // Add scores from current round if it's showing results
       if (currentRound && showResults) {
         const playerGuess = currentRound.guesses.find(g => g.playerId === player.id);
         if (playerGuess) {
-          totalScore += playerGuess.points;
+          totalScore += playerGuess.totalPoints;
         }
       }
       
@@ -301,21 +402,26 @@ export default function Game() {
                 <h3 className="text-lg font-semibold mb-3">Round Results</h3>
                 <div className="space-y-2">
                   {currentRound.guesses
-                    .sort((a, b) => a.distance - b.distance)
-                    .map((guess, index) => {
+                    .sort((a, b) => a.placement - b.placement)
+                    .map((guess) => {
                       const player = currentGame.players.find(p => p.id === guess.playerId);
+                      const placementEmoji = guess.placement === 1 ? '🥇' : guess.placement === 2 ? '🥈' : guess.placement === 3 ? '🥉' : '👤';
                       return (
                         <div key={guess.playerId} className="flex justify-between items-center">
                           <div className="flex items-center space-x-2">
-                            <span className="text-lg">{index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤'}</span>
+                            <span className="text-lg">{placementEmoji}</span>
                             <span className="font-medium">{player?.name}</span>
                             <span className="text-sm text-gray-500">
                               {player?.isComputer ? '(Computer)' : '(You)'}
                             </span>
+                            <span className="text-xs text-gray-400">#{guess.placement}</span>
                           </div>
                           <div className="text-right">
-                            <div className="font-semibold text-blue-600">{guess.points} pts</div>
-                            <div className="text-sm text-gray-500">{Math.round(guess.distance)} km away</div>
+                            <div className="font-semibold text-blue-600">{guess.totalPoints} pts</div>
+                            <div className="text-xs text-gray-500">
+                              {guess.placementPoints} place + {guess.bonusPoints} bonus
+                            </div>
+                            <div className="text-xs text-gray-500">{Math.round(guess.distance)} km away</div>
                           </div>
                         </div>
                       );
@@ -351,8 +457,16 @@ export default function Game() {
                     if (humanGuess) {
                       return (
                         <p className="mt-2">
-                          Your guess was <strong>{Math.round(humanGuess.distance)} km</strong> away 
-                          for <strong>{humanGuess.points} points</strong>
+                          Your guess was <strong>{Math.round(humanGuess.distance)} km</strong> away
+                          {/* Only show points after results are calculated */}
+                          {humanGuess.totalPoints > 0 && (
+                            <span>
+                              {' '}for <strong>{humanGuess.totalPoints} points</strong>
+                              {humanGuess.bonusPoints > 0 && (
+                                <span className="text-green-600"> (+{humanGuess.bonusPoints} bonus)</span>
+                              )}
+                            </span>
+                          )}
                         </p>
                       );
                     }
