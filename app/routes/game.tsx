@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useGame } from "../contexts/GameContext";
 import { WorldMap } from "../components/WorldMap";
@@ -38,8 +38,13 @@ export default function Game() {
       return;
     }
 
+    // Moving to next round
     setRoundNumber(prev => prev + 1);
-    startNewRound();
+    
+    // Add small delay to ensure state updates properly
+    setTimeout(() => {
+      startNewRound();
+    }, 100);
   };
 
   const handleGameEnd = () => {
@@ -48,15 +53,21 @@ export default function Game() {
     navigate("/");
   };
 
-  const handleMapClick = (lat: number, lng: number) => {
-    if (!currentRound || hasGuessed || showResults || !currentGame) return;
+  const handleMapClick = useCallback((lat: number, lng: number) => {
+    if (!currentRound || hasGuessed || showResults || !currentGame) {
+      return;
+    }
 
     const humanPlayer = currentGame.players.find(p => !p.isComputer);
-    if (!humanPlayer) return;
+    if (!humanPlayer) {
+      return;
+    }
 
     // Check if this player has already guessed
     const existingGuess = currentRound.guesses.find(g => g.playerId === humanPlayer.id);
-    if (existingGuess) return; // Player already guessed
+    if (existingGuess) {
+      return;
+    }
 
     const distance = calculateDistance(currentRound.city.lat, currentRound.city.lng, lat, lng);
     const points = calculatePoints(distance);
@@ -69,12 +80,10 @@ export default function Game() {
       points,
       timestamp: Date.now(),
     };
-
+    
     setCurrentRound(prev => prev ? { ...prev, guesses: [...prev.guesses, guess] } : null);
     setHasGuessed(true);
-
-    // Don't auto-end the round here - let the computer players guess and timer handle it
-  };
+  }, [currentRound, hasGuessed, showResults, currentGame]);
 
   // Start new round
   const startNewRound = () => {
@@ -87,6 +96,8 @@ export default function Game() {
       completed: false,
       startTime: Date.now(),
     };
+    
+    // Starting new round with fresh state
     
     setCurrentRound(newRound);
     setTimeLeft(30);
@@ -256,6 +267,7 @@ export default function Game() {
 
               <div className="mb-6">
                 <WorldMap
+                  key={currentRound.id} // Force re-render when round changes
                   targetCity={currentRound.city}
                   onMapClick={showResults ? undefined : handleMapClick}
                   guesses={currentRound.guesses.map(guess => {

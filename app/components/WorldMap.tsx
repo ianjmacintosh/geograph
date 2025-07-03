@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
+import 'leaflet/dist/leaflet.css';
 
 interface WorldMapProps {
   onMapClick?: (lat: number, lng: number) => void;
@@ -8,124 +9,150 @@ interface WorldMapProps {
 }
 
 export function WorldMap({ onMapClick, targetCity, guesses = [], showTarget = false }: WorldMapProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [mapImage, setMapImage] = useState<HTMLImageElement | null>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<any>(null);
+  const [markers, setMarkers] = useState<any[]>([]);
+  const [L, setL] = useState<any>(null);
+  const [isClient, setIsClient] = useState(false);
 
-  // Load world map image
+  // Check if we're on the client side
   useEffect(() => {
-    const img = new Image();
-    img.onload = () => setMapImage(img);
-    img.onerror = () => console.error('Failed to load world map');
-    // Use the downloaded world map SVG
-    img.src = '/world-map.svg';
+    setIsClient(true);
   }, []);
 
-  // Convert lat/lng to canvas coordinates - calibrated for Wikipedia world map
-  const latLngToCanvas = (lat: number, lng: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    
-    // Standard longitude mapping
-    const x = ((lng + 180) / 360) * canvas.width;
-    
-    // Adjusted latitude mapping for this specific world map
-    // After testing, this map seems to use approximately equirectangular with some vertical scaling
-    // Empirically adjusted for better accuracy
-    const latRange = 85; // Most world maps cut off around 85 degrees
-    const y = ((latRange - lat) / (2 * latRange)) * canvas.height * 0.95 + canvas.height * 0.025;
-    
-    return { x, y };
-  };
-
-  // Convert canvas coordinates to lat/lng
-  const canvasToLatLng = (x: number, y: number) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { lat: 0, lng: 0 };
-    
-    // Standard longitude inverse
-    const lng = (x / canvas.width) * 360 - 180;
-    
-    // Inverse latitude mapping matching our forward projection
-    const latRange = 85;
-    const normalizedY = (y - canvas.height * 0.025) / (canvas.height * 0.95);
-    const lat = latRange - (normalizedY * 2 * latRange);
-    
-    return { lat, lng };
-  };
-
-  // Draw the map
+  // Initialize Leaflet map (only on client side)
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    
-    if (!canvas || !ctx || !mapImage) return;
+    if (!isClient || !mapRef.current || map) return;
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw map
-    ctx.drawImage(mapImage, 0, 0, canvas.width, canvas.height);
+    // Dynamically import Leaflet only on client side
+    import('leaflet').then((leaflet) => {
+      const leafletLib = leaflet.default;
+      setL(leafletLib);
 
-    // Draw target city if shown
-    if (showTarget && targetCity) {
-      const { x, y } = latLngToCanvas(targetCity.lat, targetCity.lng);
-      ctx.fillStyle = '#FF0000';
-      ctx.beginPath();
-      ctx.arc(x, y, 8, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
+      const leafletMap = leafletLib.map(mapRef.current!, {
+        center: [20, 0], // Center on world
+        zoom: 2,
+        minZoom: 2,
+        maxZoom: 18,
+        worldCopyJump: true,
+        maxBounds: [[-90, -180], [90, 180]],
+        maxBoundsViscosity: 1.0
+        // Using default CRS (EPSG3857/Web Mercator) - standard for web maps
+      });
 
-    // Draw guesses
-    guesses.forEach((guess, index) => {
-      const { x, y } = latLngToCanvas(guess.lat, guess.lng);
-      ctx.fillStyle = guess.isComputer ? '#3B82F6' : '#10B981';
-      ctx.beginPath();
-      ctx.arc(x, y, 6, 0, 2 * Math.PI);
-      ctx.fill();
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      // Add tile layer with Carto Light (no labels) for geography game
+      leafletLib.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap, © CARTO',
+        noWrap: true,
+        bounds: [[-90, -180], [90, 180]]
+      }).addTo(leafletMap);
+
+      // Handle map clicks - use function reference to avoid closure issues
+      const handleMapClick = (e: any) => {
+        const currentCallback = onMapClick; // Capture current callback
+        if (currentCallback) {
+          const clickId = Date.now();
+          const coords = {
+            lat: e.latlng.lat,
+            lng: e.latlng.lng
+          };
+          // Map click successfully captured
+          // Use Leaflet's native coordinate system - no conversion needed
+          currentCallback(coords.lat, coords.lng);
+        }
+      };
       
-      // Draw player name
-      ctx.fillStyle = '#000000';
-      ctx.font = '12px Arial';
-      ctx.fillText(guess.playerName, x + 10, y + 4);
+      leafletMap.on('click', handleMapClick);
+
+      setMap(leafletMap);
     });
 
-  }, [mapImage, targetCity, guesses, showTarget]);
+    // Cleanup
+    return () => {
+      if (map) {
+        map.off(); // Remove all event listeners
+        map.remove();
+        setMap(null);
+        setL(null);
+      }
+    };
+  }, [isClient, onMapClick]);
 
-  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!onMapClick) return;
-    
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const clickX = event.clientX - rect.left;
-    const clickY = event.clientY - rect.top;
-    
-    // Scale the click coordinates to canvas coordinates
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const x = clickX * scaleX;
-    const y = clickY * scaleY;
-    
-    const { lat, lng } = canvasToLatLng(x, y);
-    onMapClick(lat, lng);
-  };
+  // Update markers when guesses or target changes
+  useEffect(() => {
+    if (!map || !L) return;
+
+    // Clear existing markers
+    markers.forEach(marker => map.removeLayer(marker));
+    const newMarkers: any[] = [];
+
+    // Add guess markers
+    guesses.forEach((guess) => {
+      const marker = L.marker([guess.lat, guess.lng], {
+        icon: L.divIcon({
+          className: 'custom-marker',
+          html: `<div class="w-4 h-4 rounded-full border-2 border-white ${
+            guess.isComputer ? 'bg-blue-500' : 'bg-green-500'
+          }"></div>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
+        })
+      }).bindTooltip(guess.playerName, {
+        permanent: false,
+        direction: 'top',
+        offset: [0, -10]
+      });
+      
+      marker.addTo(map);
+      newMarkers.push(marker);
+    });
+
+    // Add target marker if showing results
+    if (showTarget && targetCity) {
+      const targetMarker = L.marker([targetCity.lat, targetCity.lng], {
+        icon: L.divIcon({
+          className: 'custom-marker',
+          html: `<div class="w-6 h-6 rounded-full border-2 border-white bg-red-500"></div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        })
+      }).bindTooltip(`🎯 ${targetCity.name}`, {
+        permanent: true,
+        direction: 'top',
+        offset: [0, -15],
+        className: 'font-semibold'
+      });
+      
+      targetMarker.addTo(map);
+      newMarkers.push(targetMarker);
+    }
+
+    setMarkers(newMarkers);
+  }, [map, L, guesses, targetCity, showTarget]);
+
+  // Show loading state on server side or before client hydration
+  if (!isClient) {
+    return (
+      <div className="w-full max-w-4xl mx-auto">
+        <div className="w-full h-96 border border-gray-300 rounded-lg bg-gray-100 flex items-center justify-center">
+          <div className="text-gray-500">Loading map...</div>
+        </div>
+        {targetCity && !showTarget && (
+          <div className="mt-2 text-center text-gray-600">
+            <p>Find: <span className="font-semibold">{targetCity.name}</span></p>
+            <p className="text-sm">Click on the map to make your guess</p>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <canvas
-        ref={canvasRef}
-        width={800}
-        height={400}
-        className="w-full h-auto border border-gray-300 rounded-lg cursor-crosshair bg-blue-100"
-        onClick={handleCanvasClick}
+      <div
+        ref={mapRef}
+        className="w-full h-96 border border-gray-300 rounded-lg"
+        style={{ height: '400px' }}
       />
       {targetCity && !showTarget && (
         <div className="mt-2 text-center text-gray-600">
