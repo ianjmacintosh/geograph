@@ -31,7 +31,10 @@ export default function Lobby() {
 
   const handleStartGame = () => {
     startGame();
-    navigate("/game");
+    // Small delay to ensure state update completes before navigation
+    setTimeout(() => {
+      navigate("/game");
+    }, 50);
   };
 
   const handleLeaveGame = () => {

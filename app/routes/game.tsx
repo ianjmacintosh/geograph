@@ -33,9 +33,9 @@ export default function Game() {
       playerId: guess.playerId,
       distance: guess.distance
     }));
-    
+
     const placements = calculatePlacementPoints(guessData, currentGame.players.length);
-    
+
     const updatedGuesses = (round.guesses || []).map(guess => { // Ensure guesses is not null
       const placementInfo = placements.find(p => p.playerId === guess.playerId);
       if (placementInfo) {
@@ -48,7 +48,7 @@ export default function Game() {
       }
       return guess;
     });
-    
+
     return { ...round, guesses: updatedGuesses };
   }, [currentGame]);
 
@@ -137,39 +137,39 @@ export default function Game() {
 
   // Generate computer guesses after a delay - This will be moved to useComputerPlayers hook
   useEffect(() => {
-    // Computer should not guess if results are shown, or if human just guessed (let human guess settle)
-    if (!currentRound || currentRound.completed || !currentGame || showResults || hasGuessed) {
-        return;
+    // Computer should not guess if results are shown
+    if (!currentRound || currentRound.completed || !currentGame || showResults) {
+      return;
     }
-    
+
     const computerPlayers = currentGame.players.filter(p => p.isComputer);
     if (computerPlayers.length === 0) return;
 
     const currentGuesses = currentRound.guesses || [];
-    const computersWhoHaventGuessed = computerPlayers.filter(player => 
+    const computersWhoHaventGuessed = computerPlayers.filter(player =>
       !currentGuesses.some(guess => guess.playerId === player.id)
     );
 
     if (computersWhoHaventGuessed.length === 0) return;
-    
+
     const computerGuessTimer = setTimeout(() => {
       setCurrentRound(currentRoundState => { // setCurrentRound from useRoundManagement
         // Stale closure check: ensure this update is for the intended round and game state
         if (!currentRoundState || currentRoundState.id !== currentRound?.id || currentRoundState.completed || !currentGame) {
           return currentRoundState;
         }
-        
+
         const latestGuesses = currentRoundState.guesses || [];
         // Re-check which computers haven't guessed using the most up-to-date currentRoundState
         const stillNeedToGuess = currentGame.players.filter(p =>
-            p.isComputer &&
-            !latestGuesses.some(guess => guess.playerId === p.id)
+          p.isComputer &&
+          !latestGuesses.some(guess => guess.playerId === p.id)
         );
-        
+
         if (stillNeedToGuess.length === 0) {
           return currentRoundState; // All computers guessed while timeout was pending
         }
-        
+
         const computerPlayerGuesses: Guess[] = stillNeedToGuess.map(player => {
           const guessDetails = generateComputerGuess(currentRoundState.city, player.accuracy || 0.5);
           const distance = calculateDistance(currentRoundState.city.lat, currentRoundState.city.lng, guessDetails.lat, guessDetails.lng);
@@ -188,14 +188,14 @@ export default function Game() {
         });
 
         const updatedGuesses = [...latestGuesses, ...computerPlayerGuesses];
-        const newRoundWithComputerGuesses = { 
-          ...currentRoundState, 
+        const newRoundWithComputerGuesses = {
+          ...currentRoundState,
           guesses: updatedGuesses
         };
-        
+
         const totalPlayers = currentGame.players.length;
         const totalGuessesMade = newRoundWithComputerGuesses.guesses.length;
-        
+
         if (totalGuessesMade >= totalPlayers) {
           // All players (including these computers) have now guessed.
           // Schedule the round end logic.
@@ -203,13 +203,13 @@ export default function Game() {
             handleRoundEndForTimerOrAllGuessed();
           }, 100); // Small delay for state to settle.
         }
-        
+
         return newRoundWithComputerGuesses;
       });
     }, 2000 + Math.random() * 3000); // Computers guess between 2-5 seconds
 
     return () => clearTimeout(computerGuessTimer);
-  }, [currentRound, currentGame, showResults, hasGuessed, setCurrentRound, handleRoundEndForTimerOrAllGuessed]);
+  }, [currentRound, currentGame, showResults, setCurrentRound, handleRoundEndForTimerOrAllGuessed]);
 
 
   // Check if a player (human or computer) has made a guess in the current round
@@ -222,7 +222,7 @@ export default function Game() {
   // Calculate cumulative scores for display on the scoreboard
   const getPlayerScores = useCallback(() => {
     if (!currentGame) return [];
-    
+
     const playerScoresMap = new Map<string, number>();
     currentGame.players.forEach(p => playerScoresMap.set(p.id, 0));
 
@@ -309,7 +309,7 @@ export default function Game() {
                       };
                     });
                   })()}
-                  showTarget={showResults} {/* UI state */}
+                  showTarget={showResults} // UI state
                 />
               </div>
 
@@ -325,55 +325,55 @@ export default function Game() {
                 </div>
               )}
 
-          {showResults && currentRound && ( // currentRound from useRoundManagement
-            <div className="mb-6">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-3">Round Results</h3>
-                <div className="space-y-2">
-                  {(currentRound.guesses || []) // Ensure guesses is not null
-                    .sort((a, b) => (a.placement || 0) - (b.placement || 0)) // Handle potentially undefined placement
-                    .map((guess) => {
-                      const player = currentGame.players.find(p => p.id === guess.playerId);
-                      const placementEmoji = guess.placement === 1 ? '🥇' : guess.placement === 2 ? '🥈' : guess.placement === 3 ? '🥉' : '👤';
-                      return (
-                        <div key={guess.playerId} className="flex justify-between items-center">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-lg">{placementEmoji}</span>
-                            <span className="font-medium">{player?.name}</span>
-                            <span className="text-sm text-gray-500">
-                              {player?.isComputer ? '(Computer)' : '(You)'}
-                            </span>
-                            <span className="text-xs text-gray-400">#{guess.placement}</span>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-semibold text-blue-600">{guess.totalPoints || 0} pts</div>
-                            <div className="text-xs text-gray-500">
-                              {(guess.placementPoints || 0)} place + {(guess.bonusPoints || 0)} bonus
+              {showResults && currentRound && ( // currentRound from useRoundManagement
+                <div className="mb-6">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="text-lg font-semibold mb-3">Round Results</h3>
+                    <div className="space-y-2">
+                      {(currentRound.guesses || []) // Ensure guesses is not null
+                        .sort((a, b) => (a.placement || 0) - (b.placement || 0)) // Handle potentially undefined placement
+                        .map((guess) => {
+                          const player = currentGame.players.find(p => p.id === guess.playerId);
+                          const placementEmoji = guess.placement === 1 ? '🥇' : guess.placement === 2 ? '🥈' : guess.placement === 3 ? '🥉' : '👤';
+                          return (
+                            <div key={guess.playerId} className="flex justify-between items-center">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-lg">{placementEmoji}</span>
+                                <span className="font-medium">{player?.name}</span>
+                                <span className="text-sm text-gray-500">
+                                  {player?.isComputer ? '(Computer)' : '(You)'}
+                                </span>
+                                <span className="text-xs text-gray-400">#{guess.placement}</span>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-semibold text-blue-600">{guess.totalPoints || 0} pts</div>
+                                <div className="text-xs text-gray-500">
+                                  {(guess.placementPoints || 0)} place + {(guess.bonusPoints || 0)} bonus
+                                </div>
+                                <div className="text-xs text-gray-500">{Math.round(guess.distance || 0)} km away</div>
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-500">{Math.round(guess.distance || 0)} km away</div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-                
-                <div className="mt-4 flex justify-center">
-                  <button
-                    onClick={handleNextRound} // UI facing handler
-                    className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
-                  >
-                    {roundNumber >= currentGame.settings.totalRounds ? 'Final Results' : 'Next Round'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+                          );
+                        })}
+                    </div>
 
-          {!hasGuessed && !showResults && currentRound && ( // hasGuessed from usePlayerInteraction, showResults is UI state
-            <div className="text-center text-gray-600">
-              <p>Click on the map to guess where <strong>{currentRound.city.name}, {currentRound.city.country}</strong> is located!</p>
-            </div>
-          )}
+                    <div className="mt-4 flex justify-center">
+                      <button
+                        onClick={handleNextRound} // UI facing handler
+                        className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
+                      >
+                        {roundNumber >= currentGame.settings.totalRounds ? 'Final Results' : 'Next Round'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!hasGuessed && !showResults && currentRound && ( // hasGuessed from usePlayerInteraction, showResults is UI state
+                <div className="text-center text-gray-600">
+                  <p>Click on the map to guess where <strong>{currentRound.city.name}, {currentRound.city.country}</strong> is located!</p>
+                </div>
+              )}
 
               {hasGuessed && !showResults && currentRound && ( // hasGuessed from usePlayerInteraction
                 <div className="text-center text-gray-600">
@@ -444,14 +444,14 @@ export default function Game() {
                   </div>
                 ))}
               </div>
-              
+
               {/* Round Progress */}
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="text-sm text-gray-600 mb-2">
                   Round {roundNumber} of {currentGame.settings.totalRounds}
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${(roundNumber / currentGame.settings.totalRounds) * 100}%` }}
                   ></div>
