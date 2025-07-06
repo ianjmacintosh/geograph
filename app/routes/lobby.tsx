@@ -1,4 +1,5 @@
 // import type { Route } from "./+types/lobby";
+import { useState } from "react";
 import { useGame } from "../contexts/GameContext";
 import { useNavigate } from "react-router";
 
@@ -12,6 +13,7 @@ export function meta() {
 export default function Lobby() {
   const { currentGame, addComputerPlayers, startGame, clearGame, updateSettings } = useGame();
   const navigate = useNavigate();
+  const [showScoringHelp, setShowScoringHelp] = useState(false);
 
   if (!currentGame) {
     navigate("/");
@@ -156,8 +158,41 @@ export default function Lobby() {
               )}
 
               {!isHost && (
-                <div className="mt-6 text-center text-gray-600">
-                  Waiting for host to start the game...
+                <div className="mt-6 text-center">
+                  <div className="text-gray-600 mb-4">
+                    Waiting for host to start the game...
+                  </div>
+                  <button
+                    onClick={() => setShowScoringHelp(!showScoringHelp)}
+                    className="text-blue-600 hover:text-blue-800 text-sm underline"
+                  >
+                    📊 How does scoring work?
+                  </button>
+                  
+                  {showScoringHelp && (
+                    <div className="mt-4 p-4 bg-blue-50 rounded-lg text-left">
+                      <h4 className="font-semibold text-blue-800 mb-2">🏆 Scoring System</h4>
+                      <div className="text-sm text-blue-700 space-y-2">
+                        <div>
+                          <strong>Placement Points:</strong>
+                          <ul className="ml-4 mt-1 space-y-1">
+                            <li>• 1st place: {currentGame.players.length} points</li>
+                            <li>• 2nd place: {Math.max(0, currentGame.players.length - 1)} points</li>
+                            <li>• 3rd place: {Math.max(0, currentGame.players.length - 2)} points</li>
+                            <li>• And so on...</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <strong>Distance Bonus:</strong>
+                          <ul className="ml-4 mt-1 space-y-1">
+                            <li>• Within 100 km: +5 bonus points</li>
+                            <li>• Within 500 km: +2 bonus points</li>
+                            <li>• Within 1000 km: +1 bonus point</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -168,9 +203,31 @@ export default function Lobby() {
             <ul className="text-sm text-blue-700 space-y-1">
               <li>• You'll see a world map with a city marked</li>
               <li>• Guess the location by clicking on the map</li>
-              <li>• Closer guesses earn more points</li>
               <li>• Play {currentGame.settings.totalRounds} rounds and see who knows geography best!</li>
             </ul>
+          </div>
+
+          <div className="mt-4 p-4 bg-green-50 rounded-md">
+            <h3 className="font-semibold text-green-800 mb-2">🏆 Scoring System</h3>
+            <div className="text-sm text-green-700 space-y-2">
+              <div>
+                <strong>Placement Points:</strong>
+                <ul className="ml-4 mt-1 space-y-1">
+                  <li>• 1st place: {currentGame.players.length} points</li>
+                  <li>• 2nd place: {Math.max(0, currentGame.players.length - 1)} points</li>
+                  <li>• 3rd place: {Math.max(0, currentGame.players.length - 2)} points</li>
+                  <li>• And so on...</li>
+                </ul>
+              </div>
+              <div>
+                <strong>Distance Bonus:</strong>
+                <ul className="ml-4 mt-1 space-y-1">
+                  <li>• Within 100 km: +5 bonus points</li>
+                  <li>• Within 500 km: +2 bonus points</li>
+                  <li>• Within 1000 km: +1 bonus point</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </div>

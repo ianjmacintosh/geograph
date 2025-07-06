@@ -691,9 +691,14 @@ export function getCitiesByDifficulty(difficulty: 'easy' | 'medium' | 'hard'): C
   return cities.filter(city => city.difficulty === difficulty);
 }
 
-export function getRandomCityByDifficulty(difficulty: 'easy' | 'medium' | 'hard'): City {
+export function getRandomCityByDifficulty(difficulty: 'easy' | 'medium' | 'hard', usedCityIds: string[] = []): City {
   const filteredCities = getCitiesByDifficulty(difficulty);
-  return filteredCities[Math.floor(Math.random() * filteredCities.length)];
+  const availableCities = filteredCities.filter(city => !usedCityIds.includes(city.id));
+  
+  // If we've used all cities of this difficulty, start over (shouldn't happen in normal games)
+  const citiesToChooseFrom = availableCities.length > 0 ? availableCities : filteredCities;
+  
+  return citiesToChooseFrom[Math.floor(Math.random() * citiesToChooseFrom.length)];
 }
 
 export function getCityById(id: string): City | undefined {

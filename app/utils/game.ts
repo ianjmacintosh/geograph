@@ -19,13 +19,45 @@ export function calculateDistance(lat1: number, lng1: number, lat2: number, lng2
   return R * c;
 }
 
-export function calculatePoints(distance: number, maxDistance: number = 20000): number {
-  if (distance === 0) return 1000;
-  if (distance >= maxDistance) return 0;
+export function calculateBonusPoints(distance: number): number {
+  if (distance <= 100) return 5;
+  if (distance <= 500) return 2;
+  if (distance <= 1000) return 1;
+  return 0;
+}
+
+export function calculatePlacementPoints(guesses: Array<{playerId: string, distance: number}>, totalPlayers: number): Array<{playerId: string, placementPoints: number, placement: number}> {
+  // Sort by distance (closest first)
+  const sortedGuesses = [...guesses].sort((a, b) => a.distance - b.distance);
   
-  // Exponential decay scoring
-  const score = Math.max(0, Math.round(1000 * Math.exp(-distance / (maxDistance / 4))));
-  return score;
+  const results: Array<{playerId: string, placementPoints: number, placement: number}> = [];
+  let currentPlacement = 1;
+  
+  for (let i = 0; i < sortedGuesses.length; i++) {
+    const guess = sortedGuesses[i];
+    
+    // Handle ties - if this distance equals the previous distance, use same placement
+    if (i > 0 && guess.distance === sortedGuesses[i - 1].distance) {
+      // Same placement as previous
+      const prevResult = results[results.length - 1];
+      results.push({
+        playerId: guess.playerId,
+        placementPoints: prevResult.placementPoints,
+        placement: prevResult.placement
+      });
+    } else {
+      // New placement
+      currentPlacement = i + 1;
+      const placementPoints = Math.max(0, totalPlayers - currentPlacement + 1);
+      results.push({
+        playerId: guess.playerId,
+        placementPoints,
+        placement: currentPlacement
+      });
+    }
+  }
+  
+  return results;
 }
 
 export function generateComputerGuess(city: City, accuracy: number): { lat: number; lng: number } {

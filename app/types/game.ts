@@ -21,7 +21,10 @@ export interface Guess {
   lat: number;
   lng: number;
   distance: number;
-  points: number;
+  placementPoints: number;
+  bonusPoints: number;
+  totalPoints: number;
+  placement: number;
   timestamp: number;
 }
 
@@ -32,6 +35,18 @@ export interface GameRound {
   completed: boolean;
   startTime: number;
   endTime?: number;
+}
+
+export interface FinalResults {
+  playerScores: Array<{
+    playerId: string;
+    playerName: string;
+    isComputer: boolean;
+    totalScore: number;
+    finalPlacement: number;
+  }>;
+  winnerId: string;
+  gameEndTime: number;
 }
 
 export interface Game {
@@ -48,6 +63,7 @@ export interface Game {
     totalRounds: number;
     cityDifficulty: 'easy' | 'medium' | 'hard';
   };
+  finalResults?: FinalResults;
   createdAt: number;
 }
 
