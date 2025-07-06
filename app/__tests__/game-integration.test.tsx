@@ -255,11 +255,11 @@ describe('Core Game Logic Integration', () => {
     const bonusPoints = calculateBonusPoints(guess.distance)
     
     const playerResult = placements.find((p: any) => p.playerId === 'player1')
-    const totalScore = playerResult.placementPoints + bonusPoints
+    const totalScore = playerResult ? playerResult.placementPoints + bonusPoints : 0
     
     // Verify results
-    expect(playerResult.placement).toBe(1) // 1st place
-    expect(playerResult.placementPoints).toBe(1) // 1 point for solo win
+    expect(playerResult?.placement).toBe(1) // 1st place
+    expect(playerResult?.placementPoints).toBe(1) // 1 point for solo win
     expect(bonusPoints).toBe(5) // 5 bonus for <100km
     expect(totalScore).toBe(6) // 1 + 5 = 6 total
   })

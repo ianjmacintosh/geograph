@@ -16,29 +16,21 @@ export default function Results() {
   const [animateIn, setAnimateIn] = useState(false);
 
   useEffect(() => {
-    console.log('Results page - currentGame:', currentGame);
-    console.log('Results page - finalResults:', currentGame?.finalResults);
-    
     if (!currentGame) {
-      console.log('No current game, navigating to home');
       navigate("/");
       return;
     }
     
     if (!currentGame.finalResults) {
-      console.log('No final results yet, waiting...');
       // Don't navigate immediately - give it a moment for the context to update
       const timeout = setTimeout(() => {
         if (!currentGame.finalResults) {
-          console.log('Still no final results after timeout, navigating to home');
           navigate("/");
         }
       }, 2000);
       
       return () => clearTimeout(timeout);
     }
-    
-    console.log('Final results found, showing page');
     
     // Trigger animations
     setTimeout(() => setAnimateIn(true), 100);
@@ -111,7 +103,7 @@ export default function Results() {
                     {winner.totalScore} points
                   </p>
                   <p className="text-sm text-yellow-700">
-                    {winner.isComputer ? 'Computer Player' : 'Human Player'}
+                    {winner.isComputer ? 'Computer' : 'Human'}
                   </p>
                 </div>
                 <span className="text-6xl animate-bounce" style={{animationDelay: '0.2s'}}>🎉</span>

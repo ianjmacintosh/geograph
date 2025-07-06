@@ -22,6 +22,7 @@ export default function Game() {
   const [showResults, setShowResults] = useState(false);
   const [roundNumber, setRoundNumber] = useState(1);
   const [completedRounds, setCompletedRounds] = useState<GameRound[]>([]);
+  const [usedCityIds, setUsedCityIds] = useState<string[]>([]);
 
   const updateRoundWithPlacements = (round: GameRound) => {
     if (!currentGame) return round;
@@ -49,51 +50,51 @@ export default function Game() {
     return { ...round, guesses: updatedGuesses };
   };
 
-  const handleRoundEnd = () => {
+  const handleRoundEnd = useCallback(() => {
     if (!currentRound) return;
     
     // Calculate placements before showing results
     const updatedRound = updateRoundWithPlacements(currentRound);
     setCurrentRound({ ...updatedRound, completed: true, endTime: Date.now() });
     setShowResults(true);
-  };
+  }, [currentRound, currentGame]);
 
   const handleNextRound = () => {
     if (!currentGame) return;
     
-    // Save the current round to completed rounds (with placements calculated)
-    if (currentRound && currentRound.completed) {
-      setCompletedRounds(prev => [...prev, currentRound]);
-    }
-    
     if (roundNumber >= currentGame.settings.totalRounds) {
-      // Game finished
+      // Game finished - call handleGameEnd immediately without adding to completedRounds
+      // handleGameEnd will handle including the current round in calculations
       handleGameEnd();
       return;
     }
 
-    // Moving to next round
-    setRoundNumber(prev => prev + 1);
+    // Save the current round to completed rounds (with placements calculated)
+    if (currentRound && currentRound.completed) {
+      setCompletedRounds(prev => [...prev, currentRound]);
+    }
+
+    // Reset state immediately before starting new round
+    setShowResults(false);
+    setHasGuessed(false);
     
-    // Add small delay to ensure state updates properly
-    setTimeout(() => {
-      startNewRound();
-    }, 100);
+    // Start new round immediately to avoid race condition
+    startNewRound();
+    
+    // Moving to next round AFTER the new round is created
+    setRoundNumber(prev => prev + 1);
   };
 
   const handleGameEnd = () => {
     // Calculate final scores and navigate to results
     if (!currentGame) return;
     
-    // Include the current round if it's completed and has placements calculated
+    // Include the current round if it has calculated placement points
     let allRounds = [...completedRounds];
-    if (currentRound && currentRound.completed) {
+    if (currentRound && currentRound.guesses.length > 0 && 
+        currentRound.guesses.some(g => g.totalPoints > 0)) {
       allRounds = [...allRounds, currentRound];
     }
-    
-    console.log('Game ending with rounds:', allRounds.length);
-    console.log('Completed rounds:', completedRounds.length);
-    console.log('Current round completed:', currentRound?.completed);
     
     // Calculate total scores for each player
     const playerScores = currentGame.players.map(player => {
@@ -106,7 +107,6 @@ export default function Game() {
         }
       });
       
-      console.log(`Player ${player.name} total score:`, totalScore);
       
       return {
         playerId: player.id,
@@ -129,17 +129,18 @@ export default function Game() {
       gameEndTime: Date.now()
     };
     
-    console.log('Final results:', finalResults);
-    console.log('Calling finishGame...');
-    
     finishGame(finalResults);
     
-    console.log('Navigating to results...');
     navigate("/results");
   };
 
   const handleMapClick = useCallback((lat: number, lng: number) => {
-    if (!currentRound || hasGuessed || showResults || !currentGame) {
+    // Simple approach: check if already guessed first
+    if (hasGuessed) {
+      return;
+    }
+    
+    if (!currentRound || !currentGame) {
       return;
     }
 
@@ -148,7 +149,7 @@ export default function Game() {
       return;
     }
 
-    // Check if this player has already guessed
+    // Check if this player has already guessed in this round
     const existingGuess = currentRound.guesses.find(g => g.playerId === humanPlayer.id);
     if (existingGuess) {
       return;
@@ -169,13 +170,43 @@ export default function Game() {
       timestamp: Date.now(),
     };
     
-    setCurrentRound(prev => prev ? { ...prev, guesses: [...prev.guesses, guess] } : null);
+    // Use functional update to get fresh state
+    setCurrentRound(currentRoundState => {
+      if (!currentRoundState) return currentRoundState;
+      
+      // Check again if human already guessed (in case of race condition)
+      const existingHumanGuess = currentRoundState.guesses.find(g => g.playerId === humanPlayer.id);
+      if (existingHumanGuess) {
+        return currentRoundState;
+      }
+      
+      const updatedRound = { ...currentRoundState, guesses: [...currentRoundState.guesses, guess] };
+      
+      // Check if all players have now guessed
+      const totalPlayers = currentGame.players.length;
+      const totalGuesses = updatedRound.guesses.length;
+      
+      if (totalGuesses >= totalPlayers) {
+        // All players have guessed! Calculate placements and show results immediately
+        const roundWithPlacements = updateRoundWithPlacements(updatedRound);
+        
+        // Show results after a brief delay
+        setTimeout(() => {
+          setShowResults(true);
+        }, 1500);
+        
+        return { ...roundWithPlacements, completed: true, endTime: Date.now() };
+      }
+      
+      return updatedRound;
+    });
+    
     setHasGuessed(true);
-  }, [currentRound, hasGuessed, showResults, currentGame]);
+  }, [hasGuessed, currentRound?.id, currentGame?.id]); // Use IDs to avoid stale closure
 
   // Start new round
   const startNewRound = () => {
-    const city = getRandomCityByDifficulty(currentGame!.settings.cityDifficulty);
+    const city = getRandomCityByDifficulty(currentGame!.settings.cityDifficulty, usedCityIds);
     const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
     const newRound: GameRound = {
       id: generateId(),
@@ -185,12 +216,14 @@ export default function Game() {
       startTime: Date.now(),
     };
     
-    // Starting new round with fresh state
+    // Track this city as used
+    setUsedCityIds(prev => [...prev, city.id]);
     
-    setCurrentRound(newRound);
-    setTimeLeft(30);
-    setHasGuessed(false);
+    // Reset all round-specific state
     setShowResults(false);
+    setHasGuessed(false);
+    setTimeLeft(30);
+    setCurrentRound(newRound);
   };
 
   // Redirect if no game
@@ -214,14 +247,12 @@ export default function Game() {
 
   // Timer countdown
   useEffect(() => {
-    if (!currentRound || showResults || hasGuessed) return;
+    if (!currentRound || showResults) return;
 
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         const newTime = prev - 1;
         if (newTime <= 0) {
-          // Time's up - use a ref to avoid closure issues
-          setShowResults(true);
           return 0;
         }
         return newTime;
@@ -229,18 +260,17 @@ export default function Game() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [currentRound, showResults, hasGuessed]);
+  }, [currentRound?.id, showResults]); // Only depend on round ID, not the whole object
 
   // Separate effect to handle round end when timer reaches 0
   useEffect(() => {
     if (timeLeft === 0 && currentRound && !showResults) {
       // Calculate placements before showing results
       const updatedRound = updateRoundWithPlacements(currentRound);
-      setCurrentRound(updatedRound);
+      setCurrentRound({ ...updatedRound, completed: true, endTime: Date.now() });
       setShowResults(true);
-      setTimeout(() => handleRoundEnd(), 500);
     }
-  }, [timeLeft, currentRound, showResults, handleRoundEnd]);
+  }, [timeLeft, currentRound, showResults]);
 
   // Generate computer guesses after a delay
   useEffect(() => {
@@ -255,52 +285,73 @@ export default function Game() {
     );
 
     if (computersWhoHaventGuessed.length === 0) return;
-
+    
     const timer = setTimeout(() => {
-      const computerGuesses: Guess[] = computersWhoHaventGuessed.map(player => {
-        const guess = generateComputerGuess(currentRound.city, player.accuracy || 0.5);
-        const distance = calculateDistance(currentRound.city.lat, currentRound.city.lng, guess.lat, guess.lng);
-        const bonusPoints = calculateBonusPoints(distance);
-        return {
-          playerId: player.id,
-          lat: guess.lat,
-          lng: guess.lng,
-          distance,
-          placementPoints: 0, // Will be calculated after all guesses are in
-          bonusPoints,
-          totalPoints: 0, // Will be calculated after all players guess
-          placement: 0, // Will be calculated after all guesses are in
-          timestamp: Date.now() + Math.random() * 1000, // Small random delay
-        };
-      });
+      // Get fresh current round state
+      setCurrentRound(currentRoundState => {
+        if (!currentRoundState || !currentGame) {
+          return currentRoundState;
+        }
+        
+        // Check again which computers haven't guessed (in case state changed)
+        const stillNeedToGuess = computerPlayers.filter(player => 
+          !currentRoundState.guesses.some(guess => guess.playerId === player.id)
+        );
+        
+        if (stillNeedToGuess.length === 0) {
+          return currentRoundState;
+        }
+        
+        const computerGuesses: Guess[] = stillNeedToGuess.map(player => {
+          const guess = generateComputerGuess(currentRoundState.city, player.accuracy || 0.5);
+          const distance = calculateDistance(currentRoundState.city.lat, currentRoundState.city.lng, guess.lat, guess.lng);
+          const bonusPoints = calculateBonusPoints(distance);
+          return {
+            playerId: player.id,
+            lat: guess.lat,
+            lng: guess.lng,
+            distance,
+            placementPoints: 0, // Will be calculated after all guesses are in
+            bonusPoints,
+            totalPoints: 0, // Will be calculated after all players guess
+            placement: 0, // Will be calculated after all guesses are in
+            timestamp: Date.now() + Math.random() * 1000, // Small random delay
+          };
+        });
 
-      // Add computer guesses and check if round is complete
-      const newRoundWithComputerGuesses = currentRound ? { 
-        ...currentRound, 
-        guesses: [...currentRound.guesses, ...computerGuesses] 
-      } : null;
-      
-      if (!newRoundWithComputerGuesses) return;
-      
-      const totalPlayers = currentGame.players.length;
-      const totalGuesses = newRoundWithComputerGuesses.guesses.length;
-      
-      if (totalGuesses >= totalPlayers) {
-        // All players have guessed, calculate placements and show results
-        setTimeout(() => {
+        // Add computer guesses
+        const newRoundWithComputerGuesses = { 
+          ...currentRoundState, 
+          guesses: [...currentRoundState.guesses, ...computerGuesses] 
+        };
+        
+        const totalPlayers = currentGame.players.length;
+        const totalGuesses = newRoundWithComputerGuesses.guesses.length;
+        
+        if (totalGuesses >= totalPlayers) {
+          // All players have guessed, calculate placements and show results
           const updatedRoundWithPlacements = updateRoundWithPlacements(newRoundWithComputerGuesses);
-          setCurrentRound(updatedRoundWithPlacements);
-          setShowResults(true);
-          setTimeout(() => handleRoundEnd(), 500);
-        }, 1500);
-      } else {
-        // Not all players have guessed yet, just update with computer guesses
-        setCurrentRound(newRoundWithComputerGuesses);
-      }
+          
+          // Show results after a brief delay
+          setTimeout(() => {
+            setShowResults(true);
+          }, 1500);
+          
+          return { ...updatedRoundWithPlacements, completed: true, endTime: Date.now() };
+        }
+        
+        return newRoundWithComputerGuesses;
+      });
     }, 2000 + Math.random() * 3000); // Computers guess between 2-5 seconds
 
     return () => clearTimeout(timer);
-  }, [currentRound, currentGame, showResults, handleRoundEnd]);
+  }, [currentRound?.id, currentGame?.id, showResults]); // Only depend on IDs to avoid re-triggering
+
+  // Check if a player has made a guess in the current round
+  const hasPlayerGuessed = (playerId: string): boolean => {
+    if (!currentRound) return false;
+    return currentRound.guesses.some(guess => guess.playerId === playerId);
+  };
 
   // Calculate cumulative scores
   const getPlayerScores = () => {
@@ -317,11 +368,15 @@ export default function Game() {
         }
       });
       
-      // Add scores from current round if it's showing results
-      if (currentRound && showResults) {
+      // Add scores from current round if it has calculated placement points
+      if (currentRound) {
         const playerGuess = currentRound.guesses.find(g => g.playerId === player.id);
-        if (playerGuess) {
-          totalScore += playerGuess.totalPoints;
+        if (playerGuess && playerGuess.placementPoints > 0) {
+          // Use totalPoints if available, otherwise calculate from placement + bonus
+          const score = playerGuess.totalPoints > 0 
+            ? playerGuess.totalPoints 
+            : playerGuess.placementPoints + playerGuess.bonusPoints;
+          totalScore += score;
         }
       }
       
@@ -376,16 +431,19 @@ export default function Game() {
                 <WorldMap
                   key={currentRound.id} // Force re-render when round changes
                   targetCity={currentRound.city}
-                  onMapClick={showResults ? undefined : handleMapClick}
-                  guesses={currentRound.guesses.map(guess => {
-                    const player = currentGame.players.find(p => p.id === guess.playerId);
-                    return {
-                      lat: guess.lat,
-                      lng: guess.lng,
-                      playerName: player?.name || 'Unknown',
-                      isComputer: player?.isComputer || false,
-                    };
-                  })}
+                  onMapClick={showResults || hasGuessed ? undefined : handleMapClick}
+                  guesses={(() => {
+                    // Show all guesses as they happen, but only show target when results are shown
+                    return currentRound.guesses.map(guess => {
+                      const player = currentGame.players.find(p => p.id === guess.playerId);
+                      return {
+                        lat: guess.lat,
+                        lng: guess.lng,
+                        playerName: player?.name || 'Unknown',
+                        isComputer: player?.isComputer || false,
+                      };
+                    });
+                  })()}
                   showTarget={showResults}
                 />
               </div>
@@ -439,7 +497,7 @@ export default function Game() {
                     onClick={handleNextRound}
                     className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
                   >
-                    {roundNumber >= currentGame.settings.totalRounds ? 'Finish Game' : 'Next Round'}
+                    {roundNumber >= currentGame.settings.totalRounds ? 'Final Results' : 'Next Round'}
                   </button>
                 </div>
               </div>
@@ -495,14 +553,28 @@ export default function Game() {
                         {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤'}
                       </span>
                       <div>
-                        <div className="font-medium text-sm">{player.name}</div>
+                        <div className="font-medium text-sm flex items-center gap-2">
+                          {player.name}
+                          {/* Guess status indicator */}
+                          {!showResults && (
+                            <span className="text-sm">
+                              {hasPlayerGuessed(player.id) ? '✅' : '⏳'}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-xs text-gray-500">
                           {player.isComputer ? 'Computer' : 'Human'}
+                          {!showResults && hasPlayerGuessed(player.id) && (
+                            <span className="text-green-600 ml-1">• Guessed</span>
+                          )}
+                          {!showResults && !hasPlayerGuessed(player.id) && (
+                            <span className="text-orange-600 ml-1">• Waiting</span>
+                          )}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-blue-600">{player.totalScore}</div>
+                      <div className="font-bold text-blue-600" data-testid={`player-score-${player.id}`}>{player.totalScore}</div>
                       <div className="text-xs text-gray-500">pts</div>
                     </div>
                   </div>

@@ -139,13 +139,13 @@ describe('Scoring Calculation', () => {
     const player2Result = placements.find((p: any) => p.playerId === 'player2')
     const player3Result = placements.find((p: any) => p.playerId === 'player3')
     
-    expect(player1Result.placementPoints).toBe(3) // 1st place in 3-player game
+    expect(player1Result?.placementPoints).toBe(3) // 1st place in 3-player game
     expect(calculateBonusPoints(50)).toBe(5)      // <100km bonus
     
-    expect(player2Result.placementPoints).toBe(2) // 2nd place
+    expect(player2Result?.placementPoints).toBe(2) // 2nd place
     expect(calculateBonusPoints(300)).toBe(2)     // <500km bonus
     
-    expect(player3Result.placementPoints).toBe(1) // 3rd place  
+    expect(player3Result?.placementPoints).toBe(1) // 3rd place  
     expect(calculateBonusPoints(1500)).toBe(0)    // >1000km, no bonus
   })
 })
