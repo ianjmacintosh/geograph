@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState } from 'react';
-import 'leaflet/dist/leaflet.css';
 
 interface WorldMapProps {
   onMapClick?: (lat: number, lng: number) => void;
