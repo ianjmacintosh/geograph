@@ -4,7 +4,7 @@ import type { GameRound, City, Game, FinalResults, Player } from '../types/game'
 import { getRandomCityByDifficulty } from '../data/cities';
 import { useGame } from '../contexts/GameContext'; // Assuming GameContext provides finishGame
 
-interface UseRoundManagementProps {
+export interface UseRoundManagementProps {
   currentGame: Game | null;
   onRoundStart?: (newRound: GameRound) => void; // Callback when a new round starts
   onGameEnd?: (finalResults: FinalResults) => void; // Callback when game ends

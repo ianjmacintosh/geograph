@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { GameRound } from '../types/game';
 
-interface UseGameTimerProps {
+export interface UseGameTimerProps {
   currentRound: GameRound | null;
   showResults: boolean;
   roundTimeLimit: number; // milliseconds

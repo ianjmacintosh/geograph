@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { useGameTimer } from '../useGameTimer';
+import { useGameTimer, type UseGameTimerProps } from '../useGameTimer';
 import type { GameRound } from '../../types/game';
 
 const mockCurrentRound: GameRound = {
@@ -104,7 +104,7 @@ describe('useGameTimer', () => {
 
   it('should reset timeLeft when currentRound ID changes and not showing results', () => {
     const { result, rerender } = renderHook(
-      (props) => useGameTimer(props),
+      (props: UseGameTimerProps) => useGameTimer(props),
       {
         initialProps: {
           currentRound: mockCurrentRound,
