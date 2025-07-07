@@ -201,7 +201,7 @@ describe('useComputerPlayers', () => {
   it('should not guess if all computers have already guessed in the current round', () => {
     const roundWithComputerGuess: GameRound = {
         ...mockInitialRound,
-        guesses: [{ playerId: computerPlayer1.id, lat: 1, lng: 1, distance: 0, bonusPoints: 0, totalPoints: 0, placement:0, timestamp:0 }]
+        guesses: [{ playerId: computerPlayer1.id, lat: 1, lng: 1, distance: 0, bonusPoints: 0, totalPoints: 0, placement: 0, placementPoints: 0, timestamp: 0 }]
     };
     renderHook(() => useComputerPlayers({
       currentGame: mockCurrentGameOneComputer, // Only computerPlayer1

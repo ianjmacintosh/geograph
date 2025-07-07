@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
-import { GameProvider } from '../contexts/GameContext'
-import Game from '../routes/game'
-import Results from '../routes/results'
-import { calculatePlacementPoints, calculateBonusPoints } from '../utils/game'
-import type { Game as GameType } from '../types/game'
+import { GameProvider } from '../../contexts/GameContext'
+import Game from '../game'
+import Results from '../results'
+import { calculatePlacementPoints, calculateBonusPoints } from '../../utils/game'
+import type { Game as GameType } from '../../types/game'
 import React from 'react'
 
 // Mock the WorldMap component since it uses Leaflet
-vi.mock('../components/WorldMap', () => ({
+vi.mock('../../components/WorldMap', () => ({
   WorldMap: ({ onMapClick, targetCity, showTarget }: any) => (
     <div data-testid="world-map">
       <div data-testid="target-city">{targetCity.name}</div>
@@ -31,7 +31,7 @@ vi.mock('../components/WorldMap', () => ({
 }))
 
 // Mock city data to return consistent test data
-vi.mock('../data/cities', () => ({
+vi.mock('../../data/cities', () => ({
   getRandomCityByDifficulty: () => ({
     id: 'test-city',
     name: 'Test City',

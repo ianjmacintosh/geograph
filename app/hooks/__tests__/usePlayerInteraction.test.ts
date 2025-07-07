@@ -256,15 +256,16 @@ describe('usePlayerInteraction', () => {
         roundStateAfterFirstClick = firstFunctionalUpdate(mockInitialRound);
     });
 
-    expect(roundStateAfterFirstClick?.guesses.length).toBe(1);
-    expect(roundStateAfterFirstClick?.guesses[0].lat).toBe(10);
+    expect(roundStateAfterFirstClick).not.toBeNull();
+    expect(roundStateAfterFirstClick!.guesses.length).toBe(1);
+    expect(roundStateAfterFirstClick!.guesses[0].lat).toBe(10);
 
     // Simulate a scenario where the round object in the hook's closure might be stale,
     // but the functional update should receive the *actual* current state from React.
     // For this test, we manually create a "later" state for the round.
     const laterRoundStateWithOneGuess: GameRound = {
         ...mockInitialRound,
-        guesses: [{ playerId: humanPlayer.id, lat: 10, lng: 10, distance: 0, bonusPoints: 0, totalPoints: 0, placement:0, timestamp:0 }],
+        guesses: [{ playerId: humanPlayer.id, lat: 10, lng: 10, distance: 0, bonusPoints: 0, totalPoints: 0, placement: 0, placementPoints: 0, timestamp: 0 }],
     };
 
     // If handleMapClick were called again *without* hasGuessed being true (e.g., due to some complex async issue or re-render logic not tested here)
@@ -291,8 +292,9 @@ describe('usePlayerInteraction', () => {
         roundStateAfterSecondClick = secondFunctionalUpdate(laterRoundStateWithOneGuess);
      });
 
-     expect(roundStateAfterSecondClick?.guesses.length).toBe(2);
-     expect(roundStateAfterSecondClick?.guesses[1].lat).toBe(20);
+     expect(roundStateAfterSecondClick).not.toBeNull();
+     expect(roundStateAfterSecondClick!.guesses.length).toBe(2);
+     expect(roundStateAfterSecondClick!.guesses[1].lat).toBe(20);
   });
 
 });

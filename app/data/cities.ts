@@ -227,6 +227,501 @@ export const cities: City[] = [
     population: 5850342,
     difficulty: 'easy'
   },
+  {
+    id: 'amsterdam',
+    name: 'Amsterdam',
+    country: 'Netherlands',
+    lat: 52.3676,
+    lng: 4.9041,
+    population: 872680,
+    difficulty: 'easy'
+  },
+  {
+    id: 'vienna',
+    name: 'Vienna',
+    country: 'Austria',
+    lat: 48.2082,
+    lng: 16.3738,
+    population: 1911191,
+    difficulty: 'easy'
+  },
+  {
+    id: 'stockholm',
+    name: 'Stockholm',
+    country: 'Sweden',
+    lat: 59.3293,
+    lng: 18.0686,
+    population: 975551,
+    difficulty: 'easy'
+  },
+  {
+    id: 'copenhagen',
+    name: 'Copenhagen',
+    country: 'Denmark',
+    lat: 55.6761,
+    lng: 12.5683,
+    population: 660193,
+    difficulty: 'easy'
+  },
+  {
+    id: 'oslo',
+    name: 'Oslo',
+    country: 'Norway',
+    lat: 59.9139,
+    lng: 10.7522,
+    population: 697549,
+    difficulty: 'easy'
+  },
+  {
+    id: 'helsinki',
+    name: 'Helsinki',
+    country: 'Finland',
+    lat: 60.1699,
+    lng: 24.9384,
+    population: 658864,
+    difficulty: 'easy'
+  },
+  {
+    id: 'dublin',
+    name: 'Dublin',
+    country: 'Ireland',
+    lat: 53.3498,
+    lng: -6.2603,
+    population: 1388000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'zurich',
+    name: 'Zurich',
+    country: 'Switzerland',
+    lat: 47.3769,
+    lng: 8.5417,
+    population: 415367,
+    difficulty: 'easy'
+  },
+  {
+    id: 'brussels',
+    name: 'Brussels',
+    country: 'Belgium',
+    lat: 50.8503,
+    lng: 4.3517,
+    population: 1208542,
+    difficulty: 'easy'
+  },
+  {
+    id: 'lisbon',
+    name: 'Lisbon',
+    country: 'Portugal',
+    lat: 38.7223,
+    lng: -9.1393,
+    population: 545245,
+    difficulty: 'easy'
+  },
+  {
+    id: 'athens',
+    name: 'Athens',
+    country: 'Greece',
+    lat: 37.9838,
+    lng: 23.7275,
+    population: 3154000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'warsaw',
+    name: 'Warsaw',
+    country: 'Poland',
+    lat: 52.2297,
+    lng: 21.0122,
+    population: 1790658,
+    difficulty: 'easy'
+  },
+  {
+    id: 'budapest',
+    name: 'Budapest',
+    country: 'Hungary',
+    lat: 47.4979,
+    lng: 19.0402,
+    population: 1752286,
+    difficulty: 'easy'
+  },
+  {
+    id: 'beijing',
+    name: 'Beijing',
+    country: 'China',
+    lat: 39.9042,
+    lng: 116.4074,
+    population: 21540000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'shanghai',
+    name: 'Shanghai',
+    country: 'China',
+    lat: 31.2304,
+    lng: 121.4737,
+    population: 24870000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'hongkong',
+    name: 'Hong Kong',
+    country: 'Hong Kong',
+    lat: 22.3193,
+    lng: 114.1694,
+    population: 7496981,
+    difficulty: 'easy'
+  },
+  {
+    id: 'seoul',
+    name: 'Seoul',
+    country: 'South Korea',
+    lat: 37.5665,
+    lng: 126.9780,
+    population: 9720846,
+    difficulty: 'easy'
+  },
+  {
+    id: 'taipei',
+    name: 'Taipei',
+    country: 'Taiwan',
+    lat: 25.0330,
+    lng: 121.5654,
+    population: 2602418,
+    difficulty: 'easy'
+  },
+  {
+    id: 'bangkok',
+    name: 'Bangkok',
+    country: 'Thailand',
+    lat: 14.5995,
+    lng: 100.5018,
+    population: 10539000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'kualalumpur',
+    name: 'Kuala Lumpur',
+    country: 'Malaysia',
+    lat: 3.1390,
+    lng: 101.6869,
+    population: 1768000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'jakarta',
+    name: 'Jakarta',
+    country: 'Indonesia',
+    lat: -6.2088,
+    lng: 106.8456,
+    population: 10770000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'manila',
+    name: 'Manila',
+    country: 'Philippines',
+    lat: 14.5995,
+    lng: 120.9842,
+    population: 13484462,
+    difficulty: 'easy'
+  },
+  {
+    id: 'mumbai',
+    name: 'Mumbai',
+    country: 'India',
+    lat: 19.0760,
+    lng: 72.8777,
+    population: 20411000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'newdelhi',
+    name: 'New Delhi',
+    country: 'India',
+    lat: 28.6139,
+    lng: 77.2090,
+    population: 32900000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'kolkata',
+    name: 'Kolkata',
+    country: 'India',
+    lat: 22.5726,
+    lng: 88.3639,
+    population: 14850000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'riyadh',
+    name: 'Riyadh',
+    country: 'Saudi Arabia',
+    lat: 24.7136,
+    lng: 46.6753,
+    population: 7676654,
+    difficulty: 'easy'
+  },
+  {
+    id: 'doha',
+    name: 'Doha',
+    country: 'Qatar',
+    lat: 25.2854,
+    lng: 51.5310,
+    population: 2382000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'tehran',
+    name: 'Tehran',
+    country: 'Iran',
+    lat: 35.6892,
+    lng: 51.3890,
+    population: 9134000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'cairo',
+    name: 'Cairo',
+    country: 'Egypt',
+    lat: 30.0444,
+    lng: 31.2357,
+    population: 20900604,
+    difficulty: 'easy'
+  },
+  {
+    id: 'casablanca',
+    name: 'Casablanca',
+    country: 'Morocco',
+    lat: 33.5731,
+    lng: -7.5898,
+    population: 3359818,
+    difficulty: 'easy'
+  },
+  {
+    id: 'lagos',
+    name: 'Lagos',
+    country: 'Nigeria',
+    lat: 6.5244,
+    lng: 3.3792,
+    population: 15388000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'capetown',
+    name: 'Cape Town',
+    country: 'South Africa',
+    lat: -33.9249,
+    lng: 18.4241,
+    population: 4618000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'johannesburg',
+    name: 'Johannesburg',
+    country: 'South Africa',
+    lat: -26.2041,
+    lng: 28.0473,
+    population: 5635127,
+    difficulty: 'easy'
+  },
+  {
+    id: 'mexicocity',
+    name: 'Mexico City',
+    country: 'Mexico',
+    lat: 19.4326,
+    lng: -99.1332,
+    population: 21804515,
+    difficulty: 'easy'
+  },
+  {
+    id: 'lima',
+    name: 'Lima',
+    country: 'Peru',
+    lat: -12.0464,
+    lng: -77.0428,
+    population: 10882757,
+    difficulty: 'easy'
+  },
+  {
+    id: 'buenosaires',
+    name: 'Buenos Aires',
+    country: 'Argentina',
+    lat: -34.6037,
+    lng: -58.3816,
+    population: 15370000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'saopaulo',
+    name: 'São Paulo',
+    country: 'Brazil',
+    lat: -23.5558,
+    lng: -46.6396,
+    population: 22430000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'riodejaneiro',
+    name: 'Rio de Janeiro',
+    country: 'Brazil',
+    lat: -22.9068,
+    lng: -43.1729,
+    population: 13634000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'brasilia',
+    name: 'Brasília',
+    country: 'Brazil',
+    lat: -15.8267,
+    lng: -47.9218,
+    population: 3055149,
+    difficulty: 'easy'
+  },
+  {
+    id: 'vancouver',
+    name: 'Vancouver',
+    country: 'Canada',
+    lat: 49.2827,
+    lng: -123.1207,
+    population: 2632000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'toronto',
+    name: 'Toronto',
+    country: 'Canada',
+    lat: 43.6532,
+    lng: -79.3832,
+    population: 6313000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'montreal',
+    name: 'Montreal',
+    country: 'Canada',
+    lat: 45.5017,
+    lng: -73.5673,
+    population: 4246000,
+    difficulty: 'easy'
+  },
+  {
+    id: 'sanfrancisco',
+    name: 'San Francisco',
+    country: 'United States',
+    lat: 37.7749,
+    lng: -122.4194,
+    population: 883305,
+    difficulty: 'easy'
+  },
+  {
+    id: 'lasvegas',
+    name: 'Las Vegas',
+    country: 'United States',
+    lat: 36.1699,
+    lng: -115.1398,
+    population: 651319,
+    difficulty: 'easy'
+  },
+  {
+    id: 'boston',
+    name: 'Boston',
+    country: 'United States',
+    lat: 42.3601,
+    lng: -71.0589,
+    population: 695926,
+    difficulty: 'easy'
+  },
+  {
+    id: 'washington',
+    name: 'Washington, D.C.',
+    country: 'United States',
+    lat: 38.9072,
+    lng: -77.0369,
+    population: 705749,
+    difficulty: 'easy'
+  },
+  {
+    id: 'seattle',
+    name: 'Seattle',
+    country: 'United States',
+    lat: 47.6062,
+    lng: -122.3321,
+    population: 749256,
+    difficulty: 'easy'
+  },
+  {
+    id: 'denver',
+    name: 'Denver',
+    country: 'United States',
+    lat: 39.7392,
+    lng: -104.9903,
+    population: 715522,
+    difficulty: 'easy'
+  },
+  {
+    id: 'atlanta',
+    name: 'Atlanta',
+    country: 'United States',
+    lat: 33.7490,
+    lng: -84.3880,
+    population: 498715,
+    difficulty: 'easy'
+  },
+  {
+    id: 'detroit',
+    name: 'Detroit',
+    country: 'United States',
+    lat: 42.3314,
+    lng: -83.0458,
+    population: 639111,
+    difficulty: 'easy'
+  },
+  {
+    id: 'houston',
+    name: 'Houston',
+    country: 'United States',
+    lat: 29.7604,
+    lng: -95.3698,
+    population: 2320268,
+    difficulty: 'easy'
+  },
+  {
+    id: 'phoenix',
+    name: 'Phoenix',
+    country: 'United States',
+    lat: 33.4484,
+    lng: -112.0740,
+    population: 1680992,
+    difficulty: 'easy'
+  },
+  {
+    id: 'philadelphia',
+    name: 'Philadelphia',
+    country: 'United States',
+    lat: 39.9526,
+    lng: -75.1652,
+    population: 1603797,
+    difficulty: 'easy'
+  },
+  {
+    id: 'san_diego',
+    name: 'San Diego',
+    country: 'United States',
+    lat: 32.7157,
+    lng: -117.1611,
+    population: 1423851,
+    difficulty: 'easy'
+  },
+  {
+    id: 'dallas',
+    name: 'Dallas',
+    country: 'United States',
+    lat: 32.7767,
+    lng: -96.7970,
+    population: 1343573,
+    difficulty: 'easy'
+  },
   
   // Medium cities (regional capitals, well-known European/Asian cities)
   {

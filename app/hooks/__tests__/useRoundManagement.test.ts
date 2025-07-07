@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { useRoundManagement } from '../useRoundManagement';
+import { useRoundManagement, type UseRoundManagementProps } from '../useRoundManagement';
 import type { Game, GameRound, City, Player, FinalResults } from '../../types/game';
 
 // Mocks
@@ -50,18 +50,19 @@ describe('useRoundManagement', () => {
   let mockGetRandomCity: ReturnType<typeof vi.fn>;
   let mockUpdateRoundWithPlacements: ReturnType<typeof vi.fn>;
 
-  const setupHook = (gameProps: Partial<Game> = {}, initialRoundNumber = 1) => {
+  const setupHook = async (gameProps: Partial<Game> = {}, initialRoundNumber = 1) => {
     const currentGameData = { ...mockBaseGame, ...gameProps };
 
     // Reset mocks for each test run using this setup
     mockFinishGameContext = vi.fn();
     mockNavigate = vi.fn();
     mockGetRandomCity = vi.fn();
-    mockUpdateRoundWithPlacements = vi.fn(round => ({ ...round, completed: true, guesses: round.guesses.map(g => ({...g, totalPoints: 10})) }));
+    mockUpdateRoundWithPlacements = vi.fn(round => ({ ...round, completed: true, guesses: round.guesses.map((g: any) => ({...g, totalPoints: 10})) }));
 
 
     // Dynamically update the mock for useGame for this specific test
-    vi.mocked(await import('../../contexts/GameContext')).useGame.mockReturnValue({
+    const { useGame } = await import('../../contexts/GameContext');
+    vi.mocked(useGame).mockReturnValue({
       currentGame: currentGameData,
       finishGame: mockFinishGameContext,
       clearGame: vi.fn(), // or any other functions needed from useGame
@@ -69,7 +70,8 @@ describe('useRoundManagement', () => {
     } as any); // Using 'as any' to simplify mock structure for test
 
     // Dynamically update mock for useNavigate
-     vi.mocked(await import('react-router')).useNavigate.mockReturnValue(mockNavigate);
+    const { useNavigate } = await import('react-router');
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
 
     // Dynamically update mock for getRandomCityByDifficulty
     const citiesMock = await import('../../data/cities');
@@ -78,7 +80,7 @@ describe('useRoundManagement', () => {
 
 
     const hook = renderHook(
-      (props) => useRoundManagement(props), {
+      (props: UseRoundManagementProps) => useRoundManagement(props), {
       initialProps: {
         currentGame: currentGameData,
         onRoundStart: vi.fn(),
@@ -137,7 +139,7 @@ describe('useRoundManagement', () => {
     expect(result.current.currentRound?.city.id).toBe(mockCity2.id);
     expect(result.current.completedRounds.length).toBe(1);
     expect(result.current.completedRounds[0].id).toBe(firstRound.id);
-    expect(result.current.completedRounds[0].totalPoints).toBe(10); // from mockUpdateRoundWithPlacements
+    expect(result.current.completedRounds[0].completed).toBe(true); // from mockUpdateRoundWithPlacements
   });
 
   it('handleNextRound should call handleGameEnd if last round is completed', async () => {
@@ -167,7 +169,7 @@ describe('useRoundManagement', () => {
     };
     act(() => {
       result.current.setCurrentRound(testRound); // Set a completed round
-      result.current.setCompletedRounds([]); // Clear any auto-added completed rounds for this test
+      // Note: setCompletedRounds is not exposed from the hook, using internal state
     });
 
     act(() => {

@@ -296,10 +296,18 @@ export default function Game() {
                 <WorldMap
                   key={currentRound.id}
                   targetCity={currentRound.city}
-                  onMapClick={handleMapClick} // From usePlayerInteraction, it internally checks showResults/hasGuessed via isViewOnly
+                  onMapClick={showResults || hasGuessed ? undefined : handleMapClick} // Disable clicking when results shown or already guessed
                   guesses={(() => {
                     const currentGuesses = currentRound.guesses || [];
-                    return currentGuesses.map(guess => { // currentRound from useRoundManagement
+                    // Hide computer guesses until human player has guessed (unless showing results)
+                    const visibleGuesses = showResults || hasGuessed 
+                      ? currentGuesses 
+                      : currentGuesses.filter(guess => {
+                          const player = currentGame.players.find(p => p.id === guess.playerId);
+                          return player && !player.isComputer;
+                        });
+                    
+                    return visibleGuesses.map(guess => { // currentRound from useRoundManagement
                       const player = currentGame.players.find(p => p.id === guess.playerId);
                       return {
                         lat: guess.lat,
