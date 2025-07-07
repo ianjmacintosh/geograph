@@ -210,28 +210,35 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const wsUrl = getWebSocketUrl();
   console.log('🔍 WebSocket URL:', wsUrl);
   
-  const {
-    connectionStatus,
-    sendMessage,
-    isConnected
-  } = useWebSocket({
-    url: wsUrl,
-    onMessage: handleWebSocketMessage,
-    onConnect: () => {
-      dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'connected' });
-      console.log('🔗 WebSocket connected to:', wsUrl);
-    },
-    onDisconnect: () => {
-      dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'disconnected' });
-      console.log('📱 WebSocket disconnected from:', wsUrl);
-    },
-    onError: (error) => {
-      dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'error' });
-      dispatch({ type: 'SET_ERROR', payload: 'Connection error' });
-      console.error('❌ WebSocket error:', error, 'URL was:', wsUrl);
-    },
-    autoReconnect: false // Disable auto-reconnect temporarily
-  });
+  // Temporarily disable WebSocket to stop the loop
+  const connectionStatus = 'disconnected';
+  const sendMessage = () => {};
+  const isConnected = false;
+  
+  console.log('🚫 WebSocket temporarily disabled for debugging');
+  
+  // const {
+  //   connectionStatus,
+  //   sendMessage,
+  //   isConnected
+  // } = useWebSocket({
+  //   url: wsUrl,
+  //   onMessage: handleWebSocketMessage,
+  //   onConnect: () => {
+  //     dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'connected' });
+  //     console.log('🔗 WebSocket connected to:', wsUrl);
+  //   },
+  //   onDisconnect: () => {
+  //     dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'disconnected' });
+  //     console.log('📱 WebSocket disconnected from:', wsUrl);
+  //   },
+  //   onError: (error) => {
+  //     dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'error' });
+  //     dispatch({ type: 'SET_ERROR', payload: 'Connection error' });
+  //     console.error('❌ WebSocket error:', error, 'URL was:', wsUrl);
+  //   },
+  //   autoReconnect: false // Disable auto-reconnect temporarily
+  // });
   
   useEffect(() => {
     dispatch({ type: 'SET_CONNECTION_STATUS', payload: connectionStatus });
