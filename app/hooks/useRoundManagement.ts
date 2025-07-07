@@ -68,7 +68,6 @@ export function useRoundManagement({
       allRounds = [...allRounds, { ...processedCurrentRound, completed: true, endTime: Date.now() }];
     }
 
-
     const playerScores = currentGame.players.map(player => {
       let totalScore = 0;
       allRounds.forEach(round => {
@@ -98,10 +97,15 @@ export function useRoundManagement({
     };
 
     contextFinishGame(finalResults); // Use context's finishGame
+    
     if (onGameEnd) {
       onGameEnd(finalResults);
     }
-    navigate("/results");
+    
+    // Small delay to ensure context state update completes before navigation
+    setTimeout(() => {
+      navigate("/results");
+    }, 50);
   }, [currentGame, completedRounds, currentRound, contextFinishGame, navigate, onGameEnd, updateRoundWithPlacements]);
 
   const handleNextRound = useCallback(() => {

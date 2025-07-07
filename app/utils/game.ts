@@ -127,7 +127,7 @@ export function createNewGame(hostName: string): Game {
     status: 'waiting',
     settings: {
       maxPlayers: 8,
-      roundTimeLimit: 30000, // 30 seconds
+      roundTimeLimit: 30000,
       totalRounds: 5,
       cityDifficulty: 'easy'
     },
