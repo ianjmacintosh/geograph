@@ -1,14 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useGame } from "../contexts/GameContext";
 import { WorldMap } from "../components/WorldMap";
-// getRandomCityByDifficulty is used in useRoundManagement
-// calculateDistance, calculateBonusPoints are used by usePlayerInteraction or game utils
-import { calculatePlacementPoints, generateComputerGuess, calculateDistance, calculateBonusPoints } from "../utils/game"; // Ensured all utils are here or in hooks
-import type { City, GameRound, Guess } from "../types/game";
-import { useGameTimer } from "../hooks/useGameTimer";
-import { useRoundManagement } from "../hooks/useRoundManagement"; // Assuming this was the previous state
-import { usePlayerInteraction } from "../hooks/usePlayerInteraction"; // New hook
+import { usePlayerInteraction } from "../hooks/usePlayerInteraction";
 
 export function meta() {
   return [
@@ -18,80 +12,45 @@ export function meta() {
 }
 
 export default function Game() {
-  const { currentGame, clearGame, finishGame: contextFinishGame } = useGame(); // finishGame from context for useRoundManagement
+  const { currentGame, nextRound, playerId, leaveGame } = useGame();
   const navigate = useNavigate();
 
-  // `currentRound`, `setCurrentRound`, `roundNumber`, `completedRounds`, `processNextRound` (as handleNextRound)
-  // are now from useRoundManagement.
-  // `hasGuessed`, `handleMapClick`, `resetPlayerGuessState` are from usePlayerInteraction.
-
-  const [showResults, setShowResults] = useState(false); // This state remains crucial for UI toggling
-
-  const updateRoundWithPlacements = useCallback((round: GameRound): GameRound => {
-    if (!currentGame || !round || !round.guesses) return round; // Added !round.guesses check
-    const guessData = (round.guesses || []).map(guess => ({ // Ensure guesses is not null
-      playerId: guess.playerId,
-      distance: guess.distance
-    }));
-
-    const placements = calculatePlacementPoints(guessData, currentGame.players.length);
-
-    const updatedGuesses = (round.guesses || []).map(guess => { // Ensure guesses is not null
-      const placementInfo = placements.find(p => p.playerId === guess.playerId);
-      if (placementInfo) {
-        return {
-          ...guess,
-          placementPoints: placementInfo.placementPoints,
-          placement: placementInfo.placement,
-          totalPoints: placementInfo.placementPoints + guess.bonusPoints
-        };
-      }
-      return guess;
-    });
-
-    return { ...round, guesses: updatedGuesses };
-  }, [currentGame]);
-
-  const {
-    currentRound,
-    setCurrentRound,
-    roundNumber,
-    completedRounds,
-    handleNextRound: processNextRoundHook, // Renamed from hook
-    // usedCityIds is also available if needed by other hooks directly from useRoundManagement
-  } = useRoundManagement({
-    currentGame,
-    updateRoundWithPlacements, // Passed to the hook
-    // onRoundStart from useRoundManagement will handle its internal state resets.
-    // UI specific resets (like showResults, hasGuessed) are handled in Game.tsx or by their own hooks.
-  });
-
-  // This function is triggered when timer ends or all players have guessed
-  const handleRoundEndForTimerOrAllGuessed = useCallback(() => {
-    setCurrentRound(prevRound => { // setCurrentRound from useRoundManagement
-      if (!prevRound || prevRound.completed) return prevRound;
-      const updatedRound = updateRoundWithPlacements(prevRound);
-      return { ...updatedRound, completed: true, endTime: Date.now() };
-    });
-    setShowResults(true);
-  }, [setCurrentRound, updateRoundWithPlacements]);
-
-  const roundTimeLimitMs = useMemo(() => currentGame?.settings?.roundTimeLimit || 30000, [currentGame?.settings?.roundTimeLimit]);
-
-  const timeLeft = useGameTimer({
-    currentRound, // From useRoundManagement
-    showResults,
-    roundTimeLimit: roundTimeLimitMs,
-    onTimerEnd: handleRoundEndForTimerOrAllGuessed,
-  });
-
-  const playerGuessedCompletesRoundHandler = useCallback(() => {
-    // This is called by usePlayerInteraction when a human guess completes all guesses.
-    // Schedule the round end logic.
-    setTimeout(() => {
-      handleRoundEndForTimerOrAllGuessed();
-    }, 100); // Small delay, similar to computer guess completion
-  }, [handleRoundEndForTimerOrAllGuessed]);
+  // Get current round from the game state (managed by server)
+  const currentRound = currentGame?.rounds?.[currentGame.rounds.length - 1] || null;
+  const roundNumber = currentGame?.rounds?.length || 0;
+  
+  // Check if current player has guessed in this round
+  const hasPlayerGuessed = currentRound?.guesses?.some(g => g.playerId === playerId) || false;
+  
+  // Check if all players have guessed (round is complete)
+  const allPlayersGuessed = currentRound && currentGame ? 
+    currentRound.guesses.length >= currentGame.players.length : false;
+    
+  // Show results when round is completed or timer expired
+  const showResults = currentRound?.completed || false;
+  
+  // Timer state for display
+  const [timeLeft, setTimeLeft] = useState(0);
+  
+  // Update timer display
+  useEffect(() => {
+    if (!currentRound || showResults) {
+      setTimeLeft(0);
+      return;
+    }
+    
+    const updateTimer = () => {
+      const timeLimit = currentGame?.settings?.roundTimeLimit || 30000;
+      const elapsed = Date.now() - currentRound.startTime;
+      const remaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
+      setTimeLeft(remaining);
+    };
+    
+    updateTimer(); // Initial update
+    const interval = setInterval(updateTimer, 1000);
+    
+    return () => clearInterval(interval);
+  }, [currentRound, currentGame, showResults]);
 
   const {
     hasGuessed,
@@ -99,31 +58,30 @@ export default function Game() {
     resetPlayerGuessState,
   } = usePlayerInteraction({
     currentGame,
-    currentRound, // From useRoundManagement
-    setCurrentRound, // From useRoundManagement
-    onPlayerGuessCompletesRound: playerGuessedCompletesRoundHandler,
-    isViewOnly: () => showResults || hasGuessed, // Logic to disable map clicks
+    currentRound,
+    isViewOnly: () => showResults || hasPlayerGuessed, // Disable clicks if already guessed or showing results
   });
 
-  // Effect to reset UI states when a new round truly begins (ID changes)
+  // Reset guess state when round changes
   useEffect(() => {
-    if (currentRound) { // currentRound itself might be null initially
-      setShowResults(false);
-      resetPlayerGuessState(); // From usePlayerInteraction
+    if (currentRound?.id) {
+      resetPlayerGuessState();
     }
-  }, [currentRound?.id, resetPlayerGuessState]); // Depend on id for actual round change
+  }, [currentRound?.id, resetPlayerGuessState]);
 
-  // UI facing next round handler
+  // Handle next round button click
   const handleNextRound = useCallback(() => {
-    // setShowResults(false); // Done by useEffect above when new round starts
-    // resetPlayerGuessState(); // Done by useEffect above
-    processNextRoundHook(); // Call the logic from useRoundManagement
-  }, [processNextRoundHook]);
+    nextRound();
+  }, [nextRound]);
 
-  // Redirect if no game - This remains important UI logic
+  // Navigation logic
   useEffect(() => {
     if (!currentGame) {
       navigate("/");
+      return;
+    }
+    if (currentGame.status === 'finished') {
+      navigate("/results");
       return;
     }
     if (currentGame.status !== 'playing') {
@@ -131,85 +89,6 @@ export default function Game() {
       return;
     }
   }, [currentGame, navigate]);
-
-  // Initial round setup is handled by useRoundManagement's useEffect.
-  // Timer countdown and round end on timer expiry are handled by useGameTimer.
-
-  // Generate computer guesses after a delay - This will be moved to useComputerPlayers hook
-  useEffect(() => {
-    // Computer should not guess if results are shown
-    if (!currentRound || currentRound.completed || !currentGame || showResults) {
-      return;
-    }
-
-    const computerPlayers = currentGame.players.filter(p => p.isComputer);
-    if (computerPlayers.length === 0) return;
-
-    const currentGuesses = currentRound.guesses || [];
-    const computersWhoHaventGuessed = computerPlayers.filter(player =>
-      !currentGuesses.some(guess => guess.playerId === player.id)
-    );
-
-    if (computersWhoHaventGuessed.length === 0) return;
-
-    const computerGuessTimer = setTimeout(() => {
-      setCurrentRound(currentRoundState => { // setCurrentRound from useRoundManagement
-        // Stale closure check: ensure this update is for the intended round and game state
-        if (!currentRoundState || currentRoundState.id !== currentRound?.id || currentRoundState.completed || !currentGame) {
-          return currentRoundState;
-        }
-
-        const latestGuesses = currentRoundState.guesses || [];
-        // Re-check which computers haven't guessed using the most up-to-date currentRoundState
-        const stillNeedToGuess = currentGame.players.filter(p =>
-          p.isComputer &&
-          !latestGuesses.some(guess => guess.playerId === p.id)
-        );
-
-        if (stillNeedToGuess.length === 0) {
-          return currentRoundState; // All computers guessed while timeout was pending
-        }
-
-        const computerPlayerGuesses: Guess[] = stillNeedToGuess.map(player => {
-          const guessDetails = generateComputerGuess(currentRoundState.city, player.accuracy || 0.5);
-          const distance = calculateDistance(currentRoundState.city.lat, currentRoundState.city.lng, guessDetails.lat, guessDetails.lng);
-          const bonus = calculateBonusPoints(distance);
-          return {
-            playerId: player.id,
-            lat: guessDetails.lat,
-            lng: guessDetails.lng,
-            distance,
-            placementPoints: 0,
-            bonusPoints: bonus,
-            totalPoints: 0,
-            placement: 0,
-            timestamp: Date.now() + Math.random() * 1000,
-          };
-        });
-
-        const updatedGuesses = [...latestGuesses, ...computerPlayerGuesses];
-        const newRoundWithComputerGuesses = {
-          ...currentRoundState,
-          guesses: updatedGuesses
-        };
-
-        const totalPlayers = currentGame.players.length;
-        const totalGuessesMade = newRoundWithComputerGuesses.guesses.length;
-
-        if (totalGuessesMade >= totalPlayers) {
-          // All players (including these computers) have now guessed.
-          // Schedule the round end logic.
-          setTimeout(() => {
-            handleRoundEndForTimerOrAllGuessed();
-          }, 100); // Small delay for state to settle.
-        }
-
-        return newRoundWithComputerGuesses;
-      });
-    }, 2000 + Math.random() * 3000); // Computers guess between 2-5 seconds
-
-    return () => clearTimeout(computerGuessTimer);
-  }, [currentRound, currentGame, showResults, setCurrentRound, handleRoundEndForTimerOrAllGuessed]);
 
 
   // Check if a player (human or computer) has made a guess in the current round
@@ -226,30 +105,22 @@ export default function Game() {
     const playerScoresMap = new Map<string, number>();
     currentGame.players.forEach(p => playerScoresMap.set(p.id, 0));
 
-    // Scores from already completed rounds
-    completedRounds.forEach(round => { // completedRounds from useRoundManagement
-      round.guesses.forEach(guess => {
-        if (guess.totalPoints && playerScoresMap.has(guess.playerId)) {
-          playerScoresMap.set(guess.playerId, (playerScoresMap.get(guess.playerId) || 0) + guess.totalPoints);
-        }
-      });
+    // Calculate scores from all completed rounds
+    currentGame.rounds.forEach(round => {
+      if (round.completed) {
+        round.guesses.forEach(guess => {
+          if (guess.totalPoints && playerScoresMap.has(guess.playerId)) {
+            playerScoresMap.set(guess.playerId, (playerScoresMap.get(guess.playerId) || 0) + guess.totalPoints);
+          }
+        });
+      }
     });
-
-    // If current round's results are being shown, add its scores to the live scoreboard
-    // This ensures scoreboard updates immediately when round results are shown, before "Next Round" is clicked.
-    if (showResults && currentRound && currentRound.completed && !completedRounds.find(cr => cr.id === currentRound.id)) {
-      currentRound.guesses.forEach(guess => {
-        if (guess.totalPoints && playerScoresMap.has(guess.playerId)) {
-          playerScoresMap.set(guess.playerId, (playerScoresMap.get(guess.playerId) || 0) + guess.totalPoints);
-        }
-      });
-    }
 
     return currentGame.players.map(player => ({
       ...player,
       totalScore: playerScoresMap.get(player.id) || 0,
     })).sort((a, b) => b.totalScore - a.totalScore);
-  }, [currentGame, completedRounds, currentRound, showResults]);
+  }, [currentGame]);
 
 
   if (!currentGame || !currentRound) { // currentRound from useRoundManagement
@@ -282,7 +153,7 @@ export default function Game() {
                   </div>
                   <button
                     onClick={() => {
-                      clearGame(); // from useGame
+                      leaveGame();
                       navigate("/");
                     }}
                     className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-md"
@@ -296,11 +167,11 @@ export default function Game() {
                 <WorldMap
                   key={currentRound.id}
                   targetCity={currentRound.city}
-                  onMapClick={showResults || hasGuessed ? undefined : handleMapClick} // Disable clicking when results shown or already guessed
+                  onMapClick={showResults || hasPlayerGuessed ? undefined : handleMapClick} // Disable clicking when results shown or already guessed
                   guesses={(() => {
                     const currentGuesses = currentRound.guesses || [];
                     // Hide computer guesses until human player has guessed (unless showing results)
-                    const visibleGuesses = showResults || hasGuessed 
+                    const visibleGuesses = showResults || hasPlayerGuessed 
                       ? currentGuesses 
                       : currentGuesses.filter(guess => {
                           const player = currentGame.players.find(p => p.id === guess.playerId);
@@ -377,13 +248,13 @@ export default function Game() {
                 </div>
               )}
 
-              {!hasGuessed && !showResults && currentRound && ( // hasGuessed from usePlayerInteraction, showResults is UI state
+              {!hasPlayerGuessed && !showResults && currentRound && (
                 <div className="text-center text-gray-600">
                   <p>Click on the map to guess where <strong>{currentRound.city.name}, {currentRound.city.country}</strong> is located!</p>
                 </div>
               )}
 
-              {hasGuessed && !showResults && currentRound && ( // hasGuessed from usePlayerInteraction
+              {hasPlayerGuessed && !showResults && currentRound && (
                 <div className="text-center text-gray-600">
                   <p>✅ Guess submitted! Waiting for other players...</p>
                   {(() => {

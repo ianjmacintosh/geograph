@@ -1,6 +1,6 @@
-import { createContext, useContext, useReducer, type ReactNode } from 'react';
+import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
 import type { Game, GameState, Player, FinalResults } from '../types/game';
-import { createComputerPlayer } from '../utils/game';
+import { useWebSocket, type WebSocketMessage } from '../hooks/useWebSocket';
 
 type GameAction =
   | { type: 'SET_GAME'; payload: Game }
@@ -11,7 +11,9 @@ type GameAction =
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'CLEAR_GAME' }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<Game['settings']> }
-  | { type: 'FINISH_GAME'; payload: FinalResults };
+  | { type: 'FINISH_GAME'; payload: FinalResults }
+  | { type: 'SET_CONNECTION_STATUS'; payload: string }
+  | { type: 'SET_PLAYER_ID'; payload: string };
 
 const initialState: GameState = {
   currentGame: null,
@@ -19,7 +21,18 @@ const initialState: GameState = {
   error: null,
 };
 
-function gameReducer(state: GameState, action: GameAction): GameState {
+interface ExtendedGameState extends GameState {
+  connectionStatus: string;
+  playerId: string;
+}
+
+const initialExtendedState: ExtendedGameState = {
+  ...initialState,
+  connectionStatus: 'disconnected',
+  playerId: '',
+};
+
+function gameReducer(state: ExtendedGameState, action: GameAction): ExtendedGameState {
   switch (action.type) {
     case 'SET_GAME':
       return {
@@ -65,7 +78,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         error: action.payload,
       };
     case 'CLEAR_GAME':
-      return initialState;
+      return {
+        ...initialExtendedState,
+        connectionStatus: state.connectionStatus,
+        playerId: '',
+      };
     case 'UPDATE_SETTINGS':
       if (!state.currentGame) return state;
       return {
@@ -84,9 +101,19 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         currentGame: {
           ...state.currentGame,
-          status: 'finished',
+          status: 'finished' as const,
           finalResults: action.payload,
         },
+      };
+    case 'SET_CONNECTION_STATUS':
+      return {
+        ...state,
+        connectionStatus: action.payload,
+      };
+    case 'SET_PLAYER_ID':
+      return {
+        ...state,
+        playerId: action.payload,
       };
     default:
       return state;
@@ -94,101 +121,204 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 }
 
 const GameContext = createContext<{
-  state: GameState;
+  state: ExtendedGameState;
   dispatch: React.Dispatch<GameAction>;
 } | null>(null);
 
+const GameWebSocketContext = createContext<{
+  sendMessage: (type: string, payload?: any) => void;
+  isConnected: boolean;
+} | null>(null);
+
 export function GameProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(gameReducer, initialState);
+  const [state, dispatch] = useReducer(gameReducer, initialExtendedState);
+  
+  // WebSocket configuration
+  const getWebSocketUrl = () => {
+    if (typeof window === 'undefined') return undefined; // SSR guard
+    
+    if (process.env.NODE_ENV === 'development') {
+      // Development: Direct connection to WebSocket server
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.hostname;
+      const port = '8080';
+      return `${protocol}//${host}:${port}`;
+    } else {
+      // Production: Use Nginx proxy path
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host; // includes port if any
+      return `${protocol}//${host}/ws`;
+    }
+  };
+  
+  const handleWebSocketMessage = (message: WebSocketMessage) => {
+    console.log('📩 Received WebSocket message:', message.type, message.payload);
+    
+    switch (message.type) {
+      case 'GAME_CREATED':
+      case 'GAME_JOINED':
+      case 'RECONNECTED':
+        dispatch({ type: 'SET_GAME', payload: message.payload.game });
+        dispatch({ type: 'SET_PLAYER_ID', payload: message.payload.playerId });
+        dispatch({ type: 'SET_LOADING', payload: false });
+        break;
+        
+      case 'PLAYER_JOINED':
+      case 'COMPUTER_PLAYERS_ADDED':
+        dispatch({ type: 'SET_GAME', payload: message.payload.game });
+        break;
+        
+      case 'GAME_STARTED':
+      case 'ROUND_STARTED':
+        dispatch({ type: 'SET_GAME', payload: message.payload.game });
+        break;
+        
+      case 'GAME_FINISHED':
+        dispatch({ type: 'SET_GAME', payload: message.payload.game });
+        break;
+        
+      case 'PLAYER_GUESSED':
+        // Update UI to show that a player has guessed
+        // The actual game state will be updated when round results are revealed
+        break;
+        
+      case 'ROUND_RESULTS':
+        dispatch({ type: 'SET_GAME', payload: message.payload.game });
+        break;
+        
+      case 'PLAYER_LEFT':
+      case 'PLAYER_DISCONNECTED':
+        // Handle player leaving/disconnecting
+        break;
+        
+      case 'ERROR':
+        dispatch({ type: 'SET_ERROR', payload: message.payload.message });
+        dispatch({ type: 'SET_LOADING', payload: false });
+        break;
+        
+      default:
+        console.warn('Unknown WebSocket message type:', message.type);
+    }
+  };
+  
+  const {
+    connectionStatus,
+    sendMessage,
+    isConnected
+  } = useWebSocket({
+    url: getWebSocketUrl(),
+    onMessage: handleWebSocketMessage,
+    onConnect: () => {
+      dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'connected' });
+      console.log('🔗 WebSocket connected');
+    },
+    onDisconnect: () => {
+      dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'disconnected' });
+      console.log('📱 WebSocket disconnected');
+    },
+    onError: (error) => {
+      dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'error' });
+      dispatch({ type: 'SET_ERROR', payload: 'Connection error' });
+      console.error('❌ WebSocket error:', error);
+    }
+  });
+  
+  useEffect(() => {
+    dispatch({ type: 'SET_CONNECTION_STATUS', payload: connectionStatus });
+  }, [connectionStatus]);
 
   return (
     <GameContext.Provider value={{ state, dispatch }}>
-      {children}
+      <GameWebSocketContext.Provider value={{ sendMessage, isConnected }}>
+        {children}
+      </GameWebSocketContext.Provider>
     </GameContext.Provider>
   );
 }
 
 export function useGame() {
   const context = useContext(GameContext);
+  const wsContext = useContext(GameWebSocketContext);
+  
   if (!context) {
     throw new Error('useGame must be used within a GameProvider');
   }
+  
+  if (!wsContext) {
+    throw new Error('useGame must be used within a GameProvider with WebSocket context');
+  }
 
   const { state, dispatch } = context;
+  const { sendMessage, isConnected } = wsContext;
 
-  const createGame = (game: Game) => {
-    dispatch({ type: 'SET_GAME', payload: game });
+  const createGame = (playerName: string) => {
+    if (!isConnected) {
+      dispatch({ type: 'SET_ERROR', payload: 'Not connected to server' });
+      return;
+    }
+    
+    dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({ type: 'SET_ERROR', payload: null });
+    sendMessage('CREATE_GAME', { playerName });
   };
 
   const joinGame = (gameCode: string, playerName: string) => {
-    // TODO: Implement actual game joining logic
-    // For now, simulate joining a game
-    dispatch({ type: 'SET_LOADING', payload: true });
+    if (!isConnected) {
+      dispatch({ type: 'SET_ERROR', payload: 'Not connected to server' });
+      return;
+    }
     
-    setTimeout(() => {
-      // Simulate finding/creating a game
-      const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
-      const hostId = generateId();
-      const mockGame: Game = {
-        id: generateId(),
-        code: gameCode,
-        hostId: hostId,
-        players: [
-          { id: hostId, name: 'Host Player', isComputer: false, score: 0 },
-          { id: generateId(), name: playerName, isComputer: false, score: 0 },
-        ],
-        rounds: [],
-        status: 'waiting',
-        settings: {
-          maxPlayers: 8,
-          roundTimeLimit: 30000,
-          totalRounds: 5,
-          cityDifficulty: 'easy',
-        },
-        createdAt: Date.now(),
-      };
-      
-      dispatch({ type: 'SET_GAME', payload: mockGame });
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }, 1000);
+    dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({ type: 'SET_ERROR', payload: null });
+    sendMessage('JOIN_GAME', { gameCode, playerName });
   };
 
   const addComputerPlayers = (count: number = 3) => {
-    if (!state.currentGame) return;
-    
-    const computerNames = ['Alex', 'Sam', 'Jordan', 'Casey', 'Taylor', 'Morgan', 'Riley', 'Avery', 'Quinn', 'Sage'];
-    
-    // Get all currently used names
-    const usedNames = state.currentGame.players.map(p => p.name);
-    
-    // Filter out already used names
-    const availableNames = computerNames.filter(name => !usedNames.includes(name));
-    
-    // Limit count to available names
-    const actualCount = Math.min(count, availableNames.length);
-    
-    // Create players with unique names
-    const newPlayers: Player[] = [];
-    for (let i = 0; i < actualCount; i++) {
-      const name = availableNames[i]; // Take names in order to ensure uniqueness
-      const computerPlayer = createComputerPlayer(name);
-      newPlayers.push(computerPlayer);
+    if (!isConnected) {
+      dispatch({ type: 'SET_ERROR', payload: 'Not connected to server' });
+      return;
     }
     
-    // Add all players at once
-    newPlayers.forEach(player => {
-      dispatch({ type: 'ADD_PLAYER', payload: player });
-    });
+    sendMessage('ADD_COMPUTER_PLAYERS', { count });
   };
 
   const startGame = () => {
-    if (state.currentGame && state.currentGame.players.length >= 1) {
-      dispatch({ type: 'START_GAME' });
+    if (!isConnected) {
+      dispatch({ type: 'SET_ERROR', payload: 'Not connected to server' });
+      return;
     }
+    
+    sendMessage('START_GAME');
+  };
+
+  const makeGuess = (lat: number, lng: number) => {
+    if (!isConnected) {
+      dispatch({ type: 'SET_ERROR', payload: 'Not connected to server' });
+      return;
+    }
+    
+    sendMessage('MAKE_GUESS', { lat, lng });
+  };
+
+  const nextRound = () => {
+    if (!isConnected) {
+      dispatch({ type: 'SET_ERROR', payload: 'Not connected to server' });
+      return;
+    }
+    
+    sendMessage('NEXT_ROUND');
+  };
+
+  const leaveGame = () => {
+    if (!isConnected) return;
+    
+    sendMessage('LEAVE_GAME');
+    dispatch({ type: 'CLEAR_GAME' });
   };
 
   const clearGame = () => {
     dispatch({ type: 'CLEAR_GAME' });
+    dispatch({ type: 'SET_PLAYER_ID', payload: '' });
   };
 
   const updateSettings = (settings: Partial<Game['settings']>) => {
@@ -205,8 +335,14 @@ export function useGame() {
     joinGame,
     addComputerPlayers,
     startGame,
+    makeGuess,
+    nextRound,
+    leaveGame,
     clearGame,
     updateSettings,
     finishGame,
+    connectionStatus: state.connectionStatus,
+    playerId: state.playerId,
+    isConnected,
   };
 }
