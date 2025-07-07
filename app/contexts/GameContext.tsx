@@ -137,7 +137,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const getWebSocketUrl = () => {
     if (typeof window === 'undefined') return undefined; // SSR guard
     
-    if (process.env.NODE_ENV === 'development') {
+    // Check if we're in development (localhost or explicit dev env)
+    const isDevelopment = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1' ||
+                         (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development');
+    
+    if (isDevelopment) {
       // Development: Direct connection to WebSocket server
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.hostname;
