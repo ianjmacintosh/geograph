@@ -1,5 +1,5 @@
 // PM2 Configuration for Nanode 1GB
-module.exports = {
+export default {
   apps: [
     {
       name: 'geograph-websocket',

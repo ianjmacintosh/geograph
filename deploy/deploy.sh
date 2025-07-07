@@ -10,7 +10,7 @@ echo "🚀 Starting Geograph deployment..."
 # Configuration
 APP_DIR="/opt/geograph"
 APP_USER="geograph"
-DOMAIN="your-domain.com"  # Replace with your actual domain
+DOMAIN="ecobox.ianjmacintosh.com"  # Replace with your actual domain
 DB_DIR="/var/lib/geograph"
 LOG_DIR="/var/log/geograph"
 

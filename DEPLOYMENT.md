@@ -26,14 +26,14 @@
 # On your Linode server
 sudo mkdir -p /opt/geograph
 sudo chown $USER:$USER /opt/geograph
-git clone https://github.com/yourusername/geograph.git /opt/geograph
+git clone https://github.com/ianjmacintosh/geograph.git /opt/geograph
 ```
 
 **Option B: SCP Upload**
 ```bash
 # From your local machine
-scp -r /path/to/geograph user@your-server-ip:/tmp/
-ssh user@your-server-ip "sudo mv /tmp/geograph /opt/"
+scp -r /path/to/geograph imacinto@66.228.47.210:/tmp/
+ssh imacinto@66.228.47.210 "sudo mv /tmp/geograph /opt/"
 ```
 
 ### Step 3: Run Deployment Script
@@ -43,6 +43,21 @@ ssh user@your-server-ip "sudo mv /tmp/geograph /opt/"
 cd /opt/geograph
 chmod +x deploy/deploy.sh
 ./deploy/deploy.sh
+```
+
+**⚠️ Troubleshooting Common Issues:**
+
+If you encounter "dubious ownership" git errors:
+```bash
+# Fix repository ownership (script creates 'geograph' user)
+sudo chown -R geograph:geograph /opt/geograph
+```
+
+If build fails with "react-router: not found":
+```bash
+# Install all dependencies (including dev dependencies)
+sudo -u geograph bash -c "cd /opt/geograph && npm ci"
+sudo -u geograph bash -c "cd /opt/geograph && npm run build"
 ```
 
 The script will:
