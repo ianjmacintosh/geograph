@@ -206,26 +206,31 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   };
   
+  // Debug the WebSocket URL
+  const wsUrl = getWebSocketUrl();
+  console.log('🔍 WebSocket URL:', wsUrl);
+  
   const {
     connectionStatus,
     sendMessage,
     isConnected
   } = useWebSocket({
-    url: getWebSocketUrl(),
+    url: wsUrl,
     onMessage: handleWebSocketMessage,
     onConnect: () => {
       dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'connected' });
-      console.log('🔗 WebSocket connected');
+      console.log('🔗 WebSocket connected to:', wsUrl);
     },
     onDisconnect: () => {
       dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'disconnected' });
-      console.log('📱 WebSocket disconnected');
+      console.log('📱 WebSocket disconnected from:', wsUrl);
     },
     onError: (error) => {
       dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'error' });
       dispatch({ type: 'SET_ERROR', payload: 'Connection error' });
-      console.error('❌ WebSocket error:', error);
-    }
+      console.error('❌ WebSocket error:', error, 'URL was:', wsUrl);
+    },
+    autoReconnect: false // Disable auto-reconnect temporarily
   });
   
   useEffect(() => {
