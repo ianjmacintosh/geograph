@@ -3,9 +3,8 @@ export default {
   apps: [
     {
       name: 'geograph-websocket',
-      script: 'app/server/index.ts',
+      script: 'build/server/index.js',
       interpreter: 'node',
-      interpreter_args: '-r tsx/cjs',
       instances: 1,
       env: {
         NODE_ENV: 'production',
