@@ -50,7 +50,7 @@ describe('useRoundManagement', () => {
   let mockGetRandomCity: ReturnType<typeof vi.fn>;
   let mockUpdateRoundWithPlacements: ReturnType<typeof vi.fn>;
 
-  const setupHook = (gameProps: Partial<Game> = {}, initialRoundNumber = 1) => {
+  const setupHook = async (gameProps: Partial<Game> = {}, initialRoundNumber = 1) => {
     const currentGameData = { ...mockBaseGame, ...gameProps };
 
     // Reset mocks for each test run using this setup
@@ -61,7 +61,8 @@ describe('useRoundManagement', () => {
 
 
     // Dynamically update the mock for useGame for this specific test
-    vi.mocked(await import('../../contexts/GameContext')).useGame.mockReturnValue({
+    const { useGame } = await import('../../contexts/GameContext');
+    vi.mocked(useGame).mockReturnValue({
       currentGame: currentGameData,
       finishGame: mockFinishGameContext,
       clearGame: vi.fn(), // or any other functions needed from useGame
@@ -69,7 +70,8 @@ describe('useRoundManagement', () => {
     } as any); // Using 'as any' to simplify mock structure for test
 
     // Dynamically update mock for useNavigate
-     vi.mocked(await import('react-router')).useNavigate.mockReturnValue(mockNavigate);
+    const { useNavigate } = await import('react-router');
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
 
     // Dynamically update mock for getRandomCityByDifficulty
     const citiesMock = await import('../../data/cities');
