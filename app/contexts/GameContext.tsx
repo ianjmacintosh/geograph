@@ -215,7 +215,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     sendMessage,
     isConnected
   } = useWebSocket({
-    url: wsUrl,
+    url: typeof window !== 'undefined' ? wsUrl : undefined, // Only connect on client side
     onMessage: handleWebSocketMessage,
     onConnect: () => {
       dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'connected' });
@@ -231,8 +231,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       console.error('❌ WebSocket error:', error, 'URL was:', wsUrl);
     },
     autoReconnect: true,
-    reconnectAttempts: 2, // Only try twice
-    reconnectDelay: 10000 // Wait 10 seconds between attempts
+    reconnectAttempts: 5,
+    reconnectDelay: 3000
   });
   
   useEffect(() => {
