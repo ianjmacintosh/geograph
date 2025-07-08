@@ -8,7 +8,7 @@
     "dev:network": "concurrently \"npm run dev:websocket\" \"react-router dev --host\"",
     "dev:websocket": "tsx app/server/index.ts",
     "start": "concurrently \"npm run start:websocket\" \"react-router-serve ./build/server/index.js\"",
-    "start:railway": "node server.js",
+    "start:railway": "ls -la && pwd && node ./server.js",
     "start:websocket": "tsx app/server/index.ts",
     "typecheck": "react-router typegen && tsc",
     "test": "vitest",
