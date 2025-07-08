@@ -28,7 +28,6 @@ const httpServer = createServer((req, res) => {
   }
   
   // Handle all other requests with React Router
-  // React Router should handle static assets automatically
   requestHandler(req, res);
 });
 
