@@ -27,10 +27,10 @@ export class GameManager {
   private db = getDatabase();
   private activeTimers = new Map<string, NodeJS.Timeout>();
   
-  private getWebSocketServer() {
+  private async getWebSocketServer() {
     // Import here to avoid circular dependency
     try {
-      const { getWebSocketServer } = require('./websocket');
+      const { getWebSocketServer } = await import('./websocket.js');
       return getWebSocketServer();
     } catch (error) {
       console.warn('WebSocket server not available:', error);
@@ -272,7 +272,7 @@ export class GameManager {
     }
   }
 
-  private endRound(gameId: string, roundId: string) {
+  private async endRound(gameId: string, roundId: string) {
     const game = this.db.getGameById(gameId);
     if (!game) return;
     
@@ -344,7 +344,7 @@ export class GameManager {
     this.clearRoundTimer(roundId);
     
     // Notify clients about round end via WebSocket
-    const wsServer = this.getWebSocketServer();
+    const wsServer = await this.getWebSocketServer();
     if (wsServer) {
       const updatedGame = this.db.getGameById(gameId);
       wsServer.revealRoundResults(gameId, {
