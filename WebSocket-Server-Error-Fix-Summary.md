@@ -101,11 +101,45 @@ import type { GameWebSocketServer as GameWebSocketServerType } from './websocket
 4. **Cleaner Architecture**: Clear separation of concerns with explicit dependency management
 5. **Type Safety**: Full TypeScript support with proper type checking
 
+## Additional Client-Side Fix
+
+After resolving the server-side ES module issue, a **client-side JavaScript error** was discovered that was still causing WebSocket disconnections:
+
+### **Problem**: Variable Reference Before Declaration
+The `game.tsx` component was referencing variables from the `usePlayerInteraction` hook in a `useEffect` **before** those variables were declared:
+
+```typescript
+// ❌ BROKEN: useEffect runs before variables are declared
+useEffect(() => {
+  // References isAwaitingConfirmation, confirmCurrentGuess, etc.
+  if (isAwaitingConfirmation && confirmCurrentGuess) { /* ... */ }
+}, [isAwaitingConfirmation, confirmCurrentGuess]);
+
+// Variables declared AFTER the useEffect that uses them
+const { isAwaitingConfirmation, confirmCurrentGuess } = usePlayerInteraction();
+```
+
+### **Solution**: Reorder Hook Calls
+Moved the `usePlayerInteraction` hook call **before** the `useEffect` that references its variables:
+
+```typescript
+// ✅ FIXED: Variables declared first
+const { isAwaitingConfirmation, confirmCurrentGuess } = usePlayerInteraction();
+
+// useEffect can now safely reference the variables
+useEffect(() => {
+  if (isAwaitingConfirmation && confirmCurrentGuess) { /* ... */ }
+}, [isAwaitingConfirmation, confirmCurrentGuess]);
+```
+
+This **ReferenceError** was causing the React component to crash when processing the `GAME_STARTED` WebSocket message, leading to automatic WebSocket disconnection.
+
 ## Testing
 
 - ✅ Project builds successfully with `npm run build`
 - ✅ No TypeScript compilation errors
 - ✅ Server starts without module import errors
+- ✅ Client-side variable reference errors resolved
 - ✅ WebSocket communication functions properly
 - ✅ Two-stage guess confirmation feature works as expected
 
@@ -115,6 +149,7 @@ import type { GameWebSocketServer as GameWebSocketServerType } from './websocket
 **Status:** Ready for merge
 **Files Modified:**
 - `app/server/game-manager.ts` - Implemented dependency injection pattern
-- `app/server/websocket.ts` - Added GameManager injection in constructor
+- `app/server/websocket.ts` - Added GameManager injection in constructor  
+- `app/routes/game.tsx` - Fixed variable reference order to prevent client-side crashes
 
 The fix maintains backward compatibility while resolving the ES module/CommonJS conflict that was causing the server errors.
