@@ -1,9 +1,8 @@
-// Railway server entry point - testing multi-port approach
+// Railway server entry point - unified HTTP + WebSocket on same port
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 
 const PORT = parseInt(process.env.PORT || '3000');
-const WS_PORT = PORT + 1; // Try WebSocket on different port
 
 console.log('🚂 Starting Railway deployment server...');
 
@@ -12,7 +11,7 @@ if (!process.env.DB_PATH) {
   process.env.DB_PATH = './geograph.db';
 }
 
-// Create HTTP server for healthcheck
+// Create HTTP server
 const httpServer = createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/html' });
   res.end(`
@@ -21,16 +20,24 @@ const httpServer = createServer((req, res) => {
       <head><title>Geograph</title></head>
       <body>
         <h1>Geograph Server</h1>
-        <p>HTTP Server on port: ${PORT}</p>
-        <p>WebSocket Server on port: ${WS_PORT}</p>
-        <p>Testing multi-port approach...</p>
+        <p>Unified HTTP + WebSocket server on port: ${PORT}</p>
+        <p>Testing single-port approach...</p>
         <script>
           console.log('Testing WebSocket connection...');
-          const ws = new WebSocket('ws://localhost:${WS_PORT}');
+          const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+          const ws = new WebSocket(protocol + '//' + window.location.host + '/ws');
+          
           ws.onopen = () => {
             console.log('WebSocket connected!');
             document.body.innerHTML += '<p style="color: green;">✅ WebSocket connected successfully!</p>';
+            ws.send('Hello from client!');
           };
+          
+          ws.onmessage = (event) => {
+            console.log('Received:', event.data);
+            document.body.innerHTML += '<p style="color: blue;">📩 Received: ' + event.data + '</p>';
+          };
+          
           ws.onerror = (error) => {
             console.error('WebSocket error:', error);
             document.body.innerHTML += '<p style="color: red;">❌ WebSocket connection failed</p>';
@@ -41,10 +48,10 @@ const httpServer = createServer((req, res) => {
   `);
 });
 
-// Create WebSocket server on different port
+// Create WebSocket server attached to HTTP server
 const wss = new WebSocketServer({ 
-  port: WS_PORT,
-  host: '0.0.0.0'
+  server: httpServer,
+  path: '/ws'
 });
 
 wss.on('connection', (ws) => {
@@ -53,6 +60,7 @@ wss.on('connection', (ws) => {
   
   ws.on('message', (message) => {
     console.log('📩 Received:', message.toString());
+    ws.send('Echo: ' + message.toString());
   });
   
   ws.on('close', () => {
@@ -60,17 +68,15 @@ wss.on('connection', (ws) => {
   });
 });
 
-// Start HTTP server
+// Start unified server
 httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 HTTP server running on port ${PORT}`);
+  console.log(`🚀 Unified HTTP + WebSocket server running on port ${PORT}`);
+  console.log(`📱 WebSocket available at /ws path`);
 });
-
-// WebSocket server starts automatically on port
-console.log(`🎮 WebSocket server running on port ${WS_PORT}`);
 
 // Graceful shutdown
 process.on('SIGINT', () => {
-  console.log('🛑 Shutting down servers...');
+  console.log('🛑 Shutting down server...');
   wss.close();
   httpServer.close(() => {
     process.exit(0);
@@ -78,7 +84,7 @@ process.on('SIGINT', () => {
 });
 
 process.on('SIGTERM', () => {
-  console.log('🛑 Shutting down servers...');
+  console.log('🛑 Shutting down server...');
   wss.close();
   httpServer.close(() => {
     process.exit(0);
