@@ -20,11 +20,34 @@ const requestHandler = createRequestListener({
   mode: process.env.NODE_ENV || 'production'
 });
 
+// Import fs and path at top level
+import { readFileSync } from 'fs';
+import { join, extname } from 'path';
+
 // Create HTTP server with React Router
 const httpServer = createServer((req, res) => {
   // Handle WebSocket upgrade requests
   if (req.url?.startsWith('/ws')) {
     return; // Let WebSocket server handle this
+  }
+  
+  // Handle static assets from build/client
+  if (req.url?.startsWith('/assets/')) {
+    const filePath = join('./build/client', req.url);
+    
+    try {
+      const content = readFileSync(filePath);
+      const ext = extname(req.url);
+      const contentType = ext === '.js' ? 'application/javascript' : 
+                         ext === '.css' ? 'text/css' : 
+                         'application/octet-stream';
+      
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(content);
+      return;
+    } catch (error) {
+      // File not found, fall through to React Router
+    }
   }
   
   // Handle all other requests with React Router
