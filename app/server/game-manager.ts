@@ -223,52 +223,53 @@ export class GameManager {
   }
 
   private triggerComputerGuesses(gameId: string, roundId: string) {
-    // Add a small delay to make it feel more natural
-    setTimeout(() => {
-      const game = this.db.getGameById(gameId);
-      if (!game) return;
-      
-      const currentRound = game.rounds.find(r => r.id === roundId);
-      if (!currentRound || currentRound.completed) return;
-      
-      const computerPlayers = game.players.filter(p => p.isComputer);
-      
-      for (const computer of computerPlayers) {
-        // Check if computer hasn't guessed yet
-        if (!currentRound.guesses.some(g => g.playerId === computer.id)) {
-          const computerGuessPos = generateComputerGuess(currentRound.city, computer.accuracy || 0.5);
-          const distance = calculateDistance(
-            computerGuessPos.lat, 
-            computerGuessPos.lng, 
-            currentRound.city.lat, 
-            currentRound.city.lng
-          );
-          const bonusPoints = calculateBonusPoints(distance);
-          
-          const guess: Guess = {
-            playerId: computer.id,
-            lat: computerGuessPos.lat,
-            lng: computerGuessPos.lng,
-            distance,
-            placementPoints: 0,
-            bonusPoints,
-            totalPoints: bonusPoints,
-            placement: 0,
-            timestamp: Date.now()
-          };
-          
-          this.db.addGuess(roundId, guess);
-        }
+    const game = this.db.getGameById(gameId);
+    if (!game) return;
+    
+    const currentRound = game.rounds.find(r => r.id === roundId);
+    if (!currentRound || currentRound.completed) return;
+    
+    const computerPlayers = game.players.filter(p => p.isComputer);
+    
+    console.log(`🤖 Triggering guesses for ${computerPlayers.length} computer players`);
+    
+    for (const computer of computerPlayers) {
+      // Check if computer hasn't guessed yet
+      if (!currentRound.guesses.some(g => g.playerId === computer.id)) {
+        const computerGuessPos = generateComputerGuess(currentRound.city, computer.accuracy || 0.5);
+        const distance = calculateDistance(
+          computerGuessPos.lat, 
+          computerGuessPos.lng, 
+          currentRound.city.lat, 
+          currentRound.city.lng
+        );
+        const bonusPoints = calculateBonusPoints(distance);
+        
+        const guess: Guess = {
+          playerId: computer.id,
+          lat: computerGuessPos.lat,
+          lng: computerGuessPos.lng,
+          distance,
+          placementPoints: 0,
+          bonusPoints,
+          totalPoints: bonusPoints,
+          placement: 0,
+          timestamp: Date.now()
+        };
+        
+        this.db.addGuess(roundId, guess);
+        console.log(`🎯 Computer player ${computer.name} guessed (${distance.toFixed(0)}km away)`);
       }
-      
-      // Check if round should end (all players have guessed)
-      const updatedGame = this.db.getGameById(gameId)!;
-      const updatedRound = updatedGame.rounds.find(r => r.id === roundId)!;
-      
-      if (updatedRound.guesses.length === game.players.length) {
-        this.endRound(gameId, roundId);
-      }
-    }, 1000 + Math.random() * 2000); // 1-3 second delay
+    }
+    
+    // Check if round should end (all players have guessed)
+    const updatedGame = this.db.getGameById(gameId)!;
+    const updatedRound = updatedGame.rounds.find(r => r.id === roundId)!;
+    
+    if (updatedRound.guesses.length === game.players.length) {
+      console.log(`🏁 All players have guessed - ending round ${roundId}`);
+      this.endRound(gameId, roundId);
+    }
   }
 
   private endRound(gameId: string, roundId: string) {
