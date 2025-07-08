@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build",
+    "build": "react-router build && cp server.js build/server.js",
     "dev": "concurrently \"npm run dev:websocket\" \"react-router dev\"",
     "dev:network": "concurrently \"npm run dev:websocket\" \"react-router dev --host\"",
     "dev:websocket": "tsx app/server/index.ts",
