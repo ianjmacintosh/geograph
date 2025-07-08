@@ -35,7 +35,14 @@ export function WorldMap({ onMapClick, targetCity, guesses = [], showTarget = fa
         maxZoom: 18,
         worldCopyJump: true,
         maxBounds: [[-90, -180], [90, 180]],
-        maxBoundsViscosity: 1.0
+        maxBoundsViscosity: 1.0,
+        // Mobile optimization
+        tap: true,
+        tapTolerance: 15,
+        touchZoom: true,
+        bounceAtZoomLimits: false,
+        zoomSnap: 0.5,
+        zoomDelta: 0.5
         // Using default CRS (EPSG3857/Web Mercator) - standard for web maps
       });
 
@@ -147,16 +154,15 @@ export function WorldMap({ onMapClick, targetCity, guesses = [], showTarget = fa
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full h-full relative">
       <div
         ref={mapRef}
-        className="w-full h-96 border border-gray-300 rounded-lg"
-        style={{ height: '400px' }}
+        className="w-full h-full border border-gray-300 rounded-lg touch-manipulation"
       />
       {targetCity && !showTarget && (
-        <div className="mt-2 text-center text-gray-600">
-          <p>Find: <span className="font-semibold">{targetCity.name}</span></p>
-          <p className="text-sm">Click on the map to make your guess</p>
+        <div className="absolute top-2 left-2 right-2 bg-white bg-opacity-90 rounded-lg p-2 text-center text-gray-700 shadow-sm z-10">
+          <p className="text-sm sm:text-base">Find: <span className="font-semibold">{targetCity.name}</span></p>
+          <p className="text-xs sm:text-sm">Tap on the map to make your guess</p>
         </div>
       )}
     </div>

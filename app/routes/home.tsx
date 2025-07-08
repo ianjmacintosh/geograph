@@ -74,7 +74,7 @@ export default function Home() {
           <button
             onClick={handleCreateGame}
             disabled={!playerName.trim() || isLoading || connectionStatus !== 'connected'}
-            className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200"
+            className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200 min-h-[48px] touch-manipulation"
           >
             {isLoading ? "Creating..." : "Create New Game"}
           </button>
@@ -106,7 +106,7 @@ export default function Home() {
           <button
             onClick={handleJoinGame}
             disabled={!playerName.trim() || !isValidGameCode(gameCode) || isLoading || connectionStatus !== 'connected'}
-            className="w-full bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200"
+            className="w-full bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200 min-h-[48px] touch-manipulation"
           >
             {isLoading ? "Joining..." : "Join Game"}
           </button>
