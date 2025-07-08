@@ -4,7 +4,7 @@ import { WebSocketServer } from 'ws';
 import { createRequestListener } from '@react-router/node';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { GameWebSocketServer } from '/app/app/server/websocket.js';
+import { GameWebSocketServer } from './server/websocket.ts';
 
 const PORT = parseInt(process.env.PORT || '3000');
 
