@@ -25,12 +25,18 @@ export class GameWebSocketServer {
   private gameManager: GameManager;
   private db = getDatabase();
 
-  constructor(port: number = 8080) {
-    this.wss = new WebSocketServer({ port });
+  constructor(port?: number, existingWss?: WebSocketServer) {
+    if (existingWss) {
+      this.wss = existingWss;
+    } else {
+      this.wss = new WebSocketServer({ port: port || 8080 });
+    }
     this.gameManager = new GameManager();
     this.setupServer();
     
-    console.log(`🎮 WebSocket server running on port ${port}`);
+    if (!existingWss) {
+      console.log(`🎮 WebSocket server running on port ${port || 8080}`);
+    }
   }
 
   private setupServer() {
