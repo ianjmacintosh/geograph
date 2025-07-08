@@ -26,6 +26,17 @@ export interface GameResult {
 export class GameManager {
   private db = getDatabase();
   private activeTimers = new Map<string, NodeJS.Timeout>();
+  
+  private getWebSocketServer() {
+    // Import here to avoid circular dependency
+    try {
+      const { getWebSocketServer } = require('./websocket');
+      return getWebSocketServer();
+    } catch (error) {
+      console.warn('WebSocket server not available:', error);
+      return null;
+    }
+  }
 
   createGame(hostName: string): Game {
     const hostPlayer = createHumanPlayer(hostName);
@@ -267,6 +278,22 @@ export class GameManager {
     const round = game.rounds.find(r => r.id === roundId);
     if (!round || round.completed) return;
     
+    // Generate guesses for any computer players who haven't guessed yet
+    const playersWhoGuessed = round.guesses.map(g => g.playerId);
+    const computerPlayersWhoNeedToGuess = game.players.filter(p => 
+      p.isComputer && !playersWhoGuessed.includes(p.id)
+    );
+    
+    if (computerPlayersWhoNeedToGuess.length > 0) {
+      console.log(`⏰ Timer expired - generating guesses for ${computerPlayersWhoNeedToGuess.length} computer players`);
+      
+      for (const player of computerPlayersWhoNeedToGuess) {
+        const guess = this.generateComputerGuess(round.city, player);
+        this.db.addGuess(roundId, guess);
+        round.guesses.push(guess);
+      }
+    }
+    
     // Calculate placements and update scores
     const guessesWithDistance = round.guesses.map(g => ({
       playerId: g.playerId,
@@ -294,8 +321,16 @@ export class GameManager {
     // Clear round timer
     this.clearRoundTimer(roundId);
     
-    // Notify clients about round end (this would be called by WebSocket server)
-    // The WebSocket server will handle broadcasting the round results
+    // Notify clients about round end via WebSocket
+    const wsServer = this.getWebSocketServer();
+    if (wsServer) {
+      const updatedGame = this.db.getGameById(gameId);
+      wsServer.revealRoundResults(gameId, {
+        game: updatedGame,
+        round: round,
+        completed: true
+      });
+    }
     
     console.log(`🏁 Round ${roundId} completed for game ${gameId}`);
   }
