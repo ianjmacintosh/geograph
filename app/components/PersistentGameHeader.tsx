@@ -10,6 +10,9 @@ interface PersistentGameHeaderProps {
   leaderName: string;
   leaderScore: number;
   isCurrentPlayerLeader: boolean;
+  isAwaitingConfirmation: boolean;
+  onConfirmGuess: () => void;
+  onShowScoreboard: () => void;
 }
 
 export const PersistentGameHeader = memo(function PersistentGameHeader({
@@ -21,6 +24,9 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
   leaderName,
   leaderScore,
   isCurrentPlayerLeader,
+  isAwaitingConfirmation,
+  onConfirmGuess,
+  onShowScoreboard,
 }: PersistentGameHeaderProps) {
   const isLowTime = timeLeft <= 10;
   const showResults = currentRound?.completed || false;
@@ -28,31 +34,51 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
   return (
     <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
       <div className="px-3 py-2">
-        {/* Top Row: Target Location and Timer */}
+        {/* Top Row: Target Location and Actions */}
         <div className="flex justify-between items-center mb-1">
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-gray-800 truncate">
               🎯 FIND: {currentRound.city.name}, {currentRound.city.country}
             </div>
           </div>
-          {!showResults && (
-            <div className="flex-shrink-0 ml-2">
+          
+          <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
+            {/* Confirm Button (when awaiting confirmation) */}
+            {isAwaitingConfirmation && !showResults && (
+              <button
+                onClick={onConfirmGuess}
+                className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md font-bold text-sm animate-pulse"
+              >
+                CONFIRM GUESS
+              </button>
+            )}
+            
+            {/* Timer (when not awaiting confirmation) */}
+            {!isAwaitingConfirmation && !showResults && (
               <div className={`text-sm font-bold px-2 py-1 rounded ${
                 isLowTime 
                   ? 'text-red-600 bg-red-50 animate-pulse' 
                   : 'text-blue-600 bg-blue-50'
               }`}>
-                {timeLeft}s remaining
+                {timeLeft}s
               </div>
-            </div>
-          )}
-          {showResults && (
-            <div className="flex-shrink-0 ml-2">
+            )}
+            
+            {/* Round Complete indicator */}
+            {showResults && (
               <div className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
-                Round Complete
+                Complete
               </div>
-            </div>
-          )}
+            )}
+            
+            {/* Scores Button */}
+            <button
+              onClick={onShowScoreboard}
+              className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm font-medium"
+            >
+              Scores
+            </button>
+          </div>
         </div>
 
         {/* Bottom Row: Round, Score, Leader */}

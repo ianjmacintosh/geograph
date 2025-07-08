@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { useGame } from "../contexts/GameContext";
 import { WorldMap } from "../components/WorldMap";
 import { PersistentGameHeader } from "../components/PersistentGameHeader";
+import { ScoreboardModal } from "../components/ScoreboardModal";
 import { usePlayerInteraction } from "../hooks/usePlayerInteraction";
 
 export function meta() {
@@ -35,6 +36,9 @@ export default function Game() {
   
   // Timer state for display
   const [timeLeft, setTimeLeft] = useState(0);
+  
+  // Modal state
+  const [isScoreboardModalOpen, setIsScoreboardModalOpen] = useState(false);
 
   const {
     provisionalGuessLocation,
@@ -201,13 +205,16 @@ export default function Game() {
         leaderName={leader?.name || ''}
         leaderScore={leader?.totalScore || 0}
         isCurrentPlayerLeader={isCurrentPlayerLeader}
+        isAwaitingConfirmation={isAwaitingConfirmation}
+        onConfirmGuess={confirmCurrentGuess}
+        onShowScoreboard={() => setIsScoreboardModalOpen(true)}
       />
       
       <div className="max-w-7xl mx-auto p-2 sm:p-4">
 
         <div className="grid lg:grid-cols-4 gap-4 lg:gap-6">
-          {/* Main Game Area */}
-          <div className="lg:col-span-3 order-2 lg:order-1">
+          {/* Main Game Area - Full width on mobile, 3/4 on desktop */}
+          <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-xl p-3 sm:p-6">
               {/* Desktop Header */}
               <div className="hidden lg:flex justify-between items-center mb-6">
@@ -234,7 +241,7 @@ export default function Game() {
               </div>
 
               <div className="mb-4 lg:mb-6">
-                <div className="h-64 sm:h-80 lg:h-96 rounded-lg overflow-hidden">
+                <div className="h-80 sm:h-96 lg:h-96 rounded-lg overflow-hidden">
                   <WorldMap
                     key={currentRound.id} // Keep key to re-mount map on round change if necessary
                     targetCity={currentRound.city}
@@ -262,17 +269,7 @@ export default function Game() {
                 </div>
               </div>
 
-              {/* Confirmation Button */}
-              {isAwaitingConfirmation && provisionalGuessLocation && !hasConfirmedGuessForRound && !showResults && (
-                <div className="my-4 flex justify-center">
-                  <button
-                    onClick={confirmCurrentGuess}
-                    className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-md font-semibold text-base sm:text-lg touch-manipulation"
-                  >
-                    Confirm Guess
-                  </button>
-                </div>
-              )}
+
 
               {/* Target City Indicator */}
               {showResults && currentRound && (
@@ -377,8 +374,8 @@ export default function Game() {
             </div>
           </div>
 
-          {/* Scoreboard */}
-          <div className="lg:col-span-1 order-1 lg:order-2">
+          {/* Scoreboard - Hidden on mobile, visible on desktop */}
+          <div className="hidden lg:block lg:col-span-1">
             <div className="bg-white rounded-lg shadow-xl p-3 sm:p-4">
               <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Scoreboard</h2>
               <div className="space-y-2">
@@ -432,6 +429,18 @@ export default function Game() {
           </div>
         </div>
       </div>
+      
+      {/* Scoreboard Modal for Mobile */}
+      <ScoreboardModal
+        isOpen={isScoreboardModalOpen}
+        onClose={() => setIsScoreboardModalOpen(false)}
+        currentGame={currentGame}
+        playerScores={getPlayerScores()}
+        roundNumber={roundNumber}
+        hasPlayerGuessedThisRound={hasPlayerGuessedThisRound}
+        showResults={showResults}
+        currentRound={currentRound}
+      />
     </div>
   );
 }
