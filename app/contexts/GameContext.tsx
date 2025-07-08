@@ -185,11 +185,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
       case 'GUESS_MADE':
         // Confirmation that our guess was received and processed
         console.log('✅ Guess confirmed:', message.payload.guess);
+        // The server will send updated game state via other messages
         break;
         
       case 'PLAYER_GUESSED':
-        // Update UI to show that a player has guessed
-        // The actual game state will be updated when round results are revealed
+        // A player has made a guess - update the game state to show it
+        console.log('👤 Player guessed:', message.payload.playerName);
+        if (message.payload.game) {
+          dispatch({ type: 'SET_GAME', payload: message.payload.game });
+        }
         break;
         
       case 'ROUND_RESULTS':

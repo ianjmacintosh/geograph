@@ -249,11 +249,13 @@ export class GameWebSocketServer {
         guess: result.guess
       });
       
-      // Broadcast updated round state (without revealing other guesses yet)
+      // Broadcast updated game state so UI can show the guess
+      const updatedGame = this.db.getGameById(ws.gameId);
       this.broadcastToGame(ws.gameId, 'PLAYER_GUESSED', {
         playerId: ws.playerId,
         playerName: ws.playerName,
-        roundId: result.roundId
+        roundId: result.roundId,
+        game: updatedGame
       });
       
       console.log(`🎯 ${ws.playerName} made a guess in game ${ws.gameId}`);
