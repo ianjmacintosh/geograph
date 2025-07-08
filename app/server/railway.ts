@@ -1,7 +1,7 @@
 import { createServer } from 'http';
 import { readFileSync } from 'fs';
 import { WebSocketServer } from 'ws';
-import { GameWebSocketServer } from './websocket';
+import { GameWebSocketServer } from './websocket.js';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 

@@ -2,9 +2,9 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { IncomingMessage } from 'http';
 import { parse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
-import { getDatabase } from './database';
-import { GameManager } from './game-manager';
-import type { Game, Player } from '../types/game';
+import { getDatabase } from './database.js';
+import { GameManager } from './game-manager.js';
+import type { Game, Player } from '../types/game.js';
 
 export interface WebSocketMessage {
   type: string;
