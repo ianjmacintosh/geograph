@@ -134,6 +134,39 @@ useEffect(() => {
 
 This **ReferenceError** was causing the React component to crash when processing the `GAME_STARTED` WebSocket message, leading to automatic WebSocket disconnection.
 
+## Additional Two-Stage Guess UX Fix
+
+After fixing the crashes, a **user experience issue** was discovered with the two-stage guess confirmation feature:
+
+### **Problem**: Provisional Marker Persisted After Confirmation
+The yellow provisional marker (pulsing circle) remained visible and interactive even after the player confirmed their guess and after the round ended.
+
+### **Root Cause**: 
+1. **Incomplete State Cleanup**: The `confirmCurrentGuess` function wasn't clearing the `provisionalGuessLocation` state
+2. **Incorrect Disable Logic**: Map was disabled during confirmation phase, preventing users from adjusting their provisional guess
+
+### **Solution**: 
+1. **Clear Provisional Marker**: Added `setProvisionalGuessLocation(null)` when guess is confirmed
+2. **Fixed Interaction Logic**: Removed `isAwaitingConfirmation` from `isGuessDisabled` condition
+
+```typescript
+// ✅ FIXED: Clear provisional marker when confirmed
+const confirmCurrentGuess = useCallback(() => {
+  makeGuess(provisionalGuessLocation.lat, provisionalGuessLocation.lng);
+  setHasConfirmedGuessForRound(true);
+  setIsAwaitingConfirmation(false);
+  setProvisionalGuessLocation(null); // Clear the yellow marker
+}, []);
+
+// ✅ FIXED: Allow repositioning during confirmation
+isGuessDisabled={showResults || hasConfirmedGuessForRound} // Removed isAwaitingConfirmation
+```
+
+### **Improved User Experience**:
+- **During confirmation**: Users can still click the map to reposition their provisional guess
+- **After confirmation**: Yellow marker disappears, map becomes non-interactive
+- **After round ends**: No provisional markers visible, only final results
+
 ## Testing
 
 - ✅ Project builds successfully with `npm run build`
@@ -141,7 +174,11 @@ This **ReferenceError** was causing the React component to crash when processing
 - ✅ Server starts without module import errors
 - ✅ Client-side variable reference errors resolved
 - ✅ WebSocket communication functions properly
-- ✅ Two-stage guess confirmation feature works as expected
+- ✅ Two-stage guess confirmation feature works correctly:
+  - Click map → provisional yellow marker appears
+  - Click elsewhere → provisional marker moves (repositioning allowed)
+  - Click "Confirm" → provisional marker disappears, map disabled
+  - Round ends → no provisional markers visible, only final results
 
 ## Branch Information
 
@@ -150,6 +187,7 @@ This **ReferenceError** was causing the React component to crash when processing
 **Files Modified:**
 - `app/server/game-manager.ts` - Implemented dependency injection pattern
 - `app/server/websocket.ts` - Added GameManager injection in constructor  
-- `app/routes/game.tsx` - Fixed variable reference order to prevent client-side crashes
+- `app/routes/game.tsx` - Fixed variable reference order + improved map disable logic
+- `app/hooks/usePlayerInteraction.ts` - Fixed provisional marker cleanup after confirmation
 
 The fix maintains backward compatibility while resolving the ES module/CommonJS conflict that was causing the server errors.
