@@ -34,6 +34,20 @@ export default function Game() {
   
   // Timer state for display
   const [timeLeft, setTimeLeft] = useState(0);
+
+  const {
+    provisionalGuessLocation,
+    isAwaitingConfirmation,
+    hasConfirmedGuessForRound,
+    handleSetProvisionalGuess,
+    confirmCurrentGuess,
+    cancelProvisionalGuess,
+    resetPlayerGuessState,
+  } = usePlayerInteraction({
+    currentGame,
+    currentRound,
+    hasPlayerAlreadyGuessedInRound: hasPlayerGuessed, // Pass the existing hasPlayerGuessed
+  });
   
   // Effect 1: Initial Time Calculation (SSR + Client)
   useEffect(() => {
@@ -97,20 +111,6 @@ export default function Game() {
     hasConfirmedGuessForRound,
     playerId
   ]);
-
-  const {
-    provisionalGuessLocation,
-    isAwaitingConfirmation,
-    hasConfirmedGuessForRound,
-    handleSetProvisionalGuess,
-    confirmCurrentGuess,
-    cancelProvisionalGuess,
-    resetPlayerGuessState,
-  } = usePlayerInteraction({
-    currentGame,
-    currentRound,
-    hasPlayerAlreadyGuessedInRound: hasPlayerGuessed, // Pass the existing hasPlayerGuessed
-  });
 
   // Reset guess state when round changes
   useEffect(() => {
