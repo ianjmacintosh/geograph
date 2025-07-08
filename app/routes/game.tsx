@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useGame } from "../contexts/GameContext";
 import { WorldMap } from "../components/WorldMap";
+import { PersistentGameHeader } from "../components/PersistentGameHeader";
+import { ScoreboardModal } from "../components/ScoreboardModal";
 import { usePlayerInteraction } from "../hooks/usePlayerInteraction";
 
 export function meta() {
@@ -34,6 +36,9 @@ export default function Game() {
   
   // Timer state for display
   const [timeLeft, setTimeLeft] = useState(0);
+  
+  // Modal state
+  const [isScoreboardModalOpen, setIsScoreboardModalOpen] = useState(false);
 
   const {
     provisionalGuessLocation,
@@ -171,6 +176,12 @@ export default function Game() {
     })).sort((a, b) => b.totalScore - a.totalScore);
   }, [currentGame]);
 
+  // Calculate leader information for persistent header
+  const playerScores = getPlayerScores();
+  const currentPlayerScore = playerScores.find(p => p.id === playerId)?.totalScore || 0;
+  const leader = playerScores[0];
+  const isCurrentPlayerLeader = leader?.id === playerId;
+
 
   if (!currentGame || !currentRound) { // currentRound from useRoundManagement
     return (
@@ -183,37 +194,27 @@ export default function Game() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-2 sm:p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Mobile Header */}
-        <div className="lg:hidden bg-white rounded-lg shadow-xl p-4 mb-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-gray-800">
-                Round {roundNumber}/{currentGame.settings.totalRounds}
-              </h1>
-              <p className="text-sm text-gray-600">Code: {currentGame.code}</p>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <div className="text-sm sm:text-lg font-semibold">
-                <span className={timeLeft <= 10 ? 'text-red-500' : 'text-blue-600'}>{timeLeft}s</span>
-              </div>
-              <button
-                onClick={() => {
-                  leaveGame();
-                  navigate("/");
-                }}
-                className="px-2 py-1 sm:px-4 sm:py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
-              >
-                Leave
-              </button>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600">
+      {/* Persistent Mobile Header */}
+      <PersistentGameHeader
+        currentGame={currentGame}
+        currentRound={currentRound}
+        timeLeft={timeLeft}
+        roundNumber={roundNumber}
+        currentPlayerScore={currentPlayerScore}
+        leaderName={leader?.name || ''}
+        leaderScore={leader?.totalScore || 0}
+        isCurrentPlayerLeader={isCurrentPlayerLeader}
+        isAwaitingConfirmation={isAwaitingConfirmation}
+        onConfirmGuess={confirmCurrentGuess}
+        onShowScoreboard={() => setIsScoreboardModalOpen(true)}
+      />
+      
+      <div className="max-w-7xl mx-auto p-2 sm:p-4">
 
         <div className="grid lg:grid-cols-4 gap-4 lg:gap-6">
-          {/* Main Game Area */}
-          <div className="lg:col-span-3 order-2 lg:order-1">
+          {/* Main Game Area - Full width on mobile, 3/4 on desktop */}
+          <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-xl p-3 sm:p-6">
               {/* Desktop Header */}
               <div className="hidden lg:flex justify-between items-center mb-6">
@@ -240,7 +241,11 @@ export default function Game() {
               </div>
 
               <div className="mb-4 lg:mb-6">
-                <div className="h-64 sm:h-80 lg:h-96 rounded-lg overflow-hidden">
+                <div className={`rounded-lg overflow-hidden ${
+                  showResults 
+                    ? 'h-48 sm:h-64' // Smaller when showing results
+                    : 'h-[calc(100vh-12rem)] sm:h-[calc(100vh-8rem)]' // Full height during gameplay
+                } lg:h-96`}>
                   <WorldMap
                     key={currentRound.id} // Keep key to re-mount map on round change if necessary
                     targetCity={currentRound.city}
@@ -268,24 +273,14 @@ export default function Game() {
                 </div>
               </div>
 
-              {/* Confirmation Button */}
-              {isAwaitingConfirmation && provisionalGuessLocation && !hasConfirmedGuessForRound && !showResults && (
-                <div className="my-4 flex justify-center">
-                  <button
-                    onClick={confirmCurrentGuess}
-                    className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-md font-semibold text-base sm:text-lg touch-manipulation"
-                  >
-                    Confirm Guess
-                  </button>
-                </div>
-              )}
+
 
               {/* Target City Indicator */}
               {showResults && currentRound && (
-                <div className="mb-4 lg:mb-6 text-center px-2">
-                  <div className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-3 bg-red-100 border border-red-300 rounded-lg max-w-full">
-                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full mr-2 flex-shrink-0"></div>
-                    <span className="text-red-800 font-semibold text-sm sm:text-base break-words">
+                <div className="mb-3 lg:mb-6 text-center px-2">
+                  <div className="inline-flex items-center px-2 py-1 lg:px-4 lg:py-3 bg-red-100 border border-red-300 rounded-lg max-w-full">
+                    <div className="w-3 h-3 lg:w-4 lg:h-4 bg-red-500 rounded-full mr-2 flex-shrink-0"></div>
+                    <span className="text-red-800 font-semibold text-xs lg:text-base break-words">
                       🎯 {currentRound.city.name} is here ({currentRound.city.country})
                     </span>
                   </div>
@@ -293,31 +288,30 @@ export default function Game() {
               )}
 
               {showResults && currentRound && ( // currentRound from useRoundManagement
-                <div className="mb-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="text-lg font-semibold mb-3">Round Results</h3>
-                    <div className="space-y-2">
+                <div className="mb-4">
+                  <div className="bg-gray-50 rounded-lg p-3 lg:p-4">
+                    <h3 className="text-base lg:text-lg font-semibold mb-2 lg:mb-3">Round Results</h3>
+                    <div className="space-y-1 lg:space-y-2">
                       {(currentRound.guesses || []) // Ensure guesses is not null
                         .sort((a, b) => (a.placement || 0) - (b.placement || 0)) // Handle potentially undefined placement
                         .map((guess) => {
                           const player = currentGame.players.find(p => p.id === guess.playerId);
                           const placementEmoji = guess.placement === 1 ? '🥇' : guess.placement === 2 ? '🥈' : guess.placement === 3 ? '🥉' : '👤';
                           return (
-                            <div key={guess.playerId} className="flex justify-between items-center">
-                              <div className="flex items-center space-x-2">
-                                <span className="text-lg">{placementEmoji}</span>
-                                <span className="font-medium">{player?.name}</span>
-                                <span className="text-sm text-gray-500">
-                                  {player?.isComputer ? '(Computer)' : '(You)'}
+                            <div key={guess.playerId} className="flex justify-between items-center py-1">
+                              <div className="flex items-center space-x-1 lg:space-x-2 min-w-0 flex-1">
+                                <span className="text-sm lg:text-lg flex-shrink-0">{placementEmoji}</span>
+                                <span className="font-medium text-sm lg:text-base truncate">{player?.name}</span>
+                                <span className="text-xs lg:text-sm text-gray-500 hidden sm:inline">
+                                  {player?.isComputer ? '(AI)' : '(You)'}
                                 </span>
-                                <span className="text-xs text-gray-400">#{guess.placement}</span>
                               </div>
-                              <div className="text-right">
-                                <div className="font-semibold text-blue-600">{guess.totalPoints || 0} pts</div>
-                                <div className="text-xs text-gray-500">
-                                  {(guess.placementPoints || 0)} place + {(guess.bonusPoints || 0)} bonus
+                              <div className="text-right flex-shrink-0">
+                                <div className="font-semibold text-blue-600 text-sm lg:text-base">{guess.totalPoints || 0}</div>
+                                <div className="text-xs text-gray-500 hidden lg:block">
+                                  {(guess.placementPoints || 0)} + {(guess.bonusPoints || 0)} bonus
                                 </div>
-                                <div className="text-xs text-gray-500">{Math.round(guess.distance || 0)} km away</div>
+                                <div className="text-xs text-gray-500">{Math.round(guess.distance || 0)}km</div>
                               </div>
                             </div>
                           );
@@ -325,10 +319,10 @@ export default function Game() {
                     </div>
 
                     {isHost && (
-                      <div className="mt-4 flex justify-center">
+                      <div className="mt-3 lg:mt-4 flex justify-center">
                         <button
                           onClick={handleNextRound}
-                          className="px-6 py-3 sm:px-8 sm:py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-semibold text-base sm:text-lg min-h-[48px] touch-manipulation"
+                          className="px-4 py-2 lg:px-8 lg:py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-semibold text-sm lg:text-lg min-h-[44px] lg:min-h-[48px] touch-manipulation"
                         >
                           {roundNumber >= currentGame.settings.totalRounds ? 'Final Results' : 'Next Round'}
                         </button>
@@ -336,8 +330,8 @@ export default function Game() {
                     )}
                     
                     {!isHost && (
-                      <div className="mt-4 text-center text-gray-600">
-                        <p className="text-sm">Waiting for host to continue...</p>
+                      <div className="mt-3 lg:mt-4 text-center text-gray-600">
+                        <p className="text-xs lg:text-sm">Waiting for host to continue...</p>
                       </div>
                     )}
                   </div>
@@ -346,15 +340,15 @@ export default function Game() {
 
               {/* Prompt to make a guess */}
               {!isAwaitingConfirmation && !hasConfirmedGuessForRound && !showResults && currentRound && (
-                <div className="text-center text-gray-600 mt-4">
-                  <p>Click on the map to guess where <strong>{currentRound.city.name}, {currentRound.city.country}</strong> is located!</p>
+                <div className="text-center text-gray-600 mt-3 lg:mt-4">
+                  <p className="text-sm lg:text-base">Click on the map to guess where <strong>{currentRound.city.name}, {currentRound.city.country}</strong> is located!</p>
                 </div>
               )}
 
               {/* Feedback after guess is confirmed */}
               {hasConfirmedGuessForRound && !isAwaitingConfirmation && !showResults && currentRound && (
-                <div className="text-center text-gray-600 mt-4">
-                  <p>✅ Guess submitted! Waiting for other players...</p>
+                <div className="text-center text-gray-600 mt-3 lg:mt-4">
+                  <p className="text-sm lg:text-base">✅ Guess submitted! Waiting for other players...</p>
                   {(() => {
                     const currentGuesses = currentRound.guesses || [];
                     const humanGuess = currentGuesses.find(g => { // currentRound from useRoundManagement
@@ -363,7 +357,7 @@ export default function Game() {
                     });
                     if (humanGuess) {
                       return (
-                        <p className="mt-2">
+                        <p className="mt-1 lg:mt-2 text-sm lg:text-base">
                           Your guess was <strong>{Math.round(humanGuess.distance || 0)} km</strong> away
                           {(humanGuess.totalPoints || 0) > 0 && ( // Check totalPoints, not placementPoints
                             <span>
@@ -383,8 +377,8 @@ export default function Game() {
             </div>
           </div>
 
-          {/* Scoreboard */}
-          <div className="lg:col-span-1 order-1 lg:order-2">
+          {/* Scoreboard - Hidden on mobile, visible on desktop */}
+          <div className="hidden lg:block lg:col-span-1">
             <div className="bg-white rounded-lg shadow-xl p-3 sm:p-4">
               <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Scoreboard</h2>
               <div className="space-y-2">
@@ -438,6 +432,18 @@ export default function Game() {
           </div>
         </div>
       </div>
+      
+      {/* Scoreboard Modal for Mobile */}
+      <ScoreboardModal
+        isOpen={isScoreboardModalOpen}
+        onClose={() => setIsScoreboardModalOpen(false)}
+        currentGame={currentGame}
+        playerScores={getPlayerScores()}
+        roundNumber={roundNumber}
+        hasPlayerGuessedThisRound={hasPlayerGuessedThisRound}
+        showResults={showResults}
+        currentRound={currentRound}
+      />
     </div>
   );
 }
