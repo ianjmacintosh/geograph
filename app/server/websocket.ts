@@ -35,6 +35,7 @@ export class GameWebSocketServer {
       });
     }
     this.gameManager = new GameManager();
+    this.gameManager.setWebSocketServer(this); // Inject this WS server instance into GameManager
     this.setupServer();
     
     if (!existingWss) {
