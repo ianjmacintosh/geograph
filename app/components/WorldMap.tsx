@@ -87,11 +87,17 @@ export function WorldMap({
   useEffect(() => {
     if (!map || !showTarget || !targetCity) return;
     
-    // Center map on target city with zoom level 3 (one level in from minimum)
-    map.setView([targetCity.lat, targetCity.lng], 3, {
-      animate: true,
-      duration: 1.0
-    });
+    // Small delay to ensure map container has resized, then invalidate size and center
+    setTimeout(() => {
+      // Tell Leaflet the container size has changed
+      map.invalidateSize();
+      
+      // Now center on target city with proper boundaries
+      map.setView([targetCity.lat, targetCity.lng], 3, {
+        animate: true,
+        duration: 1.0
+      });
+    }, 100); // Short delay to ensure DOM has updated
   }, [map, showTarget, targetCity]);
 
   // Update markers when guesses, target, or provisionalGuessLocation changes
