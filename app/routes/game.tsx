@@ -14,6 +14,9 @@ export function meta() {
 export default function Game() {
   const { currentGame, nextRound, playerId, leaveGame } = useGame();
   const navigate = useNavigate();
+  
+  // Check if current player is the host
+  const isHost = currentGame ? playerId === currentGame.hostId : false;
 
   // Get current round from the game state (managed by server)
   const currentRound = currentGame?.rounds?.[currentGame.rounds.length - 1] || null;
@@ -265,14 +268,22 @@ export default function Game() {
                         })}
                     </div>
 
-                    <div className="mt-4 flex justify-center">
-                      <button
-                        onClick={handleNextRound}
-                        className="px-6 py-3 sm:px-8 sm:py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-semibold text-base sm:text-lg min-h-[48px] touch-manipulation"
-                      >
-                        {roundNumber >= currentGame.settings.totalRounds ? 'Final Results' : 'Next Round'}
-                      </button>
-                    </div>
+                    {isHost && (
+                      <div className="mt-4 flex justify-center">
+                        <button
+                          onClick={handleNextRound}
+                          className="px-6 py-3 sm:px-8 sm:py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-semibold text-base sm:text-lg min-h-[48px] touch-manipulation"
+                        >
+                          {roundNumber >= currentGame.settings.totalRounds ? 'Final Results' : 'Next Round'}
+                        </button>
+                      </div>
+                    )}
+                    
+                    {!isHost && (
+                      <div className="mt-4 text-center text-gray-600">
+                        <p className="text-sm">Waiting for host to continue...</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
