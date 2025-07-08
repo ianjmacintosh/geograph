@@ -29,13 +29,16 @@ export class GameWebSocketServer {
     if (existingWss) {
       this.wss = existingWss;
     } else {
-      this.wss = new WebSocketServer({ port: port || 8080 });
+      this.wss = new WebSocketServer({ 
+        port: port || 8080,
+        host: '0.0.0.0'  // Bind to all interfaces for Railway
+      });
     }
     this.gameManager = new GameManager();
     this.setupServer();
     
     if (!existingWss) {
-      console.log(`🎮 WebSocket server running on port ${port || 8080}`);
+      console.log(`🎮 WebSocket server running on port ${port || 8080} (all interfaces)`);
     }
   }
 
