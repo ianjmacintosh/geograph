@@ -1,7 +1,7 @@
 import type { Route } from "./+types/home";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { isValidGameCode, createNewGame } from "../utils/game";
+import { isValidGameCode } from "../utils/game";
 import { useGame } from "../contexts/GameContext";
 
 export function meta({}: Route.MetaArgs) {
@@ -14,8 +14,7 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
   const [gameCode, setGameCode] = useState("");
   const [playerName, setPlayerName] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
-  const { createGame, joinGame, isLoading } = useGame();
+  const { createGame, joinGame, isLoading, error, currentGame, connectionStatus } = useGame();
   const navigate = useNavigate();
 
   const handleCreateGame = () => {
@@ -24,11 +23,7 @@ export default function Home() {
       return;
     }
     
-    setIsCreating(true);
-    const newGame = createNewGame(playerName.trim());
-    createGame(newGame);
-    setIsCreating(false);
-    navigate("/lobby");
+    createGame(playerName.trim());
   };
 
   const handleJoinGame = () => {
@@ -43,8 +38,14 @@ export default function Home() {
     }
     
     joinGame(gameCode, playerName.trim());
-    navigate("/lobby");
   };
+
+  // Navigate to lobby when game is created/joined
+  useEffect(() => {
+    if (currentGame && !isLoading) {
+      navigate("/lobby");
+    }
+  }, [currentGame, isLoading, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
@@ -72,10 +73,10 @@ export default function Home() {
 
           <button
             onClick={handleCreateGame}
-            disabled={isCreating || !playerName.trim() || isLoading}
+            disabled={!playerName.trim() || isLoading || connectionStatus !== 'connected'}
             className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200"
           >
-            {isCreating || isLoading ? "Creating..." : "Create New Game"}
+            {isLoading ? "Creating..." : "Create New Game"}
           </button>
 
           <div className="relative">
@@ -104,15 +105,32 @@ export default function Home() {
 
           <button
             onClick={handleJoinGame}
-            disabled={!playerName.trim() || !isValidGameCode(gameCode) || isLoading}
+            disabled={!playerName.trim() || !isValidGameCode(gameCode) || isLoading || connectionStatus !== 'connected'}
             className="w-full bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200"
           >
             {isLoading ? "Joining..." : "Join Game"}
           </button>
         </div>
 
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Create a new game or join with a 6-digit code</p>
+        <div className="mt-8 text-center text-sm">
+          {connectionStatus === 'connected' && (
+            <p className="text-green-600">🟢 Connected to server</p>
+          )}
+          {connectionStatus === 'connecting' && (
+            <p className="text-yellow-600">🟡 Connecting to server...</p>
+          )}
+          {connectionStatus === 'disconnected' && (
+            <p className="text-red-600">🔴 Disconnected from server</p>
+          )}
+          {connectionStatus === 'error' && (
+            <p className="text-red-600">❌ Connection error</p>
+          )}
+          
+          {error && (
+            <p className="text-red-600 mt-2">⚠️ {error}</p>
+          )}
+          
+          <p className="text-gray-500 mt-2">Create a new game or join with a 6-digit code</p>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 // import type { Route } from "./+types/lobby";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGame } from "../contexts/GameContext";
 import { useNavigate } from "react-router";
 
@@ -11,16 +11,33 @@ export function meta() {
 }
 
 export default function Lobby() {
-  const { currentGame, addComputerPlayers, startGame, clearGame, updateSettings } = useGame();
+  const { currentGame, addComputerPlayers, startGame, leaveGame, updateSettings, playerId } = useGame();
   const navigate = useNavigate();
   const [showScoringHelp, setShowScoringHelp] = useState(false);
 
+  // Navigate based on game status
+  useEffect(() => {
+    if (!currentGame) {
+      navigate("/");
+      return;
+    }
+    
+    if (currentGame.status === 'playing') {
+      navigate("/game");
+      return;
+    }
+    
+    if (currentGame.status === 'finished') {
+      navigate("/results");
+      return;
+    }
+  }, [currentGame, navigate]);
+
   if (!currentGame) {
-    navigate("/");
     return null;
   }
 
-  const isHost = currentGame.players[0]?.id === currentGame.hostId;
+  const isHost = playerId === currentGame.hostId;
   const canStart = currentGame.players.length >= 1; // Allow starting with 1 player for testing
 
   const handleAddComputers = () => {
@@ -31,14 +48,10 @@ export default function Lobby() {
 
   const handleStartGame = () => {
     startGame();
-    // Small delay to ensure state update completes before navigation
-    setTimeout(() => {
-      navigate("/game");
-    }, 50);
   };
 
   const handleLeaveGame = () => {
-    clearGame();
+    leaveGame();
     navigate("/");
   };
 
@@ -85,7 +98,8 @@ export default function Lobby() {
                       <div className={`w-3 h-3 rounded-full ${player.isComputer ? 'bg-blue-400' : 'bg-green-400'}`} />
                       <span className="font-medium">
                         {player.name}
-                        {index === 0 && ' (Host)'}
+                        {player.id === currentGame.hostId && ' (Host)'}
+                        {player.id === playerId && ' (You)'}
                       </span>
                     </div>
                     <div className="text-sm text-gray-500">
