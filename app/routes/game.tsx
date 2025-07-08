@@ -34,6 +34,19 @@ export default function Game() {
   
   // Timer state for display
   const [timeLeft, setTimeLeft] = useState(0);
+
+  const {
+    provisionalGuessLocation,
+    isAwaitingConfirmation,
+    hasConfirmedGuessForRound,
+    handleSetProvisionalGuess,
+    confirmCurrentGuess,
+    resetPlayerGuessState,
+  } = usePlayerInteraction({
+    currentGame,
+    currentRound,
+    hasPlayerAlreadyGuessedInRound: hasPlayerGuessed, // Pass the existing hasPlayerGuessed
+  });
   
   // Effect 1: Initial Time Calculation (SSR + Client)
   useEffect(() => {
@@ -97,20 +110,6 @@ export default function Game() {
     hasConfirmedGuessForRound,
     playerId
   ]);
-
-  const {
-    provisionalGuessLocation,
-    isAwaitingConfirmation,
-    hasConfirmedGuessForRound,
-    handleSetProvisionalGuess,
-    confirmCurrentGuess,
-    cancelProvisionalGuess,
-    resetPlayerGuessState,
-  } = usePlayerInteraction({
-    currentGame,
-    currentRound,
-    hasPlayerAlreadyGuessedInRound: hasPlayerGuessed, // Pass the existing hasPlayerGuessed
-  });
 
   // Reset guess state when round changes
   useEffect(() => {
@@ -247,7 +246,7 @@ export default function Game() {
                     targetCity={currentRound.city}
                     onProvisionalGuess={handleSetProvisionalGuess}
                     provisionalGuessLocation={provisionalGuessLocation}
-                    isGuessDisabled={showResults || hasConfirmedGuessForRound || isAwaitingConfirmation}
+                    isGuessDisabled={showResults || hasConfirmedGuessForRound}
                     guesses={(() => {
                       const currentGuesses = currentRound.guesses || [];
                       // Only show guesses when round is complete (showResults is true)
@@ -269,20 +268,14 @@ export default function Game() {
                 </div>
               </div>
 
-              {/* Confirmation Buttons */}
+              {/* Confirmation Button */}
               {isAwaitingConfirmation && provisionalGuessLocation && !hasConfirmedGuessForRound && !showResults && (
-                <div className="my-4 flex justify-center space-x-4">
+                <div className="my-4 flex justify-center">
                   <button
                     onClick={confirmCurrentGuess}
                     className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-md font-semibold text-base sm:text-lg touch-manipulation"
                   >
                     Confirm Guess
-                  </button>
-                  <button
-                    onClick={cancelProvisionalGuess}
-                    className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-md font-semibold text-base sm:text-lg touch-manipulation"
-                  >
-                    Cancel/Adjust
                   </button>
                 </div>
               )}
