@@ -1,87 +1,117 @@
-# Welcome to React Router!
+# Geograph
 
-A modern, production-ready template for building full-stack React applications using React Router.
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+A multiplayer geography guessing game where friends can test their geography knowledge by identifying cities on a map without country labels.
 
 ## Features
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+- Real-time multiplayer gameplay
+- WebSocket-based communication
+- Interactive world map
+- Scoring system with placement and distance bonuses
+- Computer players for testing
+- Mobile-responsive design
 
-## Getting Started
+## Technology Stack
 
-### Installation
+- **Frontend**: React 19, TypeScript, TailwindCSS
+- **Backend**: Node.js, WebSocket, SQLite
+- **Framework**: React Router 7 with SSR
+- **Build**: Vite
+- **Database**: SQLite with better-sqlite3
 
-Install the dependencies:
+## Development
 
-```bash
-npm install
-```
+### Prerequisites
 
-### Development
+- Node.js 18+ 
+- npm
 
-Start the development server with HMR:
+### Setup
 
-```bash
-npm run dev
-```
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start development server: `npm run dev`
+4. Visit `http://localhost:5173`
 
-Your application will be available at `http://localhost:5173`.
+### Available Scripts
 
-## Building for Production
-
-Create a production build:
-
-```bash
-npm run build
-```
+- `npm run dev` - Start development server with hot reload
+- `npm run dev:network` - Start development server accessible on network
+- `npm run build` - Build for production
+- `npm run start` - Start production server (requires build)
+- `npm run start:railway` - Start unified server for Railway deployment
+- `npm run typecheck` - Run TypeScript type checking
 
 ## Deployment
+
+### Railway Deployment
+
+This project is configured for Railway deployment with a unified server approach:
+
+1. **Build Command**: `npm run build`
+2. **Start Command**: `npm run start:railway`
+3. **Environment Variables**:
+   - `PORT` - Server port (automatically set by Railway)
+   - `NODE_ENV` - Environment mode (set to 'production')
+   - `DB_PATH` - SQLite database path (defaults to './geograph.db')
+
+The Railway deployment uses a single server process that handles both HTTP requests and WebSocket connections on the same port via the `/ws/` path.
+
+### Traditional Deployment (Linode/Other)
+
+For traditional VPS deployment with separate processes:
+
+1. **Build Command**: `npm run build`
+2. **Start Command**: `npm run start`
+3. **Requirements**: 
+   - Nginx reverse proxy configuration
+   - Separate WebSocket server on port 8080
+   - SQLite database setup
 
 ### Docker Deployment
 
 To build and run using Docker:
 
 ```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
+docker build -t geograph .
+docker run -p 3000:3000 geograph
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+## Architecture
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
+### WebSocket Communication
 
-### DIY Deployment
+The game uses WebSocket for real-time communication:
 
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
+- **Development**: WebSocket server on port 8080
+- **Railway**: WebSocket on `/ws/` path (same port as HTTP)
+- **Production**: WebSocket proxied through Nginx
 
-Make sure to deploy the output of `npm run build`
+### Database
 
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
+SQLite database stores:
+- Game sessions
+- Player information
+- Round data and guesses
+- Scoring results
 
-## Styling
+### Game Flow
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+1. Create/join game lobby
+2. Configure settings (difficulty, rounds, etc.)
+3. Start game with random city selection
+4. Players make guesses by clicking on map
+5. Scoring based on distance and placement
+6. Multiple rounds with final results
 
----
+## Contributing
 
-Built with ❤️ using React Router.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+[Add your license here]

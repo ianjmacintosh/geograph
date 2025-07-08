@@ -2,9 +2,9 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { IncomingMessage } from 'http';
 import { parse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
-import { getDatabase } from './database';
-import { GameManager } from './game-manager';
-import type { Game, Player } from '../types/game';
+import { getDatabase } from './database.js';
+import { GameManager } from './game-manager.js';
+import type { Game, Player } from '../types/game.js';
 
 export interface WebSocketMessage {
   type: string;
@@ -25,12 +25,21 @@ export class GameWebSocketServer {
   private gameManager: GameManager;
   private db = getDatabase();
 
-  constructor(port: number = 8080) {
-    this.wss = new WebSocketServer({ port });
+  constructor(port?: number, existingWss?: WebSocketServer) {
+    if (existingWss) {
+      this.wss = existingWss;
+    } else {
+      this.wss = new WebSocketServer({ 
+        port: port || 8080,
+        host: '0.0.0.0'  // Bind to all interfaces for Railway
+      });
+    }
     this.gameManager = new GameManager();
     this.setupServer();
     
-    console.log(`🎮 WebSocket server running on port ${port}`);
+    if (!existingWss) {
+      console.log(`🎮 WebSocket server running on port ${port || 8080} (all interfaces)`);
+    }
   }
 
   private setupServer() {
