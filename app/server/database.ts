@@ -271,6 +271,22 @@ export class GameDatabase {
     );
   }
 
+  updateGuess(roundId: string, guess: Guess): void {
+    const stmt = this.db.prepare(`
+      UPDATE guesses 
+      SET placement_points = ?, total_points = ?, placement = ?
+      WHERE round_id = ? AND player_id = ?
+    `);
+    
+    stmt.run(
+      guess.placementPoints,
+      guess.totalPoints,
+      guess.placement,
+      roundId,
+      guess.playerId
+    );
+  }
+
   getGuessesForRound(roundId: string): Guess[] {
     const stmt = this.db.prepare(`
       SELECT * FROM guesses WHERE round_id = ? ORDER BY timestamp ASC

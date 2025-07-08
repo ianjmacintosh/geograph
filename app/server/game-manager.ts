@@ -333,7 +333,7 @@ export class GameManager {
         guess.totalPoints = guess.bonusPoints + guess.placementPoints;
         
         // Update in database
-        this.db.addGuess(roundId, guess); // This will update existing guess
+        this.db.updateGuess(roundId, guess);
       }
     }
     
