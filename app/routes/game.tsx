@@ -241,7 +241,7 @@ export default function Game() {
               </div>
 
               <div className="mb-4 lg:mb-6">
-                <div className="h-80 sm:h-96 lg:h-96 rounded-lg overflow-hidden">
+                <div className="h-[calc(100vh-12rem)] sm:h-[calc(100vh-8rem)] lg:h-96 rounded-lg overflow-hidden">
                   <WorldMap
                     key={currentRound.id} // Keep key to re-mount map on round change if necessary
                     targetCity={currentRound.city}
