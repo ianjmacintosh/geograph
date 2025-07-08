@@ -87,8 +87,8 @@ export function WorldMap({
   useEffect(() => {
     if (!map || !showTarget || !targetCity) return;
     
-    // Center map on target city with full zoom out for global context
-    map.setView([targetCity.lat, targetCity.lng], 2, {
+    // Center map on target city with zoom level 3 (one level in from minimum)
+    map.setView([targetCity.lat, targetCity.lng], 3, {
       animate: true,
       duration: 1.0
     });
