@@ -56,23 +56,25 @@ export default function Lobby() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-2 sm:p-4">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-xl p-6">
-          <div className="flex justify-between items-center mb-6">
+        <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-3 sm:space-y-0">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">Game Lobby</h1>
-              <p className="text-gray-600">Game Code: <span className="font-mono text-lg font-semibold">{currentGame.code}</span></p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Game Lobby</h1>
+              <p className="text-sm sm:text-base text-gray-600">
+                Code: <span className="font-mono text-lg sm:text-xl font-semibold">{currentGame.code}</span>
+              </p>
             </div>
             <button
               onClick={handleLeaveGame}
-              className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-md transition duration-200"
+              className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-md transition duration-200 self-start sm:self-auto"
             >
               Leave Game
             </button>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-800">
@@ -81,7 +83,7 @@ export default function Lobby() {
                 {isHost && currentGame.players.length < currentGame.settings.maxPlayers && (
                   <button
                     onClick={handleAddComputers}
-                    className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm transition duration-200"
+                    className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm font-semibold min-h-[44px] touch-manipulation transition duration-200"
                   >
                     Add Computers
                   </button>
@@ -167,7 +169,7 @@ export default function Lobby() {
                   <button
                     onClick={handleStartGame}
                     disabled={!canStart}
-                    className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200"
+                    className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white font-semibold py-4 px-4 rounded-md transition duration-200 min-h-[56px] touch-manipulation text-lg"
                   >
                     {canStart ? "Start Game" : "Need at least 1 player"}
                   </button>

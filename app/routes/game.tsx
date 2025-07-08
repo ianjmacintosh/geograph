@@ -14,6 +14,9 @@ export function meta() {
 export default function Game() {
   const { currentGame, nextRound, playerId, leaveGame } = useGame();
   const navigate = useNavigate();
+  
+  // Check if current player is the host
+  const isHost = currentGame ? playerId === currentGame.hostId : false;
 
   // Get current round from the game state (managed by server)
   const currentRound = currentGame?.rounds?.[currentGame.rounds.length - 1] || null;
@@ -134,13 +137,40 @@ export default function Game() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-2 sm:p-4">
       <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-4 gap-6">
+        {/* Mobile Header */}
+        <div className="lg:hidden bg-white rounded-lg shadow-xl p-4 mb-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-800">
+                Round {roundNumber}/{currentGame.settings.totalRounds}
+              </h1>
+              <p className="text-sm text-gray-600">Code: {currentGame.code}</p>
+            </div>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="text-sm sm:text-lg font-semibold">
+                <span className={timeLeft <= 10 ? 'text-red-500' : 'text-blue-600'}>{timeLeft}s</span>
+              </div>
+              <button
+                onClick={() => {
+                  leaveGame();
+                  navigate("/");
+                }}
+                className="px-2 py-1 sm:px-4 sm:py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+              >
+                Leave
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-4 gap-4 lg:gap-6">
           {/* Main Game Area */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-lg shadow-xl p-6">
-              <div className="flex justify-between items-center mb-6">
+          <div className="lg:col-span-3 order-2 lg:order-1">
+            <div className="bg-white rounded-lg shadow-xl p-3 sm:p-6">
+              {/* Desktop Header */}
+              <div className="hidden lg:flex justify-between items-center mb-6">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800">
                     Round {roundNumber} of {currentGame.settings.totalRounds}
@@ -149,7 +179,7 @@ export default function Game() {
                 </div>
                 <div className="flex items-center space-x-4">
                   <div className="text-lg font-semibold">
-                    Time: <span className={timeLeft <= 10 ? 'text-red-500' : 'text-blue-600'}>{timeLeft}s</span> {/* timeLeft from useGameTimer */}
+                    Time: <span className={timeLeft <= 10 ? 'text-red-500' : 'text-blue-600'}>{timeLeft}s</span>
                   </div>
                   <button
                     onClick={() => {
@@ -163,42 +193,40 @@ export default function Game() {
                 </div>
               </div>
 
-              <div className="mb-6">
-                <WorldMap
-                  key={currentRound.id}
-                  targetCity={currentRound.city}
-                  onMapClick={showResults || hasPlayerGuessed ? undefined : handleMapClick} // Disable clicking when results shown or already guessed
-                  guesses={(() => {
-                    const currentGuesses = currentRound.guesses || [];
-                    // Hide computer guesses until human player has guessed (unless showing results)
-                    const visibleGuesses = showResults || hasPlayerGuessed 
-                      ? currentGuesses 
-                      : currentGuesses.filter(guess => {
-                          const player = currentGame.players.find(p => p.id === guess.playerId);
-                          return player && !player.isComputer;
-                        });
-                    
-                    return visibleGuesses.map(guess => { // currentRound from useRoundManagement
-                      const player = currentGame.players.find(p => p.id === guess.playerId);
-                      return {
-                        lat: guess.lat,
-                        lng: guess.lng,
-                        playerName: player?.name || 'Unknown',
-                        isComputer: player?.isComputer || false,
-                      };
-                    });
-                  })()}
-                  showTarget={showResults} // UI state
-                />
+              <div className="mb-4 lg:mb-6">
+                <div className="h-64 sm:h-80 lg:h-96 rounded-lg overflow-hidden">
+                  <WorldMap
+                    key={currentRound.id}
+                    targetCity={currentRound.city}
+                    onMapClick={showResults || hasPlayerGuessed ? undefined : handleMapClick}
+                    guesses={(() => {
+                      const currentGuesses = currentRound.guesses || [];
+                      // Only show guesses when round is complete (showResults is true)
+                      // Hide all player guesses during active gameplay for suspense
+                      const visibleGuesses = showResults ? currentGuesses : [];
+                      
+                      return visibleGuesses.map(guess => {
+                        const player = currentGame.players.find(p => p.id === guess.playerId);
+                        return {
+                          lat: guess.lat,
+                          lng: guess.lng,
+                          playerName: player?.name || 'Unknown',
+                          isComputer: player?.isComputer || false,
+                        };
+                      });
+                    })()}
+                    showTarget={showResults}
+                  />
+                </div>
               </div>
 
               {/* Target City Indicator */}
               {showResults && currentRound && (
-                <div className="mb-6 text-center">
-                  <div className="inline-flex items-center px-4 py-2 bg-red-100 border border-red-300 rounded-lg">
-                    <div className="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
-                    <span className="text-red-800 font-semibold">
-                      🎯 {currentRound.city.name} is located here ({currentRound.city.country})
+                <div className="mb-4 lg:mb-6 text-center px-2">
+                  <div className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-3 bg-red-100 border border-red-300 rounded-lg max-w-full">
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full mr-2 flex-shrink-0"></div>
+                    <span className="text-red-800 font-semibold text-sm sm:text-base break-words">
+                      🎯 {currentRound.city.name} is here ({currentRound.city.country})
                     </span>
                   </div>
                 </div>
@@ -236,14 +264,22 @@ export default function Game() {
                         })}
                     </div>
 
-                    <div className="mt-4 flex justify-center">
-                      <button
-                        onClick={handleNextRound} // UI facing handler
-                        className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
-                      >
-                        {roundNumber >= currentGame.settings.totalRounds ? 'Final Results' : 'Next Round'}
-                      </button>
-                    </div>
+                    {isHost && (
+                      <div className="mt-4 flex justify-center">
+                        <button
+                          onClick={handleNextRound}
+                          className="px-6 py-3 sm:px-8 sm:py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-semibold text-base sm:text-lg min-h-[48px] touch-manipulation"
+                        >
+                          {roundNumber >= currentGame.settings.totalRounds ? 'Final Results' : 'Next Round'}
+                        </button>
+                      </div>
+                    )}
+                    
+                    {!isHost && (
+                      <div className="mt-4 text-center text-gray-600">
+                        <p className="text-sm">Waiting for host to continue...</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -285,27 +321,27 @@ export default function Game() {
             </div>
           </div>
 
-          {/* Scoreboard Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-xl p-4">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Scoreboard</h2>
+          {/* Scoreboard */}
+          <div className="lg:col-span-1 order-1 lg:order-2">
+            <div className="bg-white rounded-lg shadow-xl p-3 sm:p-4">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">Scoreboard</h2>
               <div className="space-y-2">
-                {getPlayerScores().map((player, index) => ( // getPlayerScores uses completedRounds from useRoundManagement
-                  <div key={player.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">
+                {getPlayerScores().map((player, index) => (
+                  <div key={player.id} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded">
+                    <div className="flex items-center space-x-2 min-w-0 flex-1">
+                      <span className="text-base sm:text-lg flex-shrink-0">
                         {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤'}
                       </span>
-                      <div>
-                        <div className="font-medium text-sm flex items-center gap-2">
-                          {player.name}
-                          {!showResults && currentRound && !currentRound.completed && ( // Only show status for ongoing round
-                            <span className="text-sm">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-sm sm:text-base flex items-center gap-1 sm:gap-2">
+                          <span className="truncate">{player.name}</span>
+                          {!showResults && currentRound && !currentRound.completed && (
+                            <span className="text-sm flex-shrink-0">
                               {hasPlayerGuessedThisRound(player.id) ? '✅' : '⏳'}
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-500 truncate">
                           {player.isComputer ? 'Computer' : 'Human'}
                           {!showResults && currentRound && !currentRound.completed && hasPlayerGuessedThisRound(player.id) && (
                             <span className="text-green-600 ml-1">• Guessed</span>
@@ -316,7 +352,7 @@ export default function Game() {
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex-shrink-0">
                       <div className="font-bold text-blue-600" data-testid={`player-score-${player.id}`}>{player.totalScore}</div>
                       <div className="text-xs text-gray-500">pts</div>
                     </div>
