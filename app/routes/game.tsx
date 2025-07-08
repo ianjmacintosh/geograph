@@ -34,36 +34,82 @@ export default function Game() {
   
   // Timer state for display
   const [timeLeft, setTimeLeft] = useState(0);
+
+  const {
+    provisionalGuessLocation,
+    isAwaitingConfirmation,
+    hasConfirmedGuessForRound,
+    handleSetProvisionalGuess,
+    confirmCurrentGuess,
+    resetPlayerGuessState,
+  } = usePlayerInteraction({
+    currentGame,
+    currentRound,
+    hasPlayerAlreadyGuessedInRound: hasPlayerGuessed, // Pass the existing hasPlayerGuessed
+  });
   
-  // Update timer display
+  // Effect 1: Initial Time Calculation (SSR + Client)
   useEffect(() => {
     if (!currentRound || showResults) {
       setTimeLeft(0);
       return;
     }
-    
-    const updateTimer = () => {
+    const calculateInitialTime = () => {
       const timeLimit = currentGame?.settings?.roundTimeLimit || 30000;
-      const elapsed = Date.now() - currentRound.startTime;
+      const startTime = typeof currentRound.startTime === 'number' ? currentRound.startTime : Date.now();
+      const elapsed = Date.now() - startTime;
       const remaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
       setTimeLeft(remaining);
     };
-    
-    updateTimer(); // Initial update
-    const interval = setInterval(updateTimer, 1000);
-    
-    return () => clearInterval(interval);
+    calculateInitialTime();
   }, [currentRound, currentGame, showResults]);
 
-  const {
-    hasGuessed,
-    handleMapClick,
-    resetPlayerGuessState,
-  } = usePlayerInteraction({
-    currentGame,
+  // Effect 2: Client-Side Interval Timer and Auto-Submit
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (!currentRound || showResults || currentRound.completed) {
+      return;
+    }
+
+    const updateTimerAndAutoSubmit = () => {
+      const timeLimit = currentGame?.settings?.roundTimeLimit || 30000;
+      const startTime = typeof currentRound.startTime === 'number' ? currentRound.startTime : Date.now();
+      const elapsed = Date.now() - startTime;
+      const newRemaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
+      setTimeLeft(newRemaining);
+
+      if (
+        newRemaining <= 0 &&
+        isAwaitingConfirmation &&
+        provisionalGuessLocation &&
+        !hasConfirmedGuessForRound &&
+        !currentRound.completed &&
+        !showResults &&
+        currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer)
+      ) {
+        console.log(`Client Timer: Auto-submitting guess for player ${playerId} due to timeout.`);
+        confirmCurrentGuess();
+      }
+    };
+
+    updateTimerAndAutoSubmit();
+    const interval = setInterval(updateTimerAndAutoSubmit, 1000);
+    
+    return () => clearInterval(interval);
+
+  }, [
     currentRound,
-    isViewOnly: () => showResults || hasPlayerGuessed, // Disable clicks if already guessed or showing results
-  });
+    currentGame,
+    showResults,
+    confirmCurrentGuess,
+    isAwaitingConfirmation,
+    provisionalGuessLocation,
+    hasConfirmedGuessForRound,
+    playerId
+  ]);
 
   // Reset guess state when round changes
   useEffect(() => {
@@ -196,9 +242,11 @@ export default function Game() {
               <div className="mb-4 lg:mb-6">
                 <div className="h-64 sm:h-80 lg:h-96 rounded-lg overflow-hidden">
                   <WorldMap
-                    key={currentRound.id}
+                    key={currentRound.id} // Keep key to re-mount map on round change if necessary
                     targetCity={currentRound.city}
-                    onMapClick={showResults || hasPlayerGuessed ? undefined : handleMapClick}
+                    onProvisionalGuess={handleSetProvisionalGuess}
+                    provisionalGuessLocation={provisionalGuessLocation}
+                    isGuessDisabled={showResults || hasConfirmedGuessForRound}
                     guesses={(() => {
                       const currentGuesses = currentRound.guesses || [];
                       // Only show guesses when round is complete (showResults is true)
@@ -219,6 +267,18 @@ export default function Game() {
                   />
                 </div>
               </div>
+
+              {/* Confirmation Button */}
+              {isAwaitingConfirmation && provisionalGuessLocation && !hasConfirmedGuessForRound && !showResults && (
+                <div className="my-4 flex justify-center">
+                  <button
+                    onClick={confirmCurrentGuess}
+                    className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-md font-semibold text-base sm:text-lg touch-manipulation"
+                  >
+                    Confirm Guess
+                  </button>
+                </div>
+              )}
 
               {/* Target City Indicator */}
               {showResults && currentRound && (
@@ -284,14 +344,16 @@ export default function Game() {
                 </div>
               )}
 
-              {!hasPlayerGuessed && !showResults && currentRound && (
-                <div className="text-center text-gray-600">
+              {/* Prompt to make a guess */}
+              {!isAwaitingConfirmation && !hasConfirmedGuessForRound && !showResults && currentRound && (
+                <div className="text-center text-gray-600 mt-4">
                   <p>Click on the map to guess where <strong>{currentRound.city.name}, {currentRound.city.country}</strong> is located!</p>
                 </div>
               )}
 
-              {hasPlayerGuessed && !showResults && currentRound && (
-                <div className="text-center text-gray-600">
+              {/* Feedback after guess is confirmed */}
+              {hasConfirmedGuessForRound && !isAwaitingConfirmation && !showResults && currentRound && (
+                <div className="text-center text-gray-600 mt-4">
                   <p>✅ Guess submitted! Waiting for other players...</p>
                   {(() => {
                     const currentGuesses = currentRound.guesses || [];

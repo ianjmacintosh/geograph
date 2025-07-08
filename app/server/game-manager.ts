@@ -11,6 +11,7 @@ import {
   generateGameCode 
 } from '../utils/game';
 import type { Game, Player, GameRound, Guess, FinalResults } from '../types/game';
+import type { GameWebSocketServer as GameWebSocketServerType } from './websocket.js'; // Added import for type
 
 export interface GameResult {
   success: boolean;
@@ -26,16 +27,10 @@ export interface GameResult {
 export class GameManager {
   private db = getDatabase();
   private activeTimers = new Map<string, NodeJS.Timeout>();
-  
-  private getWebSocketServer() {
-    // Import here to avoid circular dependency
-    try {
-      const { getWebSocketServer } = require('./websocket');
-      return getWebSocketServer();
-    } catch (error) {
-      console.warn('WebSocket server not available:', error);
-      return null;
-    }
+  private wsServerInstance: GameWebSocketServerType | null = null;
+
+  public setWebSocketServer(server: GameWebSocketServerType): void {
+    this.wsServerInstance = server;
   }
 
   createGame(hostName: string): Game {
@@ -344,14 +339,19 @@ export class GameManager {
     this.clearRoundTimer(roundId);
     
     // Notify clients about round end via WebSocket
-    const wsServer = this.getWebSocketServer();
-    if (wsServer) {
+    if (this.wsServerInstance) {
       const updatedGame = this.db.getGameById(gameId);
-      wsServer.revealRoundResults(gameId, {
-        game: updatedGame,
-        round: round,
-        completed: true
-      });
+      if (updatedGame) { // Ensure game is found before sending
+        this.wsServerInstance.revealRoundResults(gameId, {
+          game: updatedGame,
+          round: round, // Ensure 'round' is the correct, updated round object
+          completed: true
+        });
+      } else {
+        console.warn(`GameManager: Game ${gameId} not found after round end, cannot send WS update.`);
+      }
+    } else {
+      console.warn('GameManager: WebSocket server instance not set. Cannot send ROUND_RESULTS.');
     }
     
     console.log(`🏁 Round ${roundId} completed for game ${gameId}`);
