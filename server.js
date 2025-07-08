@@ -4,6 +4,7 @@ import { WebSocketServer } from 'ws';
 import { createRequestListener } from '@react-router/node';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { GameWebSocketServer } from './app/server/websocket.js';
 
 const PORT = parseInt(process.env.PORT || '3000');
 
@@ -62,33 +63,9 @@ const wss = new WebSocketServer({
   path: '/ws/'
 });
 
-// Simple WebSocket handling for now - will integrate GameWebSocketServer next
-wss.on('connection', (ws) => {
-  console.log('📱 WebSocket client connected');
-  ws.send(JSON.stringify({ type: 'CONNECTION_ESTABLISHED', payload: { message: 'Connected to Railway WebSocket server!' } }));
-  
-  ws.on('message', (message) => {
-    try {
-      const data = JSON.parse(message.toString());
-      console.log('📩 Received message:', data.type);
-      
-      // Echo back for testing
-      ws.send(JSON.stringify({ 
-        type: 'ECHO', 
-        payload: { 
-          original: data,
-          message: 'Echo from Railway server'
-        }
-      }));
-    } catch (error) {
-      console.error('❌ Error parsing message:', error);
-    }
-  });
-  
-  ws.on('close', () => {
-    console.log('📱 WebSocket client disconnected');
-  });
-});
+// Initialize GameWebSocketServer with the existing WebSocket server
+const gameWebSocketServer = new GameWebSocketServer(undefined, wss);
+console.log('🎮 GameWebSocketServer initialized with Railway WebSocket server');
 
 // Start unified server
 httpServer.listen(PORT, '0.0.0.0', () => {
