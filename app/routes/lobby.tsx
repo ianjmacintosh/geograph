@@ -62,9 +62,29 @@ export default function Lobby() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-3 sm:space-y-0">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Game Lobby</h1>
-              <p className="text-sm sm:text-base text-gray-600">
-                Code: <span className="font-mono text-lg sm:text-xl font-semibold">{currentGame.code}</span>
-              </p>
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <p className="text-sm sm:text-base text-gray-600">
+                  Code: <span className="font-mono text-lg sm:text-xl font-semibold">{currentGame.code}</span>
+                </p>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={`${window.location.origin}/join/${currentGame.code}`}
+                    readOnly
+                    className="px-2 py-1 text-xs bg-gray-100 border border-gray-300 rounded text-gray-600 font-mono"
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/join/${currentGame.code}`);
+                      // You could add a toast notification here
+                    }}
+                    className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition duration-200"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
             </div>
             <button
               onClick={handleLeaveGame}
