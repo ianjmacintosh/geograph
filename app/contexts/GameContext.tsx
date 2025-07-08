@@ -229,9 +229,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'error' });
       dispatch({ type: 'SET_ERROR', payload: 'Connection error' });
       console.error('❌ WebSocket error:', error, 'URL was:', wsUrl);
+      console.error('❌ WebSocket error details:', {
+        error,
+        url: wsUrl,
+        readyState: (error.target as WebSocket)?.readyState,
+        timestamp: new Date().toISOString()
+      });
     },
-    autoReconnect: true,
-    reconnectAttempts: 5,
+    autoReconnect: false, // Disable auto-reconnect to prevent infinite loop
+    reconnectAttempts: 0,
     reconnectDelay: 3000
   });
   
