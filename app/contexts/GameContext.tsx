@@ -210,37 +210,30 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const wsUrl = getWebSocketUrl();
   console.log('🔍 WebSocket URL:', wsUrl);
   
-  // EMERGENCY STOP: Disable WebSocket to prevent infinite loop
-  const connectionStatus = 'disconnected';
-  const sendMessage = () => {};
-  const isConnected = false;
-  
-  console.log('🚫 WebSocket DISABLED to prevent infinite loop');
-  
-  // const {
-  //   connectionStatus,
-  //   sendMessage,
-  //   isConnected
-  // } = useWebSocket({
-  //   url: typeof window !== 'undefined' ? wsUrl : undefined, // Only connect on client side
-  //   onMessage: handleWebSocketMessage,
-  //   onConnect: () => {
-  //     dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'connected' });
-  //     console.log('🔗 WebSocket connected to:', wsUrl);
-  //   },
-  //   onDisconnect: () => {
-  //     dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'disconnected' });
-  //     console.log('📱 WebSocket disconnected from:', wsUrl);
-  //   },
-  //   onError: (error) => {
-  //     dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'error' });
-  //     dispatch({ type: 'SET_ERROR', payload: 'Connection error' });
-  //     console.error('❌ WebSocket error:', error, 'URL was:', wsUrl);
-  //   },
-  //   autoReconnect: true,
-  //   reconnectAttempts: 5,
-  //   reconnectDelay: 3000
-  // });
+  const {
+    connectionStatus,
+    sendMessage,
+    isConnected
+  } = useWebSocket({
+    url: typeof window !== 'undefined' ? wsUrl : undefined, // Only connect on client side
+    onMessage: handleWebSocketMessage,
+    onConnect: () => {
+      dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'connected' });
+      console.log('🔗 WebSocket connected to:', wsUrl);
+    },
+    onDisconnect: () => {
+      dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'disconnected' });
+      console.log('📱 WebSocket disconnected from:', wsUrl);
+    },
+    onError: (error) => {
+      dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'error' });
+      dispatch({ type: 'SET_ERROR', payload: 'Connection error' });
+      console.error('❌ WebSocket error:', error, 'URL was:', wsUrl);
+    },
+    autoReconnect: true,
+    reconnectAttempts: 5,
+    reconnectDelay: 3000
+  });
   
   useEffect(() => {
     dispatch({ type: 'SET_CONNECTION_STATUS', payload: connectionStatus });
