@@ -167,6 +167,14 @@ isGuessDisabled={showResults || hasConfirmedGuessForRound} // Removed isAwaiting
 - **After confirmation**: Yellow marker disappears, map becomes non-interactive
 - **After round ends**: No provisional markers visible, only final results
 
+## UI Simplification
+
+**Final refinement**: Simplified the confirmation interface for better user experience:
+
+- **Removed**: "Cancel/Adjust" button (redundant since users can click elsewhere to reposition)
+- **Updated**: Tooltip text from "Your guess (click map to change, or confirm)" to "Confirm your guess"
+- **Result**: Cleaner interface with single "Confirm Guess" button and clearer messaging
+
 ## Testing
 
 - ✅ Project builds successfully with `npm run build`
@@ -175,9 +183,9 @@ isGuessDisabled={showResults || hasConfirmedGuessForRound} // Removed isAwaiting
 - ✅ Client-side variable reference errors resolved
 - ✅ WebSocket communication functions properly
 - ✅ Two-stage guess confirmation feature works correctly:
-  - Click map → provisional yellow marker appears
-  - Click elsewhere → provisional marker moves (repositioning allowed)
-  - Click "Confirm" → provisional marker disappears, map disabled
+  - Click map → provisional yellow marker appears with "Confirm your guess" tooltip
+  - Click elsewhere → provisional marker moves (repositioning allowed) 
+  - Click "Confirm Guess" button → provisional marker disappears, map disabled
   - Round ends → no provisional markers visible, only final results
 
 ## Branch Information
@@ -187,7 +195,8 @@ isGuessDisabled={showResults || hasConfirmedGuessForRound} // Removed isAwaiting
 **Files Modified:**
 - `app/server/game-manager.ts` - Implemented dependency injection pattern
 - `app/server/websocket.ts` - Added GameManager injection in constructor  
-- `app/routes/game.tsx` - Fixed variable reference order + improved map disable logic
+- `app/routes/game.tsx` - Fixed variable reference order + improved map disable logic + simplified UI
 - `app/hooks/usePlayerInteraction.ts` - Fixed provisional marker cleanup after confirmation
+- `app/components/WorldMap.tsx` - Updated provisional marker tooltip text
 
 The fix maintains backward compatibility while resolving the ES module/CommonJS conflict that was causing the server errors.
