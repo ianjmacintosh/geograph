@@ -211,8 +211,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
   }, [dispatch]);
   
-  // Debug the WebSocket URL
-  console.log('🔍 WebSocket URL:', wsUrl);
+  // Debug the WebSocket URL (only log once per URL change)
+  useEffect(() => {
+    console.log('🔍 WebSocket URL:', wsUrl);
+  }, [wsUrl]);
   
   // Memoize callback functions to prevent re-renders
   const onConnect = useCallback(() => {
