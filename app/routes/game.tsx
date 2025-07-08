@@ -56,13 +56,17 @@ export default function Game() {
   }, [currentRound, currentGame, showResults]);
 
   const {
-    hasGuessed,
-    handleMapClick,
+    provisionalGuessLocation,
+    isAwaitingConfirmation,
+    hasConfirmedGuessForRound,
+    handleSetProvisionalGuess,
+    confirmCurrentGuess,
+    cancelProvisionalGuess,
     resetPlayerGuessState,
   } = usePlayerInteraction({
     currentGame,
     currentRound,
-    isViewOnly: () => showResults || hasPlayerGuessed, // Disable clicks if already guessed or showing results
+    hasPlayerAlreadyGuessedInRound: hasPlayerGuessed, // Pass the existing hasPlayerGuessed
   });
 
   // Reset guess state when round changes
@@ -196,9 +200,11 @@ export default function Game() {
               <div className="mb-4 lg:mb-6">
                 <div className="h-64 sm:h-80 lg:h-96 rounded-lg overflow-hidden">
                   <WorldMap
-                    key={currentRound.id}
+                    key={currentRound.id} // Keep key to re-mount map on round change if necessary
                     targetCity={currentRound.city}
-                    onMapClick={showResults || hasPlayerGuessed ? undefined : handleMapClick}
+                    onProvisionalGuess={handleSetProvisionalGuess}
+                    provisionalGuessLocation={provisionalGuessLocation}
+                    isGuessDisabled={showResults || hasConfirmedGuessForRound || isAwaitingConfirmation}
                     guesses={(() => {
                       const currentGuesses = currentRound.guesses || [];
                       // Only show guesses when round is complete (showResults is true)
@@ -219,6 +225,24 @@ export default function Game() {
                   />
                 </div>
               </div>
+
+              {/* Confirmation Buttons */}
+              {isAwaitingConfirmation && provisionalGuessLocation && !hasConfirmedGuessForRound && !showResults && (
+                <div className="my-4 flex justify-center space-x-4">
+                  <button
+                    onClick={confirmCurrentGuess}
+                    className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-md font-semibold text-base sm:text-lg touch-manipulation"
+                  >
+                    Confirm Guess
+                  </button>
+                  <button
+                    onClick={cancelProvisionalGuess}
+                    className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-md font-semibold text-base sm:text-lg touch-manipulation"
+                  >
+                    Cancel/Adjust
+                  </button>
+                </div>
+              )}
 
               {/* Target City Indicator */}
               {showResults && currentRound && (
@@ -284,14 +308,16 @@ export default function Game() {
                 </div>
               )}
 
-              {!hasPlayerGuessed && !showResults && currentRound && (
-                <div className="text-center text-gray-600">
+              {/* Prompt to make a guess */}
+              {!isAwaitingConfirmation && !hasConfirmedGuessForRound && !showResults && currentRound && (
+                <div className="text-center text-gray-600 mt-4">
                   <p>Click on the map to guess where <strong>{currentRound.city.name}, {currentRound.city.country}</strong> is located!</p>
                 </div>
               )}
 
-              {hasPlayerGuessed && !showResults && currentRound && (
-                <div className="text-center text-gray-600">
+              {/* Feedback after guess is confirmed */}
+              {hasConfirmedGuessForRound && !isAwaitingConfirmation && !showResults && currentRound && (
+                <div className="text-center text-gray-600 mt-4">
                   <p>✅ Guess submitted! Waiting for other players...</p>
                   {(() => {
                     const currentGuesses = currentRound.guesses || [];

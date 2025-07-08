@@ -1,45 +1,85 @@
 import { useState, useCallback } from 'react';
-import type { Game, GameRound, Guess } from '../types/game';
+import type { Game, GameRound } from '../types/game';
 import { useGame } from '../contexts/GameContext';
 
 interface UsePlayerInteractionProps {
   currentGame: Game | null;
   currentRound: GameRound | null;
-  isViewOnly: () => boolean; // Function to check if map interaction should be disabled (e.g. showResults is true)
+  // isViewOnly is effectively replaced by hasGuessedOrConfirmed and conditions in game.tsx
+  // We'll use a simpler `isDisabled` prop controlled by the parent component.
+  // Or, more accurately, the conditions within handleSetProvisionalGuess will manage interactability.
+  hasPlayerAlreadyGuessedInRound: boolean;
 }
 
 export function usePlayerInteraction({
   currentGame,
   currentRound,
-  isViewOnly,
+  hasPlayerAlreadyGuessedInRound,
 }: UsePlayerInteractionProps) {
-  const [hasGuessed, setHasGuessed] = useState(false);
+  const [provisionalGuessLocation, setProvisionalGuessLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isAwaitingConfirmation, setIsAwaitingConfirmation] = useState(false);
+  // 'hasGuessed' now means the player has *confirmed* a guess for the current round.
+  // This will be derived from `hasPlayerAlreadyGuessedInRound` passed from game.tsx initially,
+  // and then set true after confirmation.
+  const [hasConfirmedGuessForRound, setHasConfirmedGuessForRound] = useState(false);
+
   const { makeGuess, playerId } = useGame();
 
   const resetPlayerGuessState = useCallback(() => {
-    setHasGuessed(false);
+    setProvisionalGuessLocation(null);
+    setIsAwaitingConfirmation(false);
+    setHasConfirmedGuessForRound(false);
   }, []);
 
-  const handleMapClick = useCallback((lat: number, lng: number) => {
-    if (hasGuessed || !currentRound || !currentGame || isViewOnly() || !playerId) {
+  // This function is called when the player clicks on the map.
+  // It sets the provisional guess.
+  const handleSetProvisionalGuess = useCallback((lat: number, lng: number) => {
+    // Do not allow setting a new provisional guess if:
+    // - Player has already confirmed a guess for this round.
+    // - It's not a valid game/round context.
+    // - There's no player ID.
+    // - The round is already completed (showing results).
+    if (hasConfirmedGuessForRound || hasPlayerAlreadyGuessedInRound || !currentRound || !currentGame || !playerId || currentRound.completed) {
       return;
     }
 
-    // Check if current player has already guessed
-    const currentGuesses = currentRound.guesses || [];
-    const existingGuess = currentGuesses.find(g => g.playerId === playerId);
-    if (existingGuess) {
+    setProvisionalGuessLocation({ lat, lng });
+    setIsAwaitingConfirmation(true);
+  }, [hasConfirmedGuessForRound, hasPlayerAlreadyGuessedInRound, currentRound, currentGame, playerId]);
+
+  const confirmCurrentGuess = useCallback(() => {
+    if (!provisionalGuessLocation || !currentRound || !currentGame || !playerId || hasConfirmedGuessForRound || hasPlayerAlreadyGuessedInRound) {
       return;
     }
 
-    // Send guess to server via WebSocket
-    makeGuess(lat, lng);
-    setHasGuessed(true);
-  }, [hasGuessed, currentRound, currentGame, isViewOnly, playerId, makeGuess]);
+    makeGuess(provisionalGuessLocation.lat, provisionalGuessLocation.lng);
+    setHasConfirmedGuessForRound(true); // Player has now officially guessed for this round.
+    setIsAwaitingConfirmation(false);
+    // Provisional location remains for the marker until cleared by round change or explicit cancel.
+  }, [provisionalGuessLocation, currentRound, currentGame, playerId, makeGuess, hasConfirmedGuessForRound, hasPlayerAlreadyGuessedInRound]);
+
+  const cancelProvisionalGuess = useCallback(() => {
+    setProvisionalGuessLocation(null);
+    setIsAwaitingConfirmation(false);
+    // hasConfirmedGuessForRound remains as is, as they haven't un-confirmed a guess, just cancelled a provisional one.
+  }, []);
+
+  // Effect to synchronize hasConfirmedGuessForRound with external hasPlayerAlreadyGuessedInRound
+  // This is important if the guess was made on another client/tab or if rejoining.
+  useState(() => {
+    if (hasPlayerAlreadyGuessedInRound) {
+      setHasConfirmedGuessForRound(true);
+    }
+  }, [hasPlayerAlreadyGuessedInRound]);
+
 
   return {
-    hasGuessed,
-    handleMapClick,
+    provisionalGuessLocation,
+    isAwaitingConfirmation,
+    hasConfirmedGuessForRound, // This now reflects if the current player has locked in their guess
+    handleSetProvisionalGuess, // Renamed from handleMapClick for clarity
+    confirmCurrentGuess,
+    cancelProvisionalGuess,
     resetPlayerGuessState,
   };
 }

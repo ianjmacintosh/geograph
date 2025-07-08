@@ -1,18 +1,28 @@
 import { useRef, useEffect, useState } from 'react';
 
 interface WorldMapProps {
-  onMapClick?: (lat: number, lng: number) => void;
+  onProvisionalGuess?: (lat: number, lng: number) => void; // Renamed for clarity
   targetCity?: { lat: number; lng: number; name: string };
   guesses?: Array<{ lat: number; lng: number; playerName: string; isComputer: boolean }>;
+  provisionalGuessLocation?: { lat: number; lng: number } | null; // New: To show temp marker
   showTarget?: boolean;
+  isGuessDisabled?: boolean; // To disable map clicks when not appropriate
 }
 
-export function WorldMap({ onMapClick, targetCity, guesses = [], showTarget = false }: WorldMapProps) {
+export function WorldMap({
+  onProvisionalGuess,
+  targetCity,
+  guesses = [],
+  provisionalGuessLocation = null,
+  showTarget = false,
+  isGuessDisabled = false
+}: WorldMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<any>(null);
   const [markers, setMarkers] = useState<any[]>([]);
   const [L, setL] = useState<any>(null);
   const [isClient, setIsClient] = useState(false);
+  const provisionalMarkerRef = useRef<any>(null); // Ref for the provisional marker
 
   // Check if we're on the client side
   useEffect(() => {
@@ -23,76 +33,65 @@ export function WorldMap({ onMapClick, targetCity, guesses = [], showTarget = fa
   useEffect(() => {
     if (!isClient || !mapRef.current || map) return;
 
-    // Dynamically import Leaflet only on client side
     import('leaflet').then((leaflet) => {
       const leafletLib = leaflet.default;
       setL(leafletLib);
 
       const leafletMap = leafletLib.map(mapRef.current!, {
-        center: [20, 0], // Center on world
+        center: [20, 0],
         zoom: 2,
         minZoom: 2,
         maxZoom: 18,
         worldCopyJump: true,
         maxBounds: [[-90, -180], [90, 180]],
         maxBoundsViscosity: 1.0,
-        // Mobile optimization
         tap: true,
         tapTolerance: 15,
         touchZoom: true,
         bounceAtZoomLimits: false,
         zoomSnap: 0.5,
         zoomDelta: 0.5
-        // Using default CRS (EPSG3857/Web Mercator) - standard for web maps
       });
 
-      // Add tile layer with Carto Light (no labels) for geography game
       leafletLib.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap, © CARTO',
         noWrap: true,
         bounds: [[-90, -180], [90, 180]]
       }).addTo(leafletMap);
 
-      // Handle map clicks - use function reference to avoid closure issues
       const handleMapClick = (e: any) => {
-        const currentCallback = onMapClick; // Capture current callback
-        if (currentCallback) {
-          const clickId = Date.now();
-          const coords = {
-            lat: e.latlng.lat,
-            lng: e.latlng.lng
-          };
-          // Map click successfully captured
-          // Use Leaflet's native coordinate system - no conversion needed
-          currentCallback(coords.lat, coords.lng);
-        }
+        if (isGuessDisabled || !onProvisionalGuess) return; // Don't do anything if guessing is disabled or no handler
+
+        const coords = {
+          lat: e.latlng.lat,
+          lng: e.latlng.lng
+        };
+        onProvisionalGuess(coords.lat, coords.lng);
       };
       
       leafletMap.on('click', handleMapClick);
-
       setMap(leafletMap);
     });
 
-    // Cleanup
     return () => {
       if (map) {
-        map.off(); // Remove all event listeners
+        map.off();
         map.remove();
         setMap(null);
         setL(null);
       }
     };
-  }, [isClient, onMapClick]);
+  }, [isClient, onProvisionalGuess, isGuessDisabled]); // Added isGuessDisabled and onProvisionalGuess
 
-  // Update markers when guesses or target changes
+  // Update markers when guesses, target, or provisionalGuessLocation changes
   useEffect(() => {
     if (!map || !L) return;
 
-    // Clear existing markers
+    // Clear existing non-provisional markers
     markers.forEach(marker => map.removeLayer(marker));
     const newMarkers: any[] = [];
 
-    // Add guess markers
+    // Add guess markers (finalized guesses)
     guesses.forEach((guess) => {
       const marker = L.marker([guess.lat, guess.lng], {
         icon: L.divIcon({
@@ -113,8 +112,36 @@ export function WorldMap({ onMapClick, targetCity, guesses = [], showTarget = fa
       newMarkers.push(marker);
     });
 
+    // Add or update provisional guess marker
+    if (provisionalMarkerRef.current) {
+      map.removeLayer(provisionalMarkerRef.current); // Remove old provisional marker
+      provisionalMarkerRef.current = null;
+    }
+
+    if (provisionalGuessLocation) {
+      const tempMarker = L.marker([provisionalGuessLocation.lat, provisionalGuessLocation.lng], {
+        icon: L.divIcon({
+          className: 'custom-marker provisional-marker',
+          html: `<div class="w-5 h-5 rounded-full border-2 border-white bg-yellow-400 animate-pulse"></div>`, // Pulsing yellow for provisional
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        })
+      }).bindTooltip("Your guess (click map to change, or confirm)", {
+        permanent: true,
+        direction: 'top',
+        offset: [0, -12],
+        className: 'font-semibold provisional-tooltip'
+      });
+
+      tempMarker.addTo(map);
+      provisionalMarkerRef.current = tempMarker; // Store reference to new provisional marker
+    }
+
     // Add target marker if showing results
     if (showTarget && targetCity) {
+      // If there's a provisional marker for the current player and it's their turn to see results,
+      // it should ideally be cleared by the parent component before `showTarget` becomes true.
+      // However, if it's still here, we'll ensure the target is distinct.
       const targetMarker = L.marker([targetCity.lat, targetCity.lng], {
         icon: L.divIcon({
           className: 'custom-marker',
@@ -133,8 +160,8 @@ export function WorldMap({ onMapClick, targetCity, guesses = [], showTarget = fa
       newMarkers.push(targetMarker);
     }
 
-    setMarkers(newMarkers);
-  }, [map, L, guesses, targetCity, showTarget]);
+    setMarkers(newMarkers); // Store only non-provisional markers for easier clearing next time
+  }, [map, L, guesses, targetCity, showTarget, provisionalGuessLocation]);
 
   // Show loading state on server side or before client hydration
   if (!isClient) {
