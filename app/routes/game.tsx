@@ -247,7 +247,7 @@ export default function Game() {
                     targetCity={currentRound.city}
                     onProvisionalGuess={handleSetProvisionalGuess}
                     provisionalGuessLocation={provisionalGuessLocation}
-                    isGuessDisabled={showResults || hasConfirmedGuessForRound || isAwaitingConfirmation}
+                    isGuessDisabled={showResults || hasConfirmedGuessForRound}
                     guesses={(() => {
                       const currentGuesses = currentRound.guesses || [];
                       // Only show guesses when round is complete (showResults is true)

@@ -55,7 +55,7 @@ export function usePlayerInteraction({
     makeGuess(provisionalGuessLocation.lat, provisionalGuessLocation.lng);
     setHasConfirmedGuessForRound(true); // Player has now officially guessed for this round.
     setIsAwaitingConfirmation(false);
-    // Provisional location remains for the marker until cleared by round change or explicit cancel.
+    setProvisionalGuessLocation(null); // Clear provisional marker once guess is confirmed
   }, [provisionalGuessLocation, currentRound, currentGame, playerId, makeGuess, hasConfirmedGuessForRound, hasPlayerAlreadyGuessedInRound]);
 
   const cancelProvisionalGuess = useCallback(() => {
