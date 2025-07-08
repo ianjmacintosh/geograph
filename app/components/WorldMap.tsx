@@ -157,7 +157,7 @@ export function WorldMap({
           iconSize: [32, 32], // w-8 h-8 -> 2rem x 2rem -> 32x32px
           iconAnchor: [16, 16]  // Center of the 32x32 icon
         })
-      }).bindTooltip("Your guess (click map to change, or confirm)", {
+      }).bindTooltip("Confirm your guess", {
         permanent: true,
         direction: 'top',
         offset: [0, -12],

@@ -41,7 +41,6 @@ export default function Game() {
     hasConfirmedGuessForRound,
     handleSetProvisionalGuess,
     confirmCurrentGuess,
-    cancelProvisionalGuess,
     resetPlayerGuessState,
   } = usePlayerInteraction({
     currentGame,
@@ -269,20 +268,14 @@ export default function Game() {
                 </div>
               </div>
 
-              {/* Confirmation Buttons */}
+              {/* Confirmation Button */}
               {isAwaitingConfirmation && provisionalGuessLocation && !hasConfirmedGuessForRound && !showResults && (
-                <div className="my-4 flex justify-center space-x-4">
+                <div className="my-4 flex justify-center">
                   <button
                     onClick={confirmCurrentGuess}
                     className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-md font-semibold text-base sm:text-lg touch-manipulation"
                   >
                     Confirm Guess
-                  </button>
-                  <button
-                    onClick={cancelProvisionalGuess}
-                    className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-md font-semibold text-base sm:text-lg touch-manipulation"
-                  >
-                    Cancel/Adjust
                   </button>
                 </div>
               )}
