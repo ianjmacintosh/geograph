@@ -289,9 +289,30 @@ export class GameManager {
       console.log(`⏰ Timer expired - generating guesses for ${computerPlayersWhoNeedToGuess.length} computer players`);
       
       for (const player of computerPlayersWhoNeedToGuess) {
-        const guess = this.generateComputerGuess(round.city, player);
+        const computerGuessPos = generateComputerGuess(round.city, player.accuracy || 0.5);
+        const distance = calculateDistance(
+          computerGuessPos.lat, 
+          computerGuessPos.lng, 
+          round.city.lat, 
+          round.city.lng
+        );
+        const bonusPoints = calculateBonusPoints(distance);
+        
+        const guess: Guess = {
+          playerId: player.id,
+          lat: computerGuessPos.lat,
+          lng: computerGuessPos.lng,
+          distance,
+          placementPoints: 0,
+          bonusPoints,
+          totalPoints: bonusPoints,
+          placement: 0,
+          timestamp: Date.now()
+        };
+        
         this.db.addGuess(roundId, guess);
         round.guesses.push(guess);
+        console.log(`⏰ Computer player ${player.name} auto-guessed (${distance.toFixed(0)}km away)`);
       }
     }
     
