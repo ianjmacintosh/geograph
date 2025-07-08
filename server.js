@@ -15,7 +15,7 @@ if (!process.env.DB_PATH) {
 // Create React Router request handler
 const requestHandler = createRequestListener({
   build: async () => {
-    return import('./build/server/index.js');
+    return import('./server/index.js');
   },
   mode: process.env.NODE_ENV || 'production'
 });
