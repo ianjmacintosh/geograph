@@ -1,7 +1,5 @@
-// Railway server entry point
+// Railway server entry point - simplified for healthcheck
 import { createServer } from 'http';
-import { WebSocketServer } from 'ws';
-import { GameWebSocketServer } from './app/server/websocket.js';
 
 const PORT = parseInt(process.env.PORT || '3000');
 
@@ -12,13 +10,8 @@ if (!process.env.DB_PATH) {
   process.env.DB_PATH = './geograph.db';
 }
 
-// Create a simple HTTP server that serves the built files
+// Create a simple HTTP server that passes healthcheck
 const server = createServer((req, res) => {
-  // Handle WebSocket upgrade requests
-  if (req.url?.startsWith('/ws')) {
-    return; // Let WebSocket server handle this
-  }
-  
   // For now, just serve a basic response to pass healthcheck
   res.writeHead(200, { 'Content-Type': 'text/html' });
   res.end(`
@@ -27,38 +20,24 @@ const server = createServer((req, res) => {
       <head><title>Geograph</title></head>
       <body>
         <h1>Geograph Server</h1>
-        <p>Server is running on Railway</p>
-        <script>
-          console.log('Attempting WebSocket connection...');
-          const ws = new WebSocket('ws://localhost:${PORT}/ws/');
-          ws.onopen = () => console.log('WebSocket connected');
-          ws.onerror = (error) => console.error('WebSocket error:', error);
-        </script>
+        <p>Server is running on Railway - Step 1: Basic HTTP server working!</p>
+        <p>Next step: Add WebSocket functionality</p>
+        <p>Port: ${PORT}</p>
+        <p>Environment: ${process.env.NODE_ENV || 'development'}</p>
       </body>
     </html>
   `);
 });
 
-// Set up WebSocket server on the same port
-const wss = new WebSocketServer({ 
-  server, 
-  path: '/ws/'
-});
-
-// Initialize the game WebSocket server
-const gameWS = new GameWebSocketServer(undefined, wss);
-console.log('🎮 WebSocket server initialized on /ws/ path');
-
-// Start the unified server
+// Start the server
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Railway server running on port ${PORT}`);
-  console.log(`📱 WebSocket available at ws://0.0.0.0:${PORT}/ws/`);
+  console.log(`📱 Basic HTTP server started - healthcheck should pass`);
 });
 
 // Graceful shutdown
 process.on('SIGINT', () => {
   console.log('🛑 Shutting down Railway server...');
-  gameWS.close();
   server.close(() => {
     process.exit(0);
   });
@@ -66,7 +45,6 @@ process.on('SIGINT', () => {
 
 process.on('SIGTERM', () => {
   console.log('🛑 Shutting down Railway server...');
-  gameWS.close();
   server.close(() => {
     process.exit(0);
   });
