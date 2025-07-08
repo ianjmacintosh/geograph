@@ -201,13 +201,9 @@ export default function Game() {
                     onMapClick={showResults || hasPlayerGuessed ? undefined : handleMapClick}
                     guesses={(() => {
                       const currentGuesses = currentRound.guesses || [];
-                      // Hide computer guesses until human player has guessed (unless showing results)
-                      const visibleGuesses = showResults || hasPlayerGuessed 
-                        ? currentGuesses 
-                        : currentGuesses.filter(guess => {
-                            const player = currentGame.players.find(p => p.id === guess.playerId);
-                            return player && !player.isComputer;
-                          });
+                      // Only show guesses when round is complete (showResults is true)
+                      // Hide all player guesses during active gameplay for suspense
+                      const visibleGuesses = showResults ? currentGuesses : [];
                       
                       return visibleGuesses.map(guess => {
                         const player = currentGame.players.find(p => p.id === guess.playerId);
