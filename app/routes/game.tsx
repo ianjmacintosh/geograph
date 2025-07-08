@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useGame } from "../contexts/GameContext";
 import { WorldMap } from "../components/WorldMap";
+import { PersistentGameHeader } from "../components/PersistentGameHeader";
 import { usePlayerInteraction } from "../hooks/usePlayerInteraction";
 
 export function meta() {
@@ -171,6 +172,12 @@ export default function Game() {
     })).sort((a, b) => b.totalScore - a.totalScore);
   }, [currentGame]);
 
+  // Calculate leader information for persistent header
+  const playerScores = getPlayerScores();
+  const currentPlayerScore = playerScores.find(p => p.id === playerId)?.totalScore || 0;
+  const leader = playerScores[0];
+  const isCurrentPlayerLeader = leader?.id === playerId;
+
 
   if (!currentGame || !currentRound) { // currentRound from useRoundManagement
     return (
@@ -183,33 +190,20 @@ export default function Game() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 p-2 sm:p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Mobile Header */}
-        <div className="lg:hidden bg-white rounded-lg shadow-xl p-4 mb-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-gray-800">
-                Round {roundNumber}/{currentGame.settings.totalRounds}
-              </h1>
-              <p className="text-sm text-gray-600">Code: {currentGame.code}</p>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <div className="text-sm sm:text-lg font-semibold">
-                <span className={timeLeft <= 10 ? 'text-red-500' : 'text-blue-600'}>{timeLeft}s</span>
-              </div>
-              <button
-                onClick={() => {
-                  leaveGame();
-                  navigate("/");
-                }}
-                className="px-2 py-1 sm:px-4 sm:py-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
-              >
-                Leave
-              </button>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600">
+      {/* Persistent Mobile Header */}
+      <PersistentGameHeader
+        currentGame={currentGame}
+        currentRound={currentRound}
+        timeLeft={timeLeft}
+        roundNumber={roundNumber}
+        currentPlayerScore={currentPlayerScore}
+        leaderName={leader?.name || ''}
+        leaderScore={leader?.totalScore || 0}
+        isCurrentPlayerLeader={isCurrentPlayerLeader}
+      />
+      
+      <div className="max-w-7xl mx-auto p-2 sm:p-4">
 
         <div className="grid lg:grid-cols-4 gap-4 lg:gap-6">
           {/* Main Game Area */}
