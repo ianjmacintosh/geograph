@@ -45,15 +45,30 @@ export default function Game() {
     const updateTimer = () => {
       const timeLimit = currentGame?.settings?.roundTimeLimit || 30000;
       const elapsed = Date.now() - currentRound.startTime;
-      const remaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
-      setTimeLeft(remaining);
+      const newRemaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
+      setTimeLeft(newRemaining);
+
+      // Auto-submit provisional guess if timer runs out for the current player
+      if (
+        newRemaining <= 0 &&
+        isAwaitingConfirmation && // Player has clicked map but not confirmed/cancelled
+        provisionalGuessLocation && // There is a location to submit
+        !hasConfirmedGuessForRound && // Player hasn't already submitted a guess
+        !currentRound.completed && // Round is not yet marked as completed by server
+        !showResults && // Results are not being shown yet
+        currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer) // Current player is human
+      ) {
+        // Only log for now, actual call will be next
+        console.log(`Auto-submitting guess for player ${playerId} due to timeout.`);
+        confirmCurrentGuess();
+      }
     };
     
     updateTimer(); // Initial update
     const interval = setInterval(updateTimer, 1000);
     
     return () => clearInterval(interval);
-  }, [currentRound, currentGame, showResults]);
+  }, [currentRound, currentGame, showResults, confirmCurrentGuess, isAwaitingConfirmation, provisionalGuessLocation, hasConfirmedGuessForRound, playerId]);
 
   const {
     provisionalGuessLocation,

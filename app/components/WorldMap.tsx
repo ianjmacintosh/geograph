@@ -93,21 +93,52 @@ export function WorldMap({
 
     // Add guess markers (finalized guesses)
     guesses.forEach((guess) => {
-      const marker = L.marker([guess.lat, guess.lng], {
-        icon: L.divIcon({
-          className: 'custom-marker',
-          html: `<div class="w-4 h-4 rounded-full border-2 border-white ${
-            guess.isComputer ? 'bg-blue-500' : 'bg-green-500'
-          }"></div>`,
-          iconSize: [16, 16],
-          iconAnchor: [8, 8]
-        })
-      }).bindTooltip(guess.playerName, {
-        permanent: false,
-        direction: 'top',
-        offset: [0, -10]
-      });
-      
+      let marker;
+      if (showTarget) {
+        // New bubble style for showing results
+        const bubbleHtml = `
+          <div class="flex flex-col items-center">
+            <div class="bg-white shadow-lg rounded-md px-2 py-0.5 text-xs font-semibold text-gray-700 whitespace-nowrap">
+              ${guess.playerName}
+            </div>
+            <div class="w-0.5 h-1.5 bg-gray-600"></div> <!-- Simple tail/connector -->
+            <div class="w-3 h-3 rounded-full border-2 border-white ${
+              guess.isComputer ? 'bg-blue-500' : 'bg-green-500'
+            }"></div>
+          </div>
+        `;
+        // Estimate size: playerName avg 8 chars ~ 50px. Padding 16px. Total width ~66px.
+        // Height: Bubble (text ~12px + padding ~4px = 16px) + tail (6px) + dot (12px) = 34px.
+        // Icon size needs to be large enough for typical names.
+        // Using a fixed width for simplicity, text can overflow or be truncated by Leaflet if too long.
+        // Let's use Tailwind's `whitespace-nowrap` to prevent wrapping and allow it to overflow if necessary,
+        // or rely on Leaflet's clipping.
+        marker = L.marker([guess.lat, guess.lng], {
+          icon: L.divIcon({
+            className: 'custom-guess-bubble-marker', // New class for potential global styling
+            html: bubbleHtml,
+            iconSize: [80, 38], // Approx width 80px, height 34px + some buffer for shadow = 38px
+            iconAnchor: [40, 32], // Anchor X: center of 80px. Anchor Y: center of the dot (38px height - 6px (half dot height))
+          })
+        });
+      } else {
+        // Original simple marker for when results are not shown (though typically not displayed anyway)
+        marker = L.marker([guess.lat, guess.lng], {
+          icon: L.divIcon({
+            className: 'custom-marker',
+            html: `<div class="w-4 h-4 rounded-full border-2 border-white ${
+              guess.isComputer ? 'bg-blue-500' : 'bg-green-500'
+            }"></div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+          })
+        }).bindTooltip(guess.playerName, {
+          permanent: false,
+          direction: 'top',
+          offset: [0, -10]
+        });
+      }
+
       marker.addTo(map);
       newMarkers.push(marker);
     });
@@ -122,9 +153,9 @@ export function WorldMap({
       const tempMarker = L.marker([provisionalGuessLocation.lat, provisionalGuessLocation.lng], {
         icon: L.divIcon({
           className: 'custom-marker provisional-marker',
-          html: `<div class="w-5 h-5 rounded-full border-2 border-white bg-yellow-400 animate-pulse"></div>`, // Pulsing yellow for provisional
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
+          html: `<div class="w-8 h-8 rounded-full border-4 border-yellow-400 animate-pulse"></div>`, // Pulsing yellow RING
+          iconSize: [32, 32], // w-8 h-8 -> 2rem x 2rem -> 32x32px
+          iconAnchor: [16, 16]  // Center of the 32x32 icon
         })
       }).bindTooltip("Your guess (click map to change, or confirm)", {
         permanent: true,
