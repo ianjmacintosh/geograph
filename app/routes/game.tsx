@@ -35,40 +35,68 @@ export default function Game() {
   // Timer state for display
   const [timeLeft, setTimeLeft] = useState(0);
   
-  // Update timer display
+  // Effect 1: Initial Time Calculation (SSR + Client)
   useEffect(() => {
     if (!currentRound || showResults) {
       setTimeLeft(0);
       return;
     }
-    
-    const updateTimer = () => {
+    const calculateInitialTime = () => {
       const timeLimit = currentGame?.settings?.roundTimeLimit || 30000;
-      const elapsed = Date.now() - currentRound.startTime;
+      const startTime = typeof currentRound.startTime === 'number' ? currentRound.startTime : Date.now();
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
+      setTimeLeft(remaining);
+    };
+    calculateInitialTime();
+  }, [currentRound, currentGame, showResults]);
+
+  // Effect 2: Client-Side Interval Timer and Auto-Submit
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (!currentRound || showResults || currentRound.completed) {
+      return;
+    }
+
+    const updateTimerAndAutoSubmit = () => {
+      const timeLimit = currentGame?.settings?.roundTimeLimit || 30000;
+      const startTime = typeof currentRound.startTime === 'number' ? currentRound.startTime : Date.now();
+      const elapsed = Date.now() - startTime;
       const newRemaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
       setTimeLeft(newRemaining);
 
-      // Auto-submit provisional guess if timer runs out for the current player
       if (
         newRemaining <= 0 &&
-        isAwaitingConfirmation && // Player has clicked map but not confirmed/cancelled
-        provisionalGuessLocation && // There is a location to submit
-        !hasConfirmedGuessForRound && // Player hasn't already submitted a guess
-        !currentRound.completed && // Round is not yet marked as completed by server
-        !showResults && // Results are not being shown yet
-        currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer) // Current player is human
+        isAwaitingConfirmation &&
+        provisionalGuessLocation &&
+        !hasConfirmedGuessForRound &&
+        !currentRound.completed &&
+        !showResults &&
+        currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer)
       ) {
-        // Only log for now, actual call will be next
-        console.log(`Auto-submitting guess for player ${playerId} due to timeout.`);
+        console.log(`Client Timer: Auto-submitting guess for player ${playerId} due to timeout.`);
         confirmCurrentGuess();
       }
     };
-    
-    updateTimer(); // Initial update
-    const interval = setInterval(updateTimer, 1000);
+
+    updateTimerAndAutoSubmit();
+    const interval = setInterval(updateTimerAndAutoSubmit, 1000);
     
     return () => clearInterval(interval);
-  }, [currentRound, currentGame, showResults, confirmCurrentGuess, isAwaitingConfirmation, provisionalGuessLocation, hasConfirmedGuessForRound, playerId]);
+
+  }, [
+    currentRound,
+    currentGame,
+    showResults,
+    confirmCurrentGuess,
+    isAwaitingConfirmation,
+    provisionalGuessLocation,
+    hasConfirmedGuessForRound,
+    playerId
+  ]);
 
   const {
     provisionalGuessLocation,
