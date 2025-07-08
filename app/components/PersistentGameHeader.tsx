@@ -26,7 +26,7 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
   const showResults = currentRound?.completed || false;
 
   return (
-    <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm lg:hidden">
+    <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
       <div className="px-3 py-2">
         {/* Top Row: Target Location and Timer */}
         <div className="flex justify-between items-center mb-1">
