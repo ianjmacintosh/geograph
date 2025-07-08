@@ -83,6 +83,17 @@ export function WorldMap({
     };
   }, [isClient, onProvisionalGuess, isGuessDisabled]); // Added isGuessDisabled and onProvisionalGuess
 
+  // Pan and zoom to target city when showing results
+  useEffect(() => {
+    if (!map || !showTarget || !targetCity) return;
+    
+    // Center map on target city with appropriate zoom
+    map.setView([targetCity.lat, targetCity.lng], 6, {
+      animate: true,
+      duration: 1.0
+    });
+  }, [map, showTarget, targetCity]);
+
   // Update markers when guesses, target, or provisionalGuessLocation changes
   useEffect(() => {
     if (!map || !L) return;
