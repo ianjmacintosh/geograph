@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useReducer, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import type { Game, GameState, Player, FinalResults } from '../types/game';
 import { useWebSocket, type WebSocketMessage } from '../hooks/useWebSocket';
 
@@ -133,8 +133,8 @@ const GameWebSocketContext = createContext<{
 export function GameProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, initialExtendedState);
   
-  // WebSocket configuration
-  const getWebSocketUrl = () => {
+  // Memoize WebSocket URL to prevent recalculation on every render
+  const wsUrl = useMemo(() => {
     if (typeof window === 'undefined') return undefined; // SSR guard
     
     // Check if we're in development (localhost or explicit dev env)
@@ -154,9 +154,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const host = window.location.host; // includes port if any
       return `${protocol}//${host}/ws/`;
     }
-  };
+  }, []);
   
-  const handleWebSocketMessage = (message: WebSocketMessage) => {
+  const handleWebSocketMessage = useCallback((message: WebSocketMessage) => {
     console.log('📩 Received WebSocket message:', message.type, message.payload);
     
     switch (message.type) {
@@ -204,49 +204,48 @@ export function GameProvider({ children }: { children: ReactNode }) {
       default:
         console.warn('Unknown WebSocket message type:', message.type);
     }
-  };
+  }, [dispatch]);
   
   // Debug the WebSocket URL
-  const wsUrl = getWebSocketUrl();
   console.log('🔍 WebSocket URL:', wsUrl);
   
-  // EMERGENCY: Disable WebSocket entirely to stop infinite loop
-  const connectionStatus = 'disconnected';
-  const sendMessage = () => {};
-  const isConnected = false;
-  
-  console.log('🚫 WebSocket EMERGENCY DISABLED - infinite loop detected');
-  
-  // const {
-  //   connectionStatus,
-  //   sendMessage,
-  //   isConnected
-  // } = useWebSocket({
-  //   url: typeof window !== 'undefined' ? wsUrl : undefined, // Only connect on client side
-  //   onMessage: handleWebSocketMessage,
-  //   onConnect: () => {
-  //     dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'connected' });
-  //     console.log('🔗 WebSocket connected to:', wsUrl);
-  //   },
-  //   onDisconnect: () => {
-  //     dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'disconnected' });
-  //     console.log('📱 WebSocket disconnected from:', wsUrl);
-  //   },
-  //   onError: (error) => {
-  //     dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'error' });
-  //     dispatch({ type: 'SET_ERROR', payload: 'Connection error' });
-  //     console.error('❌ WebSocket error:', error, 'URL was:', wsUrl);
-  //     console.error('❌ WebSocket error details:', {
-  //       error,
-  //       url: wsUrl,
-  //       readyState: (error.target as WebSocket)?.readyState,
-  //       timestamp: new Date().toISOString()
-  //     });
-  //   },
-  //   autoReconnect: false, // Disable auto-reconnect to prevent infinite loop
-  //   reconnectAttempts: 0,
-  //   reconnectDelay: 3000
-  // });
+  // Memoize callback functions to prevent re-renders
+  const onConnect = useCallback(() => {
+    dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'connected' });
+    console.log('🔗 WebSocket connected to:', wsUrl);
+  }, [wsUrl, dispatch]);
+
+  const onDisconnect = useCallback(() => {
+    dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'disconnected' });
+    console.log('📱 WebSocket disconnected from:', wsUrl);
+  }, [wsUrl, dispatch]);
+
+  const onError = useCallback((error: Event) => {
+    dispatch({ type: 'SET_CONNECTION_STATUS', payload: 'error' });
+    dispatch({ type: 'SET_ERROR', payload: 'Connection error' });
+    console.error('❌ WebSocket error:', error, 'URL was:', wsUrl);
+    console.error('❌ WebSocket error details:', {
+      error,
+      url: wsUrl,
+      readyState: (error.target as WebSocket)?.readyState,
+      timestamp: new Date().toISOString()
+    });
+  }, [wsUrl, dispatch]);
+
+  const {
+    connectionStatus,
+    sendMessage,
+    isConnected
+  } = useWebSocket({
+    url: wsUrl,
+    onMessage: handleWebSocketMessage,
+    onConnect,
+    onDisconnect,
+    onError,
+    autoReconnect: false, // Keep disabled until we verify it works
+    reconnectAttempts: 0,
+    reconnectDelay: 3000
+  });
   
   useEffect(() => {
     dispatch({ type: 'SET_CONNECTION_STATUS', payload: connectionStatus });
