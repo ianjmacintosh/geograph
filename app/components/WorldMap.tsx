@@ -201,12 +201,6 @@ export function WorldMap({
         <div className="w-full h-96 border border-gray-300 rounded-lg bg-gray-100 flex items-center justify-center">
           <div className="text-gray-500">Loading map...</div>
         </div>
-        {targetCity && !showTarget && (
-          <div className="mt-2 text-center text-gray-600">
-            <p>Find: <span className="font-semibold">{targetCity.name}</span></p>
-            <p className="text-sm">Click on the map to make your guess</p>
-          </div>
-        )}
       </div>
     );
   }
@@ -217,12 +211,6 @@ export function WorldMap({
         ref={mapRef}
         className="w-full h-full border border-gray-300 rounded-lg touch-manipulation"
       />
-      {targetCity && !showTarget && (
-        <div className="absolute top-2 left-2 right-2 bg-white bg-opacity-90 rounded-lg p-2 text-center text-gray-700 shadow-sm z-10">
-          <p className="text-sm sm:text-base">Find: <span className="font-semibold">{targetCity.name}</span></p>
-          <p className="text-xs sm:text-sm">Tap on the map to make your guess</p>
-        </div>
-      )}
     </div>
   );
 }
