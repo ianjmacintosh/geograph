@@ -1181,7 +1181,7 @@ export const cities: City[] = [
   {
     id: 'sao_paulo',
     name: 'São Paulo',
-    country: 'Brazil',
+    country: 'São Paulo',
     lat: -23.5505,
     lng: -46.6333,
     population: 12325232,
@@ -1190,7 +1190,7 @@ export const cities: City[] = [
   {
     id: 'rio_de_janeiro',
     name: 'Rio de Janeiro',
-    country: 'Brazil',
+    country: 'Rio de Janeiro',
     lat: -22.9068,
     lng: -43.1729,
     population: 6718903,
@@ -1199,7 +1199,7 @@ export const cities: City[] = [
   {
     id: 'belo_horizonte',
     name: 'Belo Horizonte',
-    country: 'Brazil',
+    country: 'Minas Gerais',
     lat: -19.9191,
     lng: -43.9378,
     population: 2521564,
@@ -1208,7 +1208,7 @@ export const cities: City[] = [
   {
     id: 'salvador',
     name: 'Salvador',
-    country: 'Brazil',
+    country: 'Bahia',
     lat: -12.9714,
     lng: -38.5014,
     population: 2886698,
@@ -1217,7 +1217,7 @@ export const cities: City[] = [
   {
     id: 'fortaleza',
     name: 'Fortaleza',
-    country: 'Brazil',
+    country: 'Ceará',
     lat: -3.7172,
     lng: -38.5433,
     population: 2686612,
@@ -1226,7 +1226,7 @@ export const cities: City[] = [
   {
     id: 'recife',
     name: 'Recife',
-    country: 'Brazil',
+    country: 'Pernambuco',
     lat: -8.0476,
     lng: -34.8770,
     population: 1653461,
@@ -1235,7 +1235,7 @@ export const cities: City[] = [
   {
     id: 'manaus',
     name: 'Manaus',
-    country: 'Brazil',
+    country: 'Amazonas',
     lat: -3.1190,
     lng: -60.0217,
     population: 2219580,
@@ -1244,7 +1244,7 @@ export const cities: City[] = [
   {
     id: 'porto_alegre',
     name: 'Porto Alegre',
-    country: 'Brazil',
+    country: 'Rio Grande do Sul',
     lat: -30.0346,
     lng: -51.2177,
     population: 1488252,
@@ -1253,7 +1253,7 @@ export const cities: City[] = [
   {
     id: 'goiania',
     name: 'Goiânia',
-    country: 'Brazil',
+    country: 'Goiás',
     lat: -16.6869,
     lng: -49.2648,
     population: 1536097,
@@ -1262,7 +1262,7 @@ export const cities: City[] = [
   {
     id: 'curitiba',
     name: 'Curitiba',
-    country: 'Brazil',
+    country: 'Paraná',
     lat: -25.4284,
     lng: -49.2733,
     population: 1948626,
@@ -1271,7 +1271,7 @@ export const cities: City[] = [
   {
     id: 'brasilia',
     name: 'Brasília',
-    country: 'Brazil',
+    country: 'Federal District',
     lat: -15.7939,
     lng: -47.8828,
     population: 3055149,
@@ -1280,7 +1280,7 @@ export const cities: City[] = [
   {
     id: 'vitoria',
     name: 'Vitória',
-    country: 'Brazil',
+    country: 'Espírito Santo',
     lat: -20.2976,
     lng: -40.2958,
     population: 365855,
@@ -1289,7 +1289,7 @@ export const cities: City[] = [
   {
     id: 'florianopolis',
     name: 'Florianópolis',
-    country: 'Brazil',
+    country: 'Santa Catarina',
     lat: -27.5954,
     lng: -48.5480,
     population: 508826,
@@ -1298,7 +1298,7 @@ export const cities: City[] = [
   {
     id: 'campo_grande',
     name: 'Campo Grande',
-    country: 'Brazil',
+    country: 'Mato Grosso do Sul',
     lat: -20.4697,
     lng: -54.6201,
     population: 906092,
@@ -1307,7 +1307,7 @@ export const cities: City[] = [
   {
     id: 'cuiaba',
     name: 'Cuiabá',
-    country: 'Brazil',
+    country: 'Mato Grosso',
     lat: -15.6014,
     lng: -56.0979,
     population: 650916,
@@ -1316,7 +1316,7 @@ export const cities: City[] = [
   {
     id: 'teresina',
     name: 'Teresina',
-    country: 'Brazil',
+    country: 'Piauí',
     lat: -5.0892,
     lng: -42.8019,
     population: 868075,
@@ -1325,7 +1325,7 @@ export const cities: City[] = [
   {
     id: 'sao_luis',
     name: 'São Luís',
-    country: 'Brazil',
+    country: 'Maranhão',
     lat: -2.5307,
     lng: -44.3068,
     population: 1108975,
@@ -1334,7 +1334,7 @@ export const cities: City[] = [
   {
     id: 'joao_pessoa',
     name: 'João Pessoa',
-    country: 'Brazil',
+    country: 'Paraíba',
     lat: -7.1195,
     lng: -34.8450,
     population: 817511,
@@ -1343,7 +1343,7 @@ export const cities: City[] = [
   {
     id: 'natal',
     name: 'Natal',
-    country: 'Brazil',
+    country: 'Rio Grande do Norte',
     lat: -5.7945,
     lng: -35.2110,
     population: 890480,
@@ -1352,7 +1352,7 @@ export const cities: City[] = [
   {
     id: 'maceio',
     name: 'Maceió',
-    country: 'Brazil',
+    country: 'Alagoas',
     lat: -9.6658,
     lng: -35.7350,
     population: 1025360,
@@ -1361,7 +1361,7 @@ export const cities: City[] = [
   {
     id: 'aracaju',
     name: 'Aracaju',
-    country: 'Brazil',
+    country: 'Sergipe',
     lat: -10.9472,
     lng: -37.0731,
     population: 664908,
@@ -1370,7 +1370,7 @@ export const cities: City[] = [
   {
     id: 'palmas',
     name: 'Palmas',
-    country: 'Brazil',
+    country: 'Tocantins',
     lat: -10.1689,
     lng: -48.3317,
     population: 306296,
@@ -1379,7 +1379,7 @@ export const cities: City[] = [
   {
     id: 'rio_branco',
     name: 'Rio Branco',
-    country: 'Brazil',
+    country: 'Acre',
     lat: -9.9754,
     lng: -67.8246,
     population: 407319,
@@ -1388,7 +1388,7 @@ export const cities: City[] = [
   {
     id: 'porto_velho',
     name: 'Porto Velho',
-    country: 'Brazil',
+    country: 'Rondônia',
     lat: -8.7619,
     lng: -63.9039,
     population: 539354,
@@ -1397,7 +1397,7 @@ export const cities: City[] = [
   {
     id: 'boa_vista',
     name: 'Boa Vista',
-    country: 'Brazil',
+    country: 'Roraima',
     lat: 2.8235,
     lng: -60.6758,
     population: 419652,
@@ -1406,7 +1406,7 @@ export const cities: City[] = [
   {
     id: 'macapa',
     name: 'Macapá',
-    country: 'Brazil',
+    country: 'Amapá',
     lat: 0.0347,
     lng: -51.0694,
     population: 512902,
@@ -1415,7 +1415,7 @@ export const cities: City[] = [
   {
     id: 'belem',
     name: 'Belém',
-    country: 'Brazil',
+    country: 'Pará',
     lat: -1.4558,
     lng: -48.5044,
     population: 1499641,
@@ -1426,7 +1426,7 @@ export const cities: City[] = [
   {
     id: 'montgomery',
     name: 'Montgomery',
-    country: 'United States',
+    country: 'Alabama',
     lat: 32.3617,
     lng: -86.2792,
     population: 200603,
@@ -1435,7 +1435,7 @@ export const cities: City[] = [
   {
     id: 'juneau',
     name: 'Juneau',
-    country: 'United States',
+    country: 'Alaska',
     lat: 58.3019,
     lng: -134.4197,
     population: 32255,
@@ -1444,7 +1444,7 @@ export const cities: City[] = [
   {
     id: 'phoenix',
     name: 'Phoenix',
-    country: 'United States',
+    country: 'Arizona',
     lat: 33.4484,
     lng: -112.0740,
     population: 1680992,
@@ -1453,7 +1453,7 @@ export const cities: City[] = [
   {
     id: 'little_rock',
     name: 'Little Rock',
-    country: 'United States',
+    country: 'Arkansas',
     lat: 34.7465,
     lng: -92.2896,
     population: 198606,
@@ -1462,7 +1462,7 @@ export const cities: City[] = [
   {
     id: 'sacramento',
     name: 'Sacramento',
-    country: 'United States',
+    country: 'California',
     lat: 38.5816,
     lng: -121.4944,
     population: 524943,
@@ -1471,7 +1471,7 @@ export const cities: City[] = [
   {
     id: 'denver',
     name: 'Denver',
-    country: 'United States',
+    country: 'Colorado',
     lat: 39.7392,
     lng: -104.9903,
     population: 715522,
@@ -1480,7 +1480,7 @@ export const cities: City[] = [
   {
     id: 'hartford',
     name: 'Hartford',
-    country: 'United States',
+    country: 'Connecticut',
     lat: 41.7658,
     lng: -72.6734,
     population: 121054,
@@ -1489,7 +1489,7 @@ export const cities: City[] = [
   {
     id: 'dover',
     name: 'Dover',
-    country: 'United States',
+    country: 'Delaware',
     lat: 39.1612,
     lng: -75.5264,
     population: 38079,
@@ -1498,7 +1498,7 @@ export const cities: City[] = [
   {
     id: 'tallahassee',
     name: 'Tallahassee',
-    country: 'United States',
+    country: 'Florida',
     lat: 30.4518,
     lng: -84.2807,
     population: 194500,
@@ -1507,7 +1507,7 @@ export const cities: City[] = [
   {
     id: 'atlanta',
     name: 'Atlanta',
-    country: 'United States',
+    country: 'Georgia',
     lat: 33.7490,
     lng: -84.3880,
     population: 498715,
@@ -1516,7 +1516,7 @@ export const cities: City[] = [
   {
     id: 'honolulu',
     name: 'Honolulu',
-    country: 'United States',
+    country: 'Hawaii',
     lat: 21.3099,
     lng: -157.8581,
     population: 350964,
@@ -1525,7 +1525,7 @@ export const cities: City[] = [
   {
     id: 'boise',
     name: 'Boise',
-    country: 'United States',
+    country: 'Idaho',
     lat: 43.6150,
     lng: -116.2023,
     population: 235684,
@@ -1534,7 +1534,7 @@ export const cities: City[] = [
   {
     id: 'springfield',
     name: 'Springfield',
-    country: 'United States',
+    country: 'Illinois',
     lat: 39.7817,
     lng: -89.6501,
     population: 114394,
@@ -1543,7 +1543,7 @@ export const cities: City[] = [
   {
     id: 'indianapolis',
     name: 'Indianapolis',
-    country: 'United States',
+    country: 'Indiana',
     lat: 39.7684,
     lng: -86.1581,
     population: 876384,
@@ -1552,7 +1552,7 @@ export const cities: City[] = [
   {
     id: 'des_moines',
     name: 'Des Moines',
-    country: 'United States',
+    country: 'Iowa',
     lat: 41.5868,
     lng: -93.6250,
     population: 215472,
@@ -1561,7 +1561,7 @@ export const cities: City[] = [
   {
     id: 'topeka',
     name: 'Topeka',
-    country: 'United States',
+    country: 'Kansas',
     lat: 39.0473,
     lng: -95.6890,
     population: 125904,
@@ -1570,7 +1570,7 @@ export const cities: City[] = [
   {
     id: 'frankfort',
     name: 'Frankfort',
-    country: 'United States',
+    country: 'Kentucky',
     lat: 38.2009,
     lng: -84.8733,
     population: 28602,
@@ -1579,7 +1579,7 @@ export const cities: City[] = [
   {
     id: 'baton_rouge',
     name: 'Baton Rouge',
-    country: 'United States',
+    country: 'Louisiana',
     lat: 30.4515,
     lng: -91.1871,
     population: 220236,
@@ -1588,7 +1588,7 @@ export const cities: City[] = [
   {
     id: 'augusta',
     name: 'Augusta',
-    country: 'United States',
+    country: 'Maine',
     lat: 44.3106,
     lng: -69.7795,
     population: 18697,
@@ -1597,7 +1597,7 @@ export const cities: City[] = [
   {
     id: 'annapolis',
     name: 'Annapolis',
-    country: 'United States',
+    country: 'Maryland',
     lat: 38.9717,
     lng: -76.5010,
     population: 40812,
@@ -1606,7 +1606,7 @@ export const cities: City[] = [
   {
     id: 'boston',
     name: 'Boston',
-    country: 'United States',
+    country: 'Massachusetts',
     lat: 42.3601,
     lng: -71.0589,
     population: 695926,
@@ -1615,7 +1615,7 @@ export const cities: City[] = [
   {
     id: 'lansing',
     name: 'Lansing',
-    country: 'United States',
+    country: 'Michigan',
     lat: 42.3314,
     lng: -84.5467,
     population: 118210,
@@ -1624,7 +1624,7 @@ export const cities: City[] = [
   {
     id: 'saint_paul',
     name: 'Saint Paul',
-    country: 'United States',
+    country: 'Minnesota',
     lat: 44.9537,
     lng: -93.0900,
     population: 308096,
@@ -1633,7 +1633,7 @@ export const cities: City[] = [
   {
     id: 'jackson',
     name: 'Jackson',
-    country: 'United States',
+    country: 'Mississippi',
     lat: 32.2988,
     lng: -90.1848,
     population: 153701,
@@ -1642,7 +1642,7 @@ export const cities: City[] = [
   {
     id: 'jefferson_city',
     name: 'Jefferson City',
-    country: 'United States',
+    country: 'Missouri',
     lat: 38.5767,
     lng: -92.1735,
     population: 43228,
@@ -1651,7 +1651,7 @@ export const cities: City[] = [
   {
     id: 'helena',
     name: 'Helena',
-    country: 'United States',
+    country: 'Montana',
     lat: 46.5965,
     lng: -112.0362,
     population: 32655,
@@ -1660,7 +1660,7 @@ export const cities: City[] = [
   {
     id: 'lincoln',
     name: 'Lincoln',
-    country: 'United States',
+    country: 'Nebraska',
     lat: 40.8136,
     lng: -96.7026,
     population: 295178,
@@ -1669,7 +1669,7 @@ export const cities: City[] = [
   {
     id: 'carson_city',
     name: 'Carson City',
-    country: 'United States',
+    country: 'Nevada',
     lat: 39.1638,
     lng: -119.7674,
     population: 58639,
@@ -1678,7 +1678,7 @@ export const cities: City[] = [
   {
     id: 'concord',
     name: 'Concord',
-    country: 'United States',
+    country: 'New Hampshire',
     lat: 43.2081,
     lng: -71.5376,
     population: 43976,
@@ -1687,7 +1687,7 @@ export const cities: City[] = [
   {
     id: 'trenton',
     name: 'Trenton',
-    country: 'United States',
+    country: 'New Jersey',
     lat: 40.2206,
     lng: -74.7565,
     population: 90871,
@@ -1696,7 +1696,7 @@ export const cities: City[] = [
   {
     id: 'santa_fe',
     name: 'Santa Fe',
-    country: 'United States',
+    country: 'New Mexico',
     lat: 35.6870,
     lng: -105.9378,
     population: 87505,
@@ -1705,7 +1705,7 @@ export const cities: City[] = [
   {
     id: 'albany',
     name: 'Albany',
-    country: 'United States',
+    country: 'New York',
     lat: 42.6526,
     lng: -73.7562,
     population: 97856,
@@ -1714,7 +1714,7 @@ export const cities: City[] = [
   {
     id: 'raleigh',
     name: 'Raleigh',
-    country: 'United States',
+    country: 'North Carolina',
     lat: 35.7796,
     lng: -78.6382,
     population: 474069,
@@ -1723,7 +1723,7 @@ export const cities: City[] = [
   {
     id: 'bismarck',
     name: 'Bismarck',
-    country: 'United States',
+    country: 'North Dakota',
     lat: 46.8083,
     lng: -100.7837,
     population: 73622,
@@ -1732,7 +1732,7 @@ export const cities: City[] = [
   {
     id: 'columbus',
     name: 'Columbus',
-    country: 'United States',
+    country: 'Ohio',
     lat: 39.9612,
     lng: -82.9988,
     population: 905748,
@@ -1741,7 +1741,7 @@ export const cities: City[] = [
   {
     id: 'oklahoma_city',
     name: 'Oklahoma City',
-    country: 'United States',
+    country: 'Oklahoma',
     lat: 35.4676,
     lng: -97.5164,
     population: 695403,
@@ -1750,7 +1750,7 @@ export const cities: City[] = [
   {
     id: 'salem',
     name: 'Salem',
-    country: 'United States',
+    country: 'Oregon',
     lat: 44.9429,
     lng: -123.0351,
     population: 175535,
@@ -1759,7 +1759,7 @@ export const cities: City[] = [
   {
     id: 'harrisburg',
     name: 'Harrisburg',
-    country: 'United States',
+    country: 'Pennsylvania',
     lat: 40.2732,
     lng: -76.8839,
     population: 50099,
@@ -1768,7 +1768,7 @@ export const cities: City[] = [
   {
     id: 'providence',
     name: 'Providence',
-    country: 'United States',
+    country: 'Rhode Island',
     lat: 41.8240,
     lng: -71.4128,
     population: 190934,
@@ -1777,7 +1777,7 @@ export const cities: City[] = [
   {
     id: 'columbia',
     name: 'Columbia',
-    country: 'United States',
+    country: 'South Carolina',
     lat: 34.0007,
     lng: -81.0348,
     population: 137300,
@@ -1786,7 +1786,7 @@ export const cities: City[] = [
   {
     id: 'pierre',
     name: 'Pierre',
-    country: 'United States',
+    country: 'South Dakota',
     lat: 44.3683,
     lng: -100.3510,
     population: 14091,
@@ -1795,7 +1795,7 @@ export const cities: City[] = [
   {
     id: 'nashville',
     name: 'Nashville',
-    country: 'United States',
+    country: 'Tennessee',
     lat: 36.1627,
     lng: -86.7816,
     population: 689447,
@@ -1804,7 +1804,7 @@ export const cities: City[] = [
   {
     id: 'austin',
     name: 'Austin',
-    country: 'United States',
+    country: 'Texas',
     lat: 30.2672,
     lng: -97.7431,
     population: 978908,
@@ -1813,7 +1813,7 @@ export const cities: City[] = [
   {
     id: 'salt_lake_city',
     name: 'Salt Lake City',
-    country: 'United States',
+    country: 'Utah',
     lat: 40.7608,
     lng: -111.8910,
     population: 200567,
@@ -1822,7 +1822,7 @@ export const cities: City[] = [
   {
     id: 'montpelier',
     name: 'Montpelier',
-    country: 'United States',
+    country: 'Vermont',
     lat: 44.2601,
     lng: -72.5806,
     population: 7855,
@@ -1831,7 +1831,7 @@ export const cities: City[] = [
   {
     id: 'richmond',
     name: 'Richmond',
-    country: 'United States',
+    country: 'Virginia',
     lat: 37.5407,
     lng: -77.4360,
     population: 230436,
@@ -1840,7 +1840,7 @@ export const cities: City[] = [
   {
     id: 'olympia',
     name: 'Olympia',
-    country: 'United States',
+    country: 'Washington',
     lat: 47.0379,
     lng: -122.9015,
     population: 55605,
@@ -1849,7 +1849,7 @@ export const cities: City[] = [
   {
     id: 'charleston',
     name: 'Charleston',
-    country: 'United States',
+    country: 'West Virginia',
     lat: 38.3498,
     lng: -81.6326,
     population: 46536,
@@ -1858,7 +1858,7 @@ export const cities: City[] = [
   {
     id: 'madison',
     name: 'Madison',
-    country: 'United States',
+    country: 'Wisconsin',
     lat: 43.0731,
     lng: -89.4012,
     population: 269840,
@@ -1867,7 +1867,7 @@ export const cities: City[] = [
   {
     id: 'cheyenne',
     name: 'Cheyenne',
-    country: 'United States',
+    country: 'Wyoming',
     lat: 41.1400,
     lng: -104.8197,
     population: 65132,
