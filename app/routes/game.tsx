@@ -126,7 +126,10 @@ export default function Game() {
     currentGame?.id,
     showResults,
     playerId,
-    hasAutoSubmitted
+    hasAutoSubmitted,
+    provisionalGuessLocation,
+    hasConfirmedGuessForRound,
+    confirmCurrentGuess
   ]);
 
   // Reset guess state when round changes
