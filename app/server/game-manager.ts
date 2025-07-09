@@ -177,14 +177,11 @@ export class GameManager {
       const gracePeriodMs = 5000; // 5 seconds
       const timeSinceRoundEnd = Date.now() - (currentRound.endTime || Date.now());
       
-      console.log(`🔍 LATE GUESS DEBUG: Round completed, timeSinceRoundEnd=${timeSinceRoundEnd}ms, gracePeriod=${gracePeriodMs}ms, endTime=${currentRound.endTime}, currentTime=${Date.now()}`);
-      
       if (timeSinceRoundEnd > gracePeriodMs) {
-        console.log(`❌ REJECTING late guess from player ${playerId} (${timeSinceRoundEnd}ms after round end, exceeds ${gracePeriodMs}ms grace period)`);
         return { success: false, error: 'Round is already completed' };
       }
       
-      console.log(`✅ ACCEPTING late guess from player ${playerId} (${timeSinceRoundEnd}ms after round end, within ${gracePeriodMs}ms grace period)`);
+      console.log(`Accepting late guess from player ${playerId} (${timeSinceRoundEnd}ms after round end)`);
     }
     
     // Check if player already guessed
