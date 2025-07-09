@@ -146,7 +146,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       // Development: Direct connection to WebSocket server
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.hostname;
-      const port = '8088';
+      const port = '8080';
       return `${protocol}//${host}:${port}`;
     } else {
       // Production: Use Nginx proxy path
