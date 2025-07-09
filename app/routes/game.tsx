@@ -89,13 +89,12 @@ export default function Game() {
       const newRemaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
       setTimeLeft(newRemaining);
 
-      // Auto-submit tentative guess when timer expires
+      // Auto-submit tentative guess when timer expires (allow even if round completed, server will handle grace period)
       // Debug all the conditions
       const shouldAutoSubmit = newRemaining <= 0 &&
         provisionalGuessLocation &&
         !hasConfirmedGuessForRound &&
         !hasAutoSubmitted &&
-        !currentRound.completed &&
         !showResults &&
         currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer);
 
@@ -104,7 +103,7 @@ export default function Game() {
         hasProvisionalGuess: !!provisionalGuessLocation,
         notConfirmed: !hasConfirmedGuessForRound,
         notAutoSubmitted: !hasAutoSubmitted,
-        roundNotCompleted: !currentRound.completed,
+        roundCompleted: currentRound.completed,
         notShowingResults: !showResults,
         isHumanPlayer: !!(currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer)),
         shouldAutoSubmit
