@@ -154,21 +154,22 @@ export default function Lobby() {
                       City Difficulty
                     </label>
                     <div className="space-y-2">
-                      {(['easy', 'medium', 'hard'] as const).map((difficulty) => (
+                      {(['easy', 'medium', 'hard', 'brazilian_capitals', 'us_capitals'] as const).map((difficulty) => (
                         <label key={difficulty} className="flex items-center cursor-pointer">
                           <input
                             type="radio"
                             name="difficulty"
                             value={difficulty}
                             checked={currentGame.settings.cityDifficulty === difficulty}
-                            onChange={(e) => updateSettings({ cityDifficulty: e.target.value as 'easy' | 'medium' | 'hard' })}
+                            onChange={(e) => updateSettings({ cityDifficulty: e.target.value as 'easy' | 'medium' | 'hard' | 'brazilian_capitals' | 'us_capitals' })}
                             className="mr-3 text-blue-600 focus:ring-blue-500"
                           />
-                          <span className="text-sm text-gray-700 capitalize">
-                            {difficulty}
-                            {difficulty === 'easy' && ' - Famous world cities'}
-                            {difficulty === 'medium' && ' - Regional capitals'}
-                            {difficulty === 'hard' && ' - Lesser-known cities'}
+                          <span className="text-sm text-gray-700">
+                            {difficulty === 'easy' && 'Easy - Famous world cities'}
+                            {difficulty === 'medium' && 'Medium - Regional capitals'}
+                            {difficulty === 'hard' && 'Hard - Lesser-known cities'}
+                            {difficulty === 'brazilian_capitals' && 'Brazilian State Capitals'}
+                            {difficulty === 'us_capitals' && 'US State Capitals'}
                           </span>
                         </label>
                       ))}
@@ -179,7 +180,13 @@ export default function Lobby() {
                 {!isHost && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">City difficulty:</span>
-                    <span className="font-semibold capitalize">{currentGame.settings.cityDifficulty}</span>
+                    <span className="font-semibold">
+                      {currentGame.settings.cityDifficulty === 'easy' && 'Easy'}
+                      {currentGame.settings.cityDifficulty === 'medium' && 'Medium'}
+                      {currentGame.settings.cityDifficulty === 'hard' && 'Hard'}
+                      {currentGame.settings.cityDifficulty === 'brazilian_capitals' && 'Brazilian State Capitals'}
+                      {currentGame.settings.cityDifficulty === 'us_capitals' && 'US State Capitals'}
+                    </span>
                   </div>
                 )}
               </div>

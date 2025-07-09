@@ -65,7 +65,9 @@ export function generateComputerGuess(city: City, accuracy: number): { lat: numb
   const difficultyMultipliers = {
     'easy': 0.8,    // 80% accuracy for well-known cities
     'medium': 0.5,  // 50% accuracy for medium cities  
-    'hard': 0.2     // 20% accuracy for obscure cities
+    'hard': 0.2,    // 20% accuracy for obscure cities
+    'brazilian_capitals': 0.4,  // 40% accuracy for Brazilian state capitals
+    'us_capitals': 0.4     // 40% accuracy for US state capitals
   };
   
   const difficultyMultiplier = difficultyMultipliers[city.difficulty];

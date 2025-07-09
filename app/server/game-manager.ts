@@ -468,7 +468,7 @@ export class GameManager {
     return { success: true };
   }
 
-  private createNewRound(gameId: string, difficulty: 'easy' | 'medium' | 'hard', usedCityIds: string[]): GameRound {
+  private createNewRound(gameId: string, difficulty: 'easy' | 'medium' | 'hard' | 'brazilian_capitals' | 'us_capitals', usedCityIds: string[]): GameRound {
     const city = getRandomCityByDifficulty(difficulty, usedCityIds);
     
     const round: GameRound = {

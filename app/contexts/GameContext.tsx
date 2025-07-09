@@ -173,6 +173,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'SET_GAME', payload: message.payload.game });
         break;
         
+      case 'SETTINGS_UPDATED':
+        dispatch({ type: 'SET_GAME', payload: message.payload.game });
+        break;
+        
       case 'GAME_STARTED':
       case 'ROUND_STARTED':
         dispatch({ type: 'SET_GAME', payload: message.payload.game });
@@ -357,7 +361,13 @@ export function useGame() {
   };
 
   const updateSettings = (settings: Partial<Game['settings']>) => {
+    if (!isConnected) {
+      dispatch({ type: 'SET_ERROR', payload: 'Not connected to server' });
+      return;
+    }
+    
     dispatch({ type: 'UPDATE_SETTINGS', payload: settings });
+    sendMessage('UPDATE_SETTINGS', { settings });
   };
 
   const finishGame = (finalResults: FinalResults) => {
