@@ -86,6 +86,19 @@ export default function Game() {
       const newRemaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
       setTimeLeft(newRemaining);
 
+      // Debug timer conditions
+      if (newRemaining <= 0) {
+        console.log('Timer expired, checking conditions:', {
+          newRemaining,
+          provisionalGuessLocation: !!provisionalGuessLocation,
+          hasConfirmedGuessForRound,
+          currentRoundCompleted: currentRound.completed,
+          showResults,
+          playerId,
+          isHuman: !!(currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer))
+        });
+      }
+
       if (
         newRemaining <= 0 &&
         provisionalGuessLocation &&
@@ -271,10 +284,11 @@ export default function Game() {
                   
                   {/* Confirm Button positioned at bottom of map */}
                   {isAwaitingConfirmation && !showResults && provisionalGuessLocation && (
-                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2" style={{ zIndex: 1000 }}>
                       <button
                         onClick={confirmCurrentGuess}
                         className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold text-lg shadow-lg animate-pulse flex items-center space-x-2 min-h-[56px] touch-manipulation"
+                        style={{ zIndex: 1001 }}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
