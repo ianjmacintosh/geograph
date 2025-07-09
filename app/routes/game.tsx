@@ -280,9 +280,26 @@ export default function Game() {
                   {/* Confirm Button positioned at bottom of map */}
                   {isAwaitingConfirmation && !showResults && provisionalGuessLocation && (
                     <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2" style={{ zIndex: 1000 }}>
+                      <style>{`
+                        @keyframes pulse-green {
+                          0%, 100% {
+                            background-color: #10b981; /* green-500 */
+                          }
+                          50% {
+                            background-color: #34d399; /* green-400 */
+                          }
+                        }
+                        .pulse-green {
+                          animation: pulse-green 1.5s ease-in-out infinite;
+                        }
+                        .pulse-green:hover {
+                          animation: none;
+                          background-color: #059669 !important; /* green-600 */
+                        }
+                      `}</style>
                       <button
                         onClick={confirmCurrentGuess}
-                        className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold text-lg shadow-lg animate-pulse flex items-center space-x-2 min-h-[56px] touch-manipulation"
+                        className="px-6 py-3 bg-green-500 text-white rounded-lg font-bold text-lg shadow-lg flex items-center space-x-2 min-h-[56px] touch-manipulation pulse-green"
                         style={{ zIndex: 1001 }}
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
