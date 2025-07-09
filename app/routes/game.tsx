@@ -89,9 +89,9 @@ export default function Game() {
       const newRemaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
       setTimeLeft(newRemaining);
 
-      // Auto-submit tentative guess when timer expires (allow even if round completed, server will handle grace period)
+      // Auto-submit tentative guess when timer reaches 1 second (to beat server timer race)
       // Debug all the conditions
-      const shouldAutoSubmit = newRemaining <= 0 &&
+      const shouldAutoSubmit = newRemaining <= 1 &&
         provisionalGuessLocation &&
         !hasConfirmedGuessForRound &&
         !hasAutoSubmitted &&
@@ -99,7 +99,7 @@ export default function Game() {
         currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer);
 
       console.log(`Timer: ${newRemaining}s, conditions:`, {
-        timeExpired: newRemaining <= 0,
+        timeExpired: newRemaining <= 1,
         hasProvisionalGuess: !!provisionalGuessLocation,
         notConfirmed: !hasConfirmedGuessForRound,
         notAutoSubmitted: !hasAutoSubmitted,
@@ -110,7 +110,7 @@ export default function Game() {
       });
 
       if (shouldAutoSubmit) {
-        console.log(`Client Timer: Auto-submitting tentative guess for player ${playerId} due to timeout.`);
+        console.log(`Client Timer: Auto-submitting tentative guess for player ${playerId} at 1 second remaining.`);
         setHasAutoSubmitted(true);
         confirmCurrentGuess();
       }
@@ -122,14 +122,11 @@ export default function Game() {
     return () => clearInterval(interval);
 
   }, [
-    currentRound,
-    currentGame,
+    currentRound?.id,
+    currentGame?.id,
     showResults,
-    confirmCurrentGuess,
-    isAwaitingConfirmation,
-    provisionalGuessLocation,
-    hasConfirmedGuessForRound,
-    playerId
+    playerId,
+    hasAutoSubmitted
   ]);
 
   // Reset guess state when round changes
