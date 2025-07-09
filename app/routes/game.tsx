@@ -88,14 +88,13 @@ export default function Game() {
 
       if (
         newRemaining <= 0 &&
-        isAwaitingConfirmation &&
         provisionalGuessLocation &&
         !hasConfirmedGuessForRound &&
         !currentRound.completed &&
         !showResults &&
         currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer)
       ) {
-        console.log(`Client Timer: Auto-submitting guess for player ${playerId} due to timeout.`);
+        console.log(`Client Timer: Auto-submitting tentative guess for player ${playerId} due to timeout.`);
         confirmCurrentGuess();
       }
     };
@@ -206,7 +205,6 @@ export default function Game() {
         leaderScore={leader?.totalScore || 0}
         isCurrentPlayerLeader={isCurrentPlayerLeader}
         isAwaitingConfirmation={isAwaitingConfirmation}
-        onConfirmGuess={confirmCurrentGuess}
         onShowScoreboard={() => setIsScoreboardModalOpen(true)}
       />
       
@@ -241,7 +239,7 @@ export default function Game() {
               </div>
 
               <div className="mb-4 lg:mb-6">
-                <div className={`rounded-lg overflow-hidden ${
+                <div className={`relative rounded-lg overflow-hidden ${
                   showResults 
                     ? 'h-48 sm:h-64' // Smaller when showing results
                     : 'h-[calc(100vh-12rem)] sm:h-[calc(100vh-8rem)]' // Full height during gameplay
@@ -270,6 +268,21 @@ export default function Game() {
                     })()}
                     showTarget={showResults}
                   />
+                  
+                  {/* Confirm Button positioned at bottom of map */}
+                  {isAwaitingConfirmation && !showResults && provisionalGuessLocation && (
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+                      <button
+                        onClick={confirmCurrentGuess}
+                        className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-bold text-lg shadow-lg animate-pulse flex items-center space-x-2 min-h-[56px] touch-manipulation"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>CONFIRM GUESS</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
