@@ -55,6 +55,11 @@ export default function Game() {
     currentRound,
     hasPlayerAlreadyGuessedInRound: hasPlayerGuessed, // Pass the existing hasPlayerGuessed
   });
+
+  // Stable callback for confirm guess to prevent effect restarts
+  const stableConfirmGuess = useCallback(() => {
+    confirmCurrentGuess();
+  }, [confirmCurrentGuess]);
   
   // Effect 1: Initial Time Calculation (SSR + Client)
   useEffect(() => {
@@ -98,21 +103,24 @@ export default function Game() {
         !showResults &&
         currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer);
 
-      console.log(`Timer: ${newRemaining}s, conditions:`, {
-        timeExpired: newRemaining <= 1,
-        hasProvisionalGuess: !!provisionalGuessLocation,
-        notConfirmed: !hasConfirmedGuessForRound,
-        notAutoSubmitted: !hasAutoSubmitted,
-        roundCompleted: currentRound.completed,
-        notShowingResults: !showResults,
-        isHumanPlayer: !!(currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer)),
-        shouldAutoSubmit
-      });
+      // Debug logs (remove after testing)
+      if (newRemaining <= 3) {
+        console.log(`Timer: ${newRemaining}s, conditions:`, {
+          timeExpired: newRemaining <= 1,
+          hasProvisionalGuess: !!provisionalGuessLocation,
+          notConfirmed: !hasConfirmedGuessForRound,
+          notAutoSubmitted: !hasAutoSubmitted,
+          roundCompleted: currentRound.completed,
+          notShowingResults: !showResults,
+          isHumanPlayer: !!(currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer)),
+          shouldAutoSubmit
+        });
+      }
 
       if (shouldAutoSubmit) {
         console.log(`Client Timer: Auto-submitting tentative guess for player ${playerId} at 1 second remaining.`);
         setHasAutoSubmitted(true);
-        confirmCurrentGuess();
+        stableConfirmGuess();
       }
     };
 
@@ -129,7 +137,7 @@ export default function Game() {
     hasAutoSubmitted,
     provisionalGuessLocation,
     hasConfirmedGuessForRound,
-    confirmCurrentGuess
+    stableConfirmGuess
   ]);
 
   // Reset guess state when round changes
