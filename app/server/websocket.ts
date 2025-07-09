@@ -45,7 +45,9 @@ export class GameWebSocketServer {
 
   private setupServer() {
     this.wss.on('connection', (ws: AuthenticatedWebSocket, request: IncomingMessage) => {
-      console.log('📱 New WebSocket connection');
+      console.log('📱 New WebSocket connection from:', request.socket.remoteAddress);
+      console.log('📱 Connection URL:', request.url);
+      console.log('📱 Connection headers:', request.headers);
       
       ws.isAlive = true;
       
@@ -54,11 +56,17 @@ export class GameWebSocketServer {
       const gameCode = url.query.gameCode as string;
       const playerId = url.query.playerId as string;
       
+      console.log('📱 Parsed query params:', { gameCode, playerId });
+      
       if (gameCode && playerId) {
+        console.log('📱 Attempting player reconnection');
         this.handlePlayerReconnection(ws, gameCode, playerId);
+      } else {
+        console.log('📱 No reconnection needed, connection ready');
       }
 
       ws.on('message', (data: Buffer) => {
+        console.log('📱 Received WebSocket message:', data.toString());
         try {
           const message: WebSocketMessage = JSON.parse(data.toString());
           this.handleMessage(ws, message);
@@ -69,11 +77,12 @@ export class GameWebSocketServer {
       });
 
       ws.on('pong', () => {
+        console.log('📱 Received pong');
         ws.isAlive = true;
       });
 
-      ws.on('close', () => {
-        console.log('📱 WebSocket connection closed');
+      ws.on('close', (code, reason) => {
+        console.log('📱 WebSocket connection closed with code:', code, 'reason:', reason?.toString());
         if (ws.gameId && ws.playerId) {
           this.handlePlayerDisconnection(ws.gameId, ws.playerId);
         }
