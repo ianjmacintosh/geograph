@@ -1175,6 +1175,703 @@ export const cities: City[] = [
     lng: 102.6331,
     population: 948477,
     difficulty: 'hard'
+  },
+
+  // Brazilian State Capitals (all 26 states + Federal District)
+  {
+    id: 'sao_paulo',
+    name: 'São Paulo',
+    country: 'São Paulo',
+    lat: -23.5505,
+    lng: -46.6333,
+    population: 12325232,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'rio_de_janeiro',
+    name: 'Rio de Janeiro',
+    country: 'Rio de Janeiro',
+    lat: -22.9068,
+    lng: -43.1729,
+    population: 6718903,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'belo_horizonte',
+    name: 'Belo Horizonte',
+    country: 'Minas Gerais',
+    lat: -19.9191,
+    lng: -43.9378,
+    population: 2521564,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'salvador',
+    name: 'Salvador',
+    country: 'Bahia',
+    lat: -12.9714,
+    lng: -38.5014,
+    population: 2886698,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'fortaleza',
+    name: 'Fortaleza',
+    country: 'Ceará',
+    lat: -3.7172,
+    lng: -38.5433,
+    population: 2686612,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'recife',
+    name: 'Recife',
+    country: 'Pernambuco',
+    lat: -8.0476,
+    lng: -34.8770,
+    population: 1653461,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'manaus',
+    name: 'Manaus',
+    country: 'Amazonas',
+    lat: -3.1190,
+    lng: -60.0217,
+    population: 2219580,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'porto_alegre',
+    name: 'Porto Alegre',
+    country: 'Rio Grande do Sul',
+    lat: -30.0346,
+    lng: -51.2177,
+    population: 1488252,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'goiania',
+    name: 'Goiânia',
+    country: 'Goiás',
+    lat: -16.6869,
+    lng: -49.2648,
+    population: 1536097,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'curitiba',
+    name: 'Curitiba',
+    country: 'Paraná',
+    lat: -25.4284,
+    lng: -49.2733,
+    population: 1948626,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'brasilia',
+    name: 'Brasília',
+    country: 'Federal District',
+    lat: -15.7939,
+    lng: -47.8828,
+    population: 3055149,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'vitoria',
+    name: 'Vitória',
+    country: 'Espírito Santo',
+    lat: -20.2976,
+    lng: -40.2958,
+    population: 365855,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'florianopolis',
+    name: 'Florianópolis',
+    country: 'Santa Catarina',
+    lat: -27.5954,
+    lng: -48.5480,
+    population: 508826,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'campo_grande',
+    name: 'Campo Grande',
+    country: 'Mato Grosso do Sul',
+    lat: -20.4697,
+    lng: -54.6201,
+    population: 906092,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'cuiaba',
+    name: 'Cuiabá',
+    country: 'Mato Grosso',
+    lat: -15.6014,
+    lng: -56.0979,
+    population: 650916,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'teresina',
+    name: 'Teresina',
+    country: 'Piauí',
+    lat: -5.0892,
+    lng: -42.8019,
+    population: 868075,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'sao_luis',
+    name: 'São Luís',
+    country: 'Maranhão',
+    lat: -2.5307,
+    lng: -44.3068,
+    population: 1108975,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'joao_pessoa',
+    name: 'João Pessoa',
+    country: 'Paraíba',
+    lat: -7.1195,
+    lng: -34.8450,
+    population: 817511,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'natal',
+    name: 'Natal',
+    country: 'Rio Grande do Norte',
+    lat: -5.7945,
+    lng: -35.2110,
+    population: 890480,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'maceio',
+    name: 'Maceió',
+    country: 'Alagoas',
+    lat: -9.6658,
+    lng: -35.7350,
+    population: 1025360,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'aracaju',
+    name: 'Aracaju',
+    country: 'Sergipe',
+    lat: -10.9472,
+    lng: -37.0731,
+    population: 664908,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'palmas',
+    name: 'Palmas',
+    country: 'Tocantins',
+    lat: -10.1689,
+    lng: -48.3317,
+    population: 306296,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'rio_branco',
+    name: 'Rio Branco',
+    country: 'Acre',
+    lat: -9.9754,
+    lng: -67.8246,
+    population: 407319,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'porto_velho',
+    name: 'Porto Velho',
+    country: 'Rondônia',
+    lat: -8.7619,
+    lng: -63.9039,
+    population: 539354,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'boa_vista',
+    name: 'Boa Vista',
+    country: 'Roraima',
+    lat: 2.8235,
+    lng: -60.6758,
+    population: 419652,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'macapa',
+    name: 'Macapá',
+    country: 'Amapá',
+    lat: 0.0347,
+    lng: -51.0694,
+    population: 512902,
+    difficulty: 'brazilian_capitals'
+  },
+  {
+    id: 'belem',
+    name: 'Belém',
+    country: 'Pará',
+    lat: -1.4558,
+    lng: -48.5044,
+    population: 1499641,
+    difficulty: 'brazilian_capitals'
+  },
+
+  // US State Capitals (all 50 states)
+  {
+    id: 'montgomery',
+    name: 'Montgomery',
+    country: 'Alabama',
+    lat: 32.3617,
+    lng: -86.2792,
+    population: 200603,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'juneau',
+    name: 'Juneau',
+    country: 'Alaska',
+    lat: 58.3019,
+    lng: -134.4197,
+    population: 32255,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'phoenix',
+    name: 'Phoenix',
+    country: 'Arizona',
+    lat: 33.4484,
+    lng: -112.0740,
+    population: 1680992,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'little_rock',
+    name: 'Little Rock',
+    country: 'Arkansas',
+    lat: 34.7465,
+    lng: -92.2896,
+    population: 198606,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'sacramento',
+    name: 'Sacramento',
+    country: 'California',
+    lat: 38.5816,
+    lng: -121.4944,
+    population: 524943,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'denver',
+    name: 'Denver',
+    country: 'Colorado',
+    lat: 39.7392,
+    lng: -104.9903,
+    population: 715522,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'hartford',
+    name: 'Hartford',
+    country: 'Connecticut',
+    lat: 41.7658,
+    lng: -72.6734,
+    population: 121054,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'dover',
+    name: 'Dover',
+    country: 'Delaware',
+    lat: 39.1612,
+    lng: -75.5264,
+    population: 38079,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'tallahassee',
+    name: 'Tallahassee',
+    country: 'Florida',
+    lat: 30.4518,
+    lng: -84.2807,
+    population: 194500,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'atlanta',
+    name: 'Atlanta',
+    country: 'Georgia',
+    lat: 33.7490,
+    lng: -84.3880,
+    population: 498715,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'honolulu',
+    name: 'Honolulu',
+    country: 'Hawaii',
+    lat: 21.3099,
+    lng: -157.8581,
+    population: 350964,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'boise',
+    name: 'Boise',
+    country: 'Idaho',
+    lat: 43.6150,
+    lng: -116.2023,
+    population: 235684,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'springfield',
+    name: 'Springfield',
+    country: 'Illinois',
+    lat: 39.7817,
+    lng: -89.6501,
+    population: 114394,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'indianapolis',
+    name: 'Indianapolis',
+    country: 'Indiana',
+    lat: 39.7684,
+    lng: -86.1581,
+    population: 876384,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'des_moines',
+    name: 'Des Moines',
+    country: 'Iowa',
+    lat: 41.5868,
+    lng: -93.6250,
+    population: 215472,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'topeka',
+    name: 'Topeka',
+    country: 'Kansas',
+    lat: 39.0473,
+    lng: -95.6890,
+    population: 125904,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'frankfort',
+    name: 'Frankfort',
+    country: 'Kentucky',
+    lat: 38.2009,
+    lng: -84.8733,
+    population: 28602,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'baton_rouge',
+    name: 'Baton Rouge',
+    country: 'Louisiana',
+    lat: 30.4515,
+    lng: -91.1871,
+    population: 220236,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'augusta',
+    name: 'Augusta',
+    country: 'Maine',
+    lat: 44.3106,
+    lng: -69.7795,
+    population: 18697,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'annapolis',
+    name: 'Annapolis',
+    country: 'Maryland',
+    lat: 38.9717,
+    lng: -76.5010,
+    population: 40812,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'boston',
+    name: 'Boston',
+    country: 'Massachusetts',
+    lat: 42.3601,
+    lng: -71.0589,
+    population: 695926,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'lansing',
+    name: 'Lansing',
+    country: 'Michigan',
+    lat: 42.3314,
+    lng: -84.5467,
+    population: 118210,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'saint_paul',
+    name: 'Saint Paul',
+    country: 'Minnesota',
+    lat: 44.9537,
+    lng: -93.0900,
+    population: 308096,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'jackson',
+    name: 'Jackson',
+    country: 'Mississippi',
+    lat: 32.2988,
+    lng: -90.1848,
+    population: 153701,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'jefferson_city',
+    name: 'Jefferson City',
+    country: 'Missouri',
+    lat: 38.5767,
+    lng: -92.1735,
+    population: 43228,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'helena',
+    name: 'Helena',
+    country: 'Montana',
+    lat: 46.5965,
+    lng: -112.0362,
+    population: 32655,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'lincoln',
+    name: 'Lincoln',
+    country: 'Nebraska',
+    lat: 40.8136,
+    lng: -96.7026,
+    population: 295178,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'carson_city',
+    name: 'Carson City',
+    country: 'Nevada',
+    lat: 39.1638,
+    lng: -119.7674,
+    population: 58639,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'concord',
+    name: 'Concord',
+    country: 'New Hampshire',
+    lat: 43.2081,
+    lng: -71.5376,
+    population: 43976,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'trenton',
+    name: 'Trenton',
+    country: 'New Jersey',
+    lat: 40.2206,
+    lng: -74.7565,
+    population: 90871,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'santa_fe',
+    name: 'Santa Fe',
+    country: 'New Mexico',
+    lat: 35.6870,
+    lng: -105.9378,
+    population: 87505,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'albany',
+    name: 'Albany',
+    country: 'New York',
+    lat: 42.6526,
+    lng: -73.7562,
+    population: 97856,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'raleigh',
+    name: 'Raleigh',
+    country: 'North Carolina',
+    lat: 35.7796,
+    lng: -78.6382,
+    population: 474069,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'bismarck',
+    name: 'Bismarck',
+    country: 'North Dakota',
+    lat: 46.8083,
+    lng: -100.7837,
+    population: 73622,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'columbus',
+    name: 'Columbus',
+    country: 'Ohio',
+    lat: 39.9612,
+    lng: -82.9988,
+    population: 905748,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'oklahoma_city',
+    name: 'Oklahoma City',
+    country: 'Oklahoma',
+    lat: 35.4676,
+    lng: -97.5164,
+    population: 695403,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'salem',
+    name: 'Salem',
+    country: 'Oregon',
+    lat: 44.9429,
+    lng: -123.0351,
+    population: 175535,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'harrisburg',
+    name: 'Harrisburg',
+    country: 'Pennsylvania',
+    lat: 40.2732,
+    lng: -76.8839,
+    population: 50099,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'providence',
+    name: 'Providence',
+    country: 'Rhode Island',
+    lat: 41.8240,
+    lng: -71.4128,
+    population: 190934,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'columbia',
+    name: 'Columbia',
+    country: 'South Carolina',
+    lat: 34.0007,
+    lng: -81.0348,
+    population: 137300,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'pierre',
+    name: 'Pierre',
+    country: 'South Dakota',
+    lat: 44.3683,
+    lng: -100.3510,
+    population: 14091,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'nashville',
+    name: 'Nashville',
+    country: 'Tennessee',
+    lat: 36.1627,
+    lng: -86.7816,
+    population: 689447,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'austin',
+    name: 'Austin',
+    country: 'Texas',
+    lat: 30.2672,
+    lng: -97.7431,
+    population: 978908,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'salt_lake_city',
+    name: 'Salt Lake City',
+    country: 'Utah',
+    lat: 40.7608,
+    lng: -111.8910,
+    population: 200567,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'montpelier',
+    name: 'Montpelier',
+    country: 'Vermont',
+    lat: 44.2601,
+    lng: -72.5806,
+    population: 7855,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'richmond',
+    name: 'Richmond',
+    country: 'Virginia',
+    lat: 37.5407,
+    lng: -77.4360,
+    population: 230436,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'olympia',
+    name: 'Olympia',
+    country: 'Washington',
+    lat: 47.0379,
+    lng: -122.9015,
+    population: 55605,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'charleston',
+    name: 'Charleston',
+    country: 'West Virginia',
+    lat: 38.3498,
+    lng: -81.6326,
+    population: 46536,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'madison',
+    name: 'Madison',
+    country: 'Wisconsin',
+    lat: 43.0731,
+    lng: -89.4012,
+    population: 269840,
+    difficulty: 'us_capitals'
+  },
+  {
+    id: 'cheyenne',
+    name: 'Cheyenne',
+    country: 'Wyoming',
+    lat: 41.1400,
+    lng: -104.8197,
+    population: 65132,
+    difficulty: 'us_capitals'
   }
 ];
 
@@ -1182,11 +1879,11 @@ export function getRandomCity(): City {
   return cities[Math.floor(Math.random() * cities.length)];
 }
 
-export function getCitiesByDifficulty(difficulty: 'easy' | 'medium' | 'hard'): City[] {
+export function getCitiesByDifficulty(difficulty: 'easy' | 'medium' | 'hard' | 'brazilian_capitals' | 'us_capitals'): City[] {
   return cities.filter(city => city.difficulty === difficulty);
 }
 
-export function getRandomCityByDifficulty(difficulty: 'easy' | 'medium' | 'hard', usedCityIds: string[] = []): City {
+export function getRandomCityByDifficulty(difficulty: 'easy' | 'medium' | 'hard' | 'brazilian_capitals' | 'us_capitals', usedCityIds: string[] = []): City {
   const filteredCities = getCitiesByDifficulty(difficulty);
   const availableCities = filteredCities.filter(city => !usedCityIds.includes(city.id));
   

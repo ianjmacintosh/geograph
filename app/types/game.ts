@@ -5,7 +5,7 @@ export interface City {
   lat: number;
   lng: number;
   population: number;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: 'easy' | 'medium' | 'hard' | 'brazilian_capitals' | 'us_capitals';
 }
 
 export interface Player {
@@ -61,7 +61,7 @@ export interface Game {
     maxPlayers: number;
     roundTimeLimit: number;
     totalRounds: number;
-    cityDifficulty: 'easy' | 'medium' | 'hard';
+    cityDifficulty: 'easy' | 'medium' | 'hard' | 'brazilian_capitals' | 'us_capitals';
   };
   finalResults?: FinalResults;
   createdAt: number;

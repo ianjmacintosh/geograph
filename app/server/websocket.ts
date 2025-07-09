@@ -129,6 +129,10 @@ export class GameWebSocketServer {
         this.handleLeaveGame(ws);
         break;
         
+      case 'UPDATE_SETTINGS':
+        this.handleUpdateSettings(ws, message.payload);
+        break;
+        
       default:
         console.warn(`⚠️ Unknown message type: ${message.type}`);
         this.sendError(ws, `Unknown message type: ${message.type}`);
@@ -333,6 +337,30 @@ export class GameWebSocketServer {
     } catch (error) {
       console.error('❌ Error leaving game:', error);
       this.sendError(ws, 'Failed to leave game');
+    }
+  }
+
+  private handleUpdateSettings(ws: AuthenticatedWebSocket, payload: { settings: any }) {
+    if (!ws.gameId || !ws.playerId) {
+      return this.sendError(ws, 'Not in a game');
+    }
+
+    try {
+      const result = this.gameManager.updateSettings(ws.gameId, ws.playerId, payload.settings);
+      
+      if (!result.success) {
+        return this.sendError(ws, result.error || 'Failed to update settings');
+      }
+      
+      // Broadcast the updated game state to all players in the game
+      this.broadcastToGame(ws.gameId, 'SETTINGS_UPDATED', {
+        game: result.game
+      });
+      
+      console.log(`⚙️ Settings updated for game ${ws.gameId}`);
+    } catch (error) {
+      console.error('❌ Error updating settings:', error);
+      this.sendError(ws, 'Failed to update settings');
     }
   }
 
