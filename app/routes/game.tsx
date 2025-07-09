@@ -39,6 +39,9 @@ export default function Game() {
   
   // Modal state
   const [isScoreboardModalOpen, setIsScoreboardModalOpen] = useState(false);
+  
+  // Track if we've already auto-submitted for this round to prevent duplicates
+  const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
 
   const {
     provisionalGuessLocation,
@@ -87,11 +90,12 @@ export default function Game() {
       setTimeLeft(newRemaining);
 
       // Debug timer conditions
-      if (newRemaining <= 0) {
-        console.log('Timer expired, checking conditions:', {
+      if (newRemaining <= 2) {
+        console.log('Timer about to expire, checking conditions:', {
           newRemaining,
           provisionalGuessLocation: !!provisionalGuessLocation,
           hasConfirmedGuessForRound,
+          hasAutoSubmitted,
           currentRoundCompleted: currentRound.completed,
           showResults,
           playerId,
@@ -99,15 +103,18 @@ export default function Game() {
         });
       }
 
+      // Auto-submit tentative guess with 1 second buffer before server timer expires
       if (
-        newRemaining <= 0 &&
+        newRemaining <= 1 &&
         provisionalGuessLocation &&
         !hasConfirmedGuessForRound &&
+        !hasAutoSubmitted &&
         !currentRound.completed &&
         !showResults &&
         currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer)
       ) {
-        console.log(`Client Timer: Auto-submitting tentative guess for player ${playerId} due to timeout.`);
+        console.log(`Client Timer: Auto-submitting tentative guess for player ${playerId} with ${newRemaining}s remaining (1s buffer).`);
+        setHasAutoSubmitted(true);
         confirmCurrentGuess();
       }
     };
@@ -132,6 +139,7 @@ export default function Game() {
   useEffect(() => {
     if (currentRound?.id) {
       resetPlayerGuessState();
+      setHasAutoSubmitted(false);
     }
   }, [currentRound?.id, resetPlayerGuessState]);
 
