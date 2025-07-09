@@ -90,15 +90,27 @@ export default function Game() {
       setTimeLeft(newRemaining);
 
       // Auto-submit tentative guess when timer expires
-      if (
-        newRemaining <= 0 &&
+      // Debug all the conditions
+      const shouldAutoSubmit = newRemaining <= 0 &&
         provisionalGuessLocation &&
         !hasConfirmedGuessForRound &&
         !hasAutoSubmitted &&
         !currentRound.completed &&
         !showResults &&
-        currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer)
-      ) {
+        currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer);
+
+      console.log(`Timer: ${newRemaining}s, conditions:`, {
+        timeExpired: newRemaining <= 0,
+        hasProvisionalGuess: !!provisionalGuessLocation,
+        notConfirmed: !hasConfirmedGuessForRound,
+        notAutoSubmitted: !hasAutoSubmitted,
+        roundNotCompleted: !currentRound.completed,
+        notShowingResults: !showResults,
+        isHumanPlayer: !!(currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer)),
+        shouldAutoSubmit
+      });
+
+      if (shouldAutoSubmit) {
         console.log(`Client Timer: Auto-submitting tentative guess for player ${playerId} due to timeout.`);
         setHasAutoSubmitted(true);
         confirmCurrentGuess();
