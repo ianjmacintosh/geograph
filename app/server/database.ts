@@ -152,6 +152,14 @@ export class GameDatabase {
     stmt.run(JSON.stringify(finalResults), Date.now(), gameId);
   }
 
+  updateGameSettings(gameId: string, settings: Game['settings']): void {
+    const stmt = this.db.prepare(`
+      UPDATE games SET settings = ?, updated_at = ? WHERE id = ?
+    `);
+    
+    stmt.run(JSON.stringify(settings), Date.now(), gameId);
+  }
+
   // Player operations
   addPlayer(gameId: string, player: Player): void {
     const stmt = this.db.prepare(`

@@ -445,6 +445,41 @@ export class GameManager {
     };
   }
 
+  updateSettings(gameId: string, playerId: string, settings: Partial<Game['settings']>): GameResult {
+    const game = this.db.getGameById(gameId);
+    
+    if (!game) {
+      return { success: false, error: 'Game not found' };
+    }
+    
+    // Only the host can update settings
+    if (game.hostId !== playerId) {
+      return { success: false, error: 'Only the host can update settings' };
+    }
+    
+    // Only allow settings changes before the game starts
+    if (game.status !== 'waiting') {
+      return { success: false, error: 'Settings can only be changed before the game starts' };
+    }
+    
+    // Update the settings
+    const updatedSettings = {
+      ...game.settings,
+      ...settings
+    };
+    
+    // Update in database
+    this.db.updateGameSettings(gameId, updatedSettings);
+    
+    // Get the updated game
+    const updatedGame = this.db.getGameById(gameId);
+    
+    return { 
+      success: true, 
+      game: updatedGame! 
+    };
+  }
+
   removePlayer(gameId: string, playerId: string): GameResult {
     const game = this.db.getGameById(gameId);
     
