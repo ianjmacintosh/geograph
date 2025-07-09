@@ -48,21 +48,10 @@ export function usePlayerInteraction({
   }, [hasConfirmedGuessForRound, hasPlayerAlreadyGuessedInRound, currentRound, currentGame, playerId]);
 
   const confirmCurrentGuess = useCallback(() => {
-    console.log('confirmCurrentGuess called with conditions:', {
-      provisionalGuessLocation: !!provisionalGuessLocation,
-      currentRound: !!currentRound,
-      currentGame: !!currentGame,
-      playerId: !!playerId,
-      hasConfirmedGuessForRound,
-      hasPlayerAlreadyGuessedInRound
-    });
-
     if (!provisionalGuessLocation || !currentRound || !currentGame || !playerId || hasConfirmedGuessForRound || hasPlayerAlreadyGuessedInRound) {
-      console.log('confirmCurrentGuess: Conditions not met, returning early');
       return;
     }
 
-    console.log('confirmCurrentGuess: Making guess with coordinates:', provisionalGuessLocation);
     makeGuess(provisionalGuessLocation.lat, provisionalGuessLocation.lng);
     setHasConfirmedGuessForRound(true); // Player has now officially guessed for this round.
     setIsAwaitingConfirmation(false);

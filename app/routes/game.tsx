@@ -89,19 +89,6 @@ export default function Game() {
       const newRemaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
       setTimeLeft(newRemaining);
 
-      // Debug timer conditions
-      if (newRemaining <= 2) {
-        console.log('Timer about to expire, checking conditions:', {
-          newRemaining,
-          provisionalGuessLocation: !!provisionalGuessLocation,
-          hasConfirmedGuessForRound,
-          hasAutoSubmitted,
-          currentRoundCompleted: currentRound.completed,
-          showResults,
-          playerId,
-          isHuman: !!(currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer))
-        });
-      }
 
       // Auto-submit tentative guess with 1 second buffer before server timer expires
       if (
