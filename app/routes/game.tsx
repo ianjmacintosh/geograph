@@ -89,10 +89,9 @@ export default function Game() {
       const newRemaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
       setTimeLeft(newRemaining);
 
-
-      // Auto-submit tentative guess with 1 second buffer before server timer expires
+      // Auto-submit tentative guess when timer expires
       if (
-        newRemaining <= 1 &&
+        newRemaining <= 0 &&
         provisionalGuessLocation &&
         !hasConfirmedGuessForRound &&
         !hasAutoSubmitted &&
@@ -100,7 +99,7 @@ export default function Game() {
         !showResults &&
         currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer)
       ) {
-        console.log(`Client Timer: Auto-submitting tentative guess for player ${playerId} with ${newRemaining}s remaining (1s buffer).`);
+        console.log(`Client Timer: Auto-submitting tentative guess for player ${playerId} due to timeout.`);
         setHasAutoSubmitted(true);
         confirmCurrentGuess();
       }

@@ -210,7 +210,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
         break;
         
       case 'ERROR':
-        dispatch({ type: 'SET_ERROR', payload: message.payload.message });
+        // Don't show error for "Round is already completed" - this is expected when auto-submit races with server timer
+        if (message.payload.message !== 'Round is already completed') {
+          dispatch({ type: 'SET_ERROR', payload: message.payload.message });
+        }
         dispatch({ type: 'SET_LOADING', payload: false });
         break;
         
