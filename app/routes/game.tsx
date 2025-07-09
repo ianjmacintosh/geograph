@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useGame } from "../contexts/GameContext";
 import { WorldMap } from "../components/WorldMap";
@@ -39,6 +39,9 @@ export default function Game() {
   
   // Modal state
   const [isScoreboardModalOpen, setIsScoreboardModalOpen] = useState(false);
+  
+  // Track if we've already auto-submitted for this round to prevent duplicates
+  const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
 
   const {
     provisionalGuessLocation,
@@ -51,6 +54,20 @@ export default function Game() {
     currentGame,
     currentRound,
     hasPlayerAlreadyGuessedInRound: hasPlayerGuessed, // Pass the existing hasPlayerGuessed
+  });
+
+  // Use refs to access current values without causing effect restarts
+  const provisionalGuessRef = useRef(provisionalGuessLocation);
+  const hasConfirmedRef = useRef(hasConfirmedGuessForRound);
+  const hasAutoSubmittedRef = useRef(hasAutoSubmitted);
+  const confirmGuessRef = useRef(confirmCurrentGuess);
+  
+  // Update refs when values change
+  useEffect(() => {
+    provisionalGuessRef.current = provisionalGuessLocation;
+    hasConfirmedRef.current = hasConfirmedGuessForRound;
+    hasAutoSubmittedRef.current = hasAutoSubmitted;
+    confirmGuessRef.current = confirmCurrentGuess;
   });
   
   // Effect 1: Initial Time Calculation (SSR + Client)
@@ -86,17 +103,33 @@ export default function Game() {
       const newRemaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
       setTimeLeft(newRemaining);
 
-      if (
-        newRemaining <= 0 &&
-        isAwaitingConfirmation &&
-        provisionalGuessLocation &&
-        !hasConfirmedGuessForRound &&
-        !currentRound.completed &&
+      // Auto-submit tentative guess when timer reaches 1 second (to beat server timer race)
+      // Use ref values to avoid stale closures
+      const shouldAutoSubmit = newRemaining <= 1 &&
+        provisionalGuessRef.current &&
+        !hasConfirmedRef.current &&
+        !hasAutoSubmittedRef.current &&
         !showResults &&
-        currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer)
-      ) {
-        console.log(`Client Timer: Auto-submitting guess for player ${playerId} due to timeout.`);
-        confirmCurrentGuess();
+        currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer);
+
+      // Debug logs (remove after testing)
+      if (newRemaining <= 3) {
+        console.log(`Timer: ${newRemaining}s, conditions:`, {
+          timeExpired: newRemaining <= 1,
+          hasProvisionalGuess: !!provisionalGuessRef.current,
+          notConfirmed: !hasConfirmedRef.current,
+          notAutoSubmitted: !hasAutoSubmittedRef.current,
+          roundCompleted: currentRound.completed,
+          notShowingResults: !showResults,
+          isHumanPlayer: !!(currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer)),
+          shouldAutoSubmit
+        });
+      }
+
+      if (shouldAutoSubmit) {
+        console.log(`Client Timer: Auto-submitting tentative guess for player ${playerId} at 1 second remaining.`);
+        setHasAutoSubmitted(true);
+        confirmGuessRef.current();
       }
     };
 
@@ -106,13 +139,9 @@ export default function Game() {
     return () => clearInterval(interval);
 
   }, [
-    currentRound,
-    currentGame,
+    currentRound?.id,
+    currentGame?.id,
     showResults,
-    confirmCurrentGuess,
-    isAwaitingConfirmation,
-    provisionalGuessLocation,
-    hasConfirmedGuessForRound,
     playerId
   ]);
 
@@ -120,6 +149,7 @@ export default function Game() {
   useEffect(() => {
     if (currentRound?.id) {
       resetPlayerGuessState();
+      setHasAutoSubmitted(false);
     }
   }, [currentRound?.id, resetPlayerGuessState]);
 
@@ -206,7 +236,6 @@ export default function Game() {
         leaderScore={leader?.totalScore || 0}
         isCurrentPlayerLeader={isCurrentPlayerLeader}
         isAwaitingConfirmation={isAwaitingConfirmation}
-        onConfirmGuess={confirmCurrentGuess}
         onShowScoreboard={() => setIsScoreboardModalOpen(true)}
       />
       
@@ -241,7 +270,7 @@ export default function Game() {
               </div>
 
               <div className="mb-4 lg:mb-6">
-                <div className={`rounded-lg overflow-hidden ${
+                <div className={`relative rounded-lg overflow-hidden ${
                   showResults 
                     ? 'h-48 sm:h-64' // Smaller when showing results
                     : 'h-[calc(100vh-12rem)] sm:h-[calc(100vh-8rem)]' // Full height during gameplay
@@ -270,6 +299,39 @@ export default function Game() {
                     })()}
                     showTarget={showResults}
                   />
+                  
+                  {/* Confirm Button positioned at bottom of map */}
+                  {isAwaitingConfirmation && !showResults && provisionalGuessLocation && (
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2" style={{ zIndex: 1000 }}>
+                      <style>{`
+                        @keyframes pulse-green {
+                          0%, 100% {
+                            background-color: #10b981; /* green-500 */
+                          }
+                          50% {
+                            background-color: #34d399; /* green-400 */
+                          }
+                        }
+                        .pulse-green {
+                          animation: pulse-green 1.5s ease-in-out infinite;
+                        }
+                        .pulse-green:hover {
+                          animation: none;
+                          background-color: #059669 !important; /* green-600 */
+                        }
+                      `}</style>
+                      <button
+                        onClick={confirmCurrentGuess}
+                        className="px-6 py-3 bg-green-500 text-white rounded-lg font-bold text-lg shadow-lg flex items-center space-x-2 min-h-[56px] touch-manipulation pulse-green"
+                        style={{ zIndex: 1001 }}
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>CONFIRM GUESS</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 

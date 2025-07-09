@@ -11,7 +11,6 @@ interface PersistentGameHeaderProps {
   leaderScore: number;
   isCurrentPlayerLeader: boolean;
   isAwaitingConfirmation: boolean;
-  onConfirmGuess: () => void;
   onShowScoreboard: () => void;
 }
 
@@ -25,7 +24,6 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
   leaderScore,
   isCurrentPlayerLeader,
   isAwaitingConfirmation,
-  onConfirmGuess,
   onShowScoreboard,
 }: PersistentGameHeaderProps) {
   const isLowTime = timeLeft <= 10;
@@ -43,18 +41,8 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
           </div>
           
           <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
-            {/* Confirm Button (when awaiting confirmation) */}
-            {isAwaitingConfirmation && !showResults && (
-              <button
-                onClick={onConfirmGuess}
-                className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md font-bold text-sm animate-pulse"
-              >
-                CONFIRM GUESS
-              </button>
-            )}
-            
-            {/* Timer (when not awaiting confirmation) */}
-            {!isAwaitingConfirmation && !showResults && (
+            {/* Timer */}
+            {!showResults && (
               <div className={`text-sm font-bold px-2 py-1 rounded ${
                 isLowTime 
                   ? 'text-red-600 bg-red-50 animate-pulse' 

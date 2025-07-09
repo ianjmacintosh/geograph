@@ -173,7 +173,15 @@ export class GameManager {
     }
     
     if (currentRound.completed) {
-      return { success: false, error: 'Round is already completed' };
+      // Allow a 5-second grace period for late guesses due to network latency
+      const gracePeriodMs = 5000; // 5 seconds
+      const timeSinceRoundEnd = Date.now() - (currentRound.endTime || Date.now());
+      
+      if (timeSinceRoundEnd > gracePeriodMs) {
+        return { success: false, error: 'Round is already completed' };
+      }
+      
+      console.log(`Accepting late guess from player ${playerId} (${timeSinceRoundEnd}ms after round end)`);
     }
     
     // Check if player already guessed
