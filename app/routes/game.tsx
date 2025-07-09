@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useGame } from "../contexts/GameContext";
 import { WorldMap } from "../components/WorldMap";
@@ -56,10 +56,19 @@ export default function Game() {
     hasPlayerAlreadyGuessedInRound: hasPlayerGuessed, // Pass the existing hasPlayerGuessed
   });
 
-  // Stable callback for confirm guess to prevent effect restarts
-  const stableConfirmGuess = useCallback(() => {
-    confirmCurrentGuess();
-  }, [confirmCurrentGuess]);
+  // Use refs to access current values without causing effect restarts
+  const provisionalGuessRef = useRef(provisionalGuessLocation);
+  const hasConfirmedRef = useRef(hasConfirmedGuessForRound);
+  const hasAutoSubmittedRef = useRef(hasAutoSubmitted);
+  const confirmGuessRef = useRef(confirmCurrentGuess);
+  
+  // Update refs when values change
+  useEffect(() => {
+    provisionalGuessRef.current = provisionalGuessLocation;
+    hasConfirmedRef.current = hasConfirmedGuessForRound;
+    hasAutoSubmittedRef.current = hasAutoSubmitted;
+    confirmGuessRef.current = confirmCurrentGuess;
+  });
   
   // Effect 1: Initial Time Calculation (SSR + Client)
   useEffect(() => {
@@ -95,11 +104,11 @@ export default function Game() {
       setTimeLeft(newRemaining);
 
       // Auto-submit tentative guess when timer reaches 1 second (to beat server timer race)
-      // Debug all the conditions
+      // Use ref values to avoid stale closures
       const shouldAutoSubmit = newRemaining <= 1 &&
-        provisionalGuessLocation &&
-        !hasConfirmedGuessForRound &&
-        !hasAutoSubmitted &&
+        provisionalGuessRef.current &&
+        !hasConfirmedRef.current &&
+        !hasAutoSubmittedRef.current &&
         !showResults &&
         currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer);
 
@@ -107,9 +116,9 @@ export default function Game() {
       if (newRemaining <= 3) {
         console.log(`Timer: ${newRemaining}s, conditions:`, {
           timeExpired: newRemaining <= 1,
-          hasProvisionalGuess: !!provisionalGuessLocation,
-          notConfirmed: !hasConfirmedGuessForRound,
-          notAutoSubmitted: !hasAutoSubmitted,
+          hasProvisionalGuess: !!provisionalGuessRef.current,
+          notConfirmed: !hasConfirmedRef.current,
+          notAutoSubmitted: !hasAutoSubmittedRef.current,
           roundCompleted: currentRound.completed,
           notShowingResults: !showResults,
           isHumanPlayer: !!(currentGame && currentGame.players.find(p => p.id === playerId && !p.isComputer)),
@@ -120,7 +129,7 @@ export default function Game() {
       if (shouldAutoSubmit) {
         console.log(`Client Timer: Auto-submitting tentative guess for player ${playerId} at 1 second remaining.`);
         setHasAutoSubmitted(true);
-        stableConfirmGuess();
+        confirmGuessRef.current();
       }
     };
 
@@ -133,11 +142,7 @@ export default function Game() {
     currentRound?.id,
     currentGame?.id,
     showResults,
-    playerId,
-    hasAutoSubmitted,
-    provisionalGuessLocation,
-    hasConfirmedGuessForRound,
-    stableConfirmGuess
+    playerId
   ]);
 
   // Reset guess state when round changes
