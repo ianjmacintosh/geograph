@@ -5,4 +5,5 @@ export default [
   route("lobby", "routes/lobby.tsx"),
   route("game", "routes/game.tsx"),
   route("results", "routes/results.tsx"),
+  route("join/:gameCode", "routes/join.tsx"),
 ] satisfies RouteConfig;

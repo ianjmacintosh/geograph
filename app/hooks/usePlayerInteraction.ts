@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { Game, GameRound } from '../types/game';
 import { useGame } from '../contexts/GameContext';
 
@@ -66,7 +66,7 @@ export function usePlayerInteraction({
 
   // Effect to synchronize hasConfirmedGuessForRound with external hasPlayerAlreadyGuessedInRound
   // This is important if the guess was made on another client/tab or if rejoining.
-  useState(() => {
+  useEffect(() => {
     if (hasPlayerAlreadyGuessedInRound) {
       setHasConfirmedGuessForRound(true);
     }

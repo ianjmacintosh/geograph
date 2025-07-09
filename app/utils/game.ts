@@ -1,11 +1,11 @@
 import type { Game, Player, City, Guess } from '../types/game';
 
 export function generateGameCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
 export function isValidGameCode(code: string): boolean {
-  return /^\d{6}$/.test(code);
+  return /^\d{4}$/.test(code);
 }
 
 export function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {

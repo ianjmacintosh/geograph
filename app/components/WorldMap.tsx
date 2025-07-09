@@ -45,7 +45,6 @@ export function WorldMap({
         worldCopyJump: true,
         maxBounds: [[-90, -180], [90, 180]],
         maxBoundsViscosity: 1.0,
-        tap: true,
         tapTolerance: 15,
         touchZoom: true,
         bounceAtZoomLimits: false,
