@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import type { GameRound, City, Game, FinalResults, Player } from '../types/game';
 import { getRandomCityByDifficulty } from '../data/cities';
+import { calculateFinalPlacements } from '../utils/game';
 import { useGame } from '../contexts/GameContext'; // Assuming GameContext provides finishGame
 
 export interface UseRoundManagementProps {
@@ -85,14 +86,19 @@ export function useRoundManagement({
       };
     });
 
-    const sortedScores = playerScores.sort((a, b) => b.totalScore - a.totalScore);
-    sortedScores.forEach((player, index) => {
-      player.finalPlacement = index + 1;
-    });
+    const sortedScores = calculateFinalPlacements(playerScores);
+
+    // Find all players who tied for first place
+    const winnerIds: string[] = [];
+    if (sortedScores.length > 0) {
+      const topScore = sortedScores[0].totalScore;
+      winnerIds.push(...sortedScores.filter(p => p.totalScore === topScore).map(p => p.playerId));
+    }
 
     const finalResults: FinalResults = {
       playerScores: sortedScores,
       winnerId: sortedScores.length > 0 ? sortedScores[0].playerId : '', // Handle empty scores
+      winnerIds,
       gameEndTime: Date.now(),
     };
 
