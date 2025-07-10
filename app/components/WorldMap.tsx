@@ -1,1 +1,1 @@
-export { WorldMapContainer as WorldMap } from './components/WorldMap';
+export { default as WorldMap } from './WorldMap/WorldMapContainer';
