@@ -35,18 +35,24 @@ export function useWebSocket({
   const messageQueueRef = useRef<WebSocketMessage[]>([]);
 
   const connect = useCallback(() => {
-    if (!url) return;
+    if (!url) {
+      console.log('🔍 No WebSocket URL provided, skipping connection');
+      return;
+    }
     
     if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log('🔍 WebSocket already connected, skipping');
       return; // Already connected
     }
     
+    console.log('🔍 Connecting to WebSocket:', url);
     setConnectionStatus('connecting');
     
     try {
       wsRef.current = new WebSocket(url);
       
       wsRef.current.onopen = () => {
+        console.log('🔗 WebSocket connected successfully');
         setConnectionStatus('connected');
         reconnectAttemptsRef.current = 0;
         
@@ -54,6 +60,7 @@ export function useWebSocket({
         while (messageQueueRef.current.length > 0) {
           const message = messageQueueRef.current.shift();
           if (message) {
+            console.log('📤 Sending queued message:', message.type);
             sendMessage(message.type, message.payload);
           }
         }
@@ -62,6 +69,7 @@ export function useWebSocket({
       };
       
       wsRef.current.onmessage = (event) => {
+        console.log('📥 Received WebSocket message:', event.data);
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
           setLastMessage(message);
@@ -71,20 +79,32 @@ export function useWebSocket({
         }
       };
       
-      wsRef.current.onclose = () => {
+      wsRef.current.onclose = (event) => {
+        console.log('🔌 WebSocket connection closed. Code:', event.code, 'Reason:', event.reason, 'Clean:', event.wasClean);
         setConnectionStatus('disconnected');
         onDisconnect?.();
         
         // Attempt to reconnect if enabled
         if (autoReconnect && reconnectAttemptsRef.current < reconnectAttempts) {
           reconnectAttemptsRef.current++;
+          
+          // Exponential backoff with jitter for better mobile stability
+          const baseDelay = reconnectDelay * Math.pow(1.5, reconnectAttemptsRef.current - 1);
+          const jitter = Math.random() * 1000; // Add up to 1 second of jitter
+          const delay = Math.min(baseDelay + jitter, 30000); // Cap at 30 seconds
+          
+          console.log(`🔄 Reconnecting in ${Math.round(delay)}ms (attempt ${reconnectAttemptsRef.current}/${reconnectAttempts})`);
+          
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
-          }, reconnectDelay);
+          }, delay);
+        } else if (reconnectAttemptsRef.current >= reconnectAttempts) {
+          console.error('❌ Max reconnection attempts reached');
         }
       };
       
       wsRef.current.onerror = (error) => {
+        console.error('❌ WebSocket error occurred:', error);
         setConnectionStatus('error');
         onError?.(error);
       };
@@ -109,6 +129,12 @@ export function useWebSocket({
     setConnectionStatus('disconnected');
   }, []);
 
+  const reconnect = useCallback(() => {
+    disconnect();
+    reconnectAttemptsRef.current = 0; // Reset attempts
+    connect();
+  }, [disconnect, connect]);
+
   const sendMessage = useCallback((type: string, payload?: any) => {
     const message: WebSocketMessage = { type, payload };
     
@@ -123,26 +149,22 @@ export function useWebSocket({
   // Connect when URL is provided
   useEffect(() => {
     if (url) {
+      console.log('🔍 useWebSocket effect triggered with URL:', url);
       connect();
     }
     
     return () => {
+      console.log('🔍 useWebSocket cleanup triggered');
       disconnect();
     };
   }, [url, connect, disconnect]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      disconnect();
-    };
-  }, [disconnect]);
 
   return {
     connectionStatus,
     lastMessage,
     connect,
     disconnect,
+    reconnect,
     sendMessage,
     isConnected: connectionStatus === 'connected',
     isConnecting: connectionStatus === 'connecting'

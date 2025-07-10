@@ -14,6 +14,7 @@ export default function Lobby() {
   const { currentGame, addComputerPlayers, startGame, leaveGame, updateSettings, playerId } = useGame();
   const navigate = useNavigate();
   const [showScoringHelp, setShowScoringHelp] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   // Navigate based on game status
   useEffect(() => {
@@ -66,24 +67,35 @@ export default function Lobby() {
                 <p className="text-sm sm:text-base text-gray-600">
                   Code: <span className="font-mono text-lg sm:text-xl font-semibold">{currentGame.code}</span>
                 </p>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={`${window.location.origin}/join/${currentGame.code}`}
-                    readOnly
-                    className="px-2 py-1 text-xs bg-gray-100 border border-gray-300 rounded text-gray-600 font-mono"
-                    onClick={(e) => (e.target as HTMLInputElement).select()}
-                  />
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/join/${currentGame.code}`);
-                      // You could add a toast notification here
-                    }}
-                    className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition duration-200"
-                  >
-                    Copy
-                  </button>
-                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(`${window.location.origin}/join/${currentGame.code}`);
+                      setCopySuccess(true);
+                      setTimeout(() => setCopySuccess(false), 2000);
+                    } catch (err) {
+                      console.error('Failed to copy:', err);
+                    }
+                  }}
+                  className="inline-flex items-center px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded transition duration-200"
+                  title="Copy invite link"
+                >
+                  {copySuccess ? (
+                    <>
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Share
+                    </>
+                  )}
+                </button>
               </div>
             </div>
             <button
