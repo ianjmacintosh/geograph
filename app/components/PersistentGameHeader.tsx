@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import React, { memo } from 'react';
 import type { Game, GameRound } from '../types/game';
 
 interface PersistentGameHeaderProps {
@@ -26,7 +26,15 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
   isAwaitingConfirmation,
   onShowScoreboard,
 }: PersistentGameHeaderProps) {
+  const totalTime = currentGame.settings.roundTimeLimit / 1000;
+  // Use fractions for chronograph
+  const elapsed = Math.max(0, totalTime - timeLeft);
+  // Show timeLeft with 2 decimals (e.g., 5.38)
+  const timeLeftPrecise = timeLeft.toFixed(2);
+  const elapsedPrecise = elapsed.toFixed(2);
+  const totalPrecise = totalTime.toFixed(2);
   const isLowTime = timeLeft <= 10;
+  const isCriticalTime = timeLeft <= 5;
   const showResults = currentRound?.completed || false;
 
   return (
@@ -39,26 +47,40 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
               🎯 FIND: {currentRound.city.name}, {currentRound.city.country}
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
-            {/* Timer */}
+            {/* Timer with chronograph */}
             {!showResults && (
-              <div className={`text-sm font-bold px-2 py-1 rounded ${
-                isLowTime 
-                  ? 'text-red-600 bg-red-50 animate-pulse' 
-                  : 'text-blue-600 bg-blue-50'
-              }`}>
-                {timeLeft}s
+              <div className={`text-sm font-bold px-2 py-1 rounded flex items-center gap-2 ${isCriticalTime
+                  ? 'text-white bg-red-600 animate-pulse-fast'
+                  : isLowTime
+                    ? 'text-red-600 bg-red-50 animate-pulse'
+                    : 'text-blue-600 bg-blue-50'
+                }`}>
+                <span>{timeLeftPrecise}</span>
+                <span className="text-xs text-gray-500 font-normal hidden sm:inline">
+                  {/* Chronograph: elapsed/total in seconds with decimals */}
+                  {elapsedPrecise} / {totalPrecise}
+                </span>
+                <style>{`
+                  @keyframes pulse-fast {
+                    0%, 100% { background-color: #dc2626; color: #fff; }
+                    50% { background-color: #fff; color: #dc2626; }
+                  }
+                  .animate-pulse-fast {
+                    animation: pulse-fast 0.7s cubic-bezier(0.4,0,0.6,1) infinite;
+                  }
+                `}</style>
               </div>
             )}
-            
+
             {/* Round Complete indicator */}
             {showResults && (
               <div className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
                 Complete
               </div>
             )}
-            
+
             {/* Scores Button */}
             <button
               onClick={onShowScoreboard}
@@ -76,7 +98,7 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
             <div className="font-medium text-gray-600">
               ROUND {roundNumber}/{currentGame.settings.totalRounds}
             </div>
-            
+
             {/* Current Score */}
             <div className="font-medium">
               <span className="text-gray-500">Score:</span>{' '}
