@@ -1,4 +1,6 @@
-import { memo } from 'react';
+import React, { memo } from 'react';
+import ScoreboardHeader from './Scoreboard/ScoreboardHeader';
+import ScoreboardList from './Scoreboard/ScoreboardList';
 import type { Game } from '../types/game';
 
 interface ScoreboardModalProps {
@@ -36,56 +38,17 @@ export const ScoreboardModal = memo(function ScoreboardModal({
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      
       {/* Modal */}
       <div className="relative bg-white rounded-lg shadow-xl p-4 m-4 w-full max-w-md max-h-[80vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800">Scoreboard</h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700"
-          >
-            ✕
-          </button>
-        </div>
-
+        <ScoreboardHeader onClose={onClose} />
         {/* Scores */}
-        <div className="space-y-2 mb-4">
-          {playerScores.map((player, index) => (
-            <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
-              <div className="flex items-center space-x-2 min-w-0 flex-1">
-                <span className="text-lg flex-shrink-0">
-                  {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤'}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium text-base flex items-center gap-2">
-                    <span className="truncate">{player.name}</span>
-                    {!showResults && currentRound && !currentRound.completed && (
-                      <span className="text-sm flex-shrink-0">
-                        {hasPlayerGuessedThisRound(player.id) ? '✅' : '⏳'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-gray-500 truncate">
-                    {player.isComputer ? 'Computer' : 'Human'}
-                    {!showResults && currentRound && !currentRound.completed && hasPlayerGuessedThisRound(player.id) && (
-                      <span className="text-green-600 ml-1">• Guessed</span>
-                    )}
-                    {!showResults && currentRound && !currentRound.completed && !hasPlayerGuessedThisRound(player.id) && (
-                      <span className="text-orange-600 ml-1">• Waiting</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <div className="font-bold text-blue-600 text-lg">{player.totalScore}</div>
-                <div className="text-xs text-gray-500">pts</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
+        <ScoreboardList
+          playerScores={playerScores}
+          showResults={showResults}
+          currentRound={currentRound}
+          hasPlayerGuessedThisRound={hasPlayerGuessedThisRound}
+        />
         {/* Round Progress */}
         <div className="pt-4 border-t border-gray-200">
           <div className="text-sm text-gray-600 mb-2">

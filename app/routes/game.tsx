@@ -16,30 +16,30 @@ export function meta() {
 export default function Game() {
   const { currentGame, nextRound, playerId, leaveGame } = useGame();
   const navigate = useNavigate();
-  
+
   // Check if current player is the host
   const isHost = currentGame ? playerId === currentGame.hostId : false;
 
   // Get current round from the game state (managed by server)
   const currentRound = currentGame?.rounds?.[currentGame.rounds.length - 1] || null;
   const roundNumber = currentGame?.rounds?.length || 0;
-  
+
   // Check if current player has guessed in this round
   const hasPlayerGuessed = currentRound?.guesses?.some(g => g.playerId === playerId) || false;
-  
+
   // Check if all players have guessed (round is complete)
-  const allPlayersGuessed = currentRound && currentGame ? 
+  const allPlayersGuessed = currentRound && currentGame ?
     currentRound.guesses.length >= currentGame.players.length : false;
-    
+
   // Show results when round is completed or timer expired
   const showResults = currentRound?.completed || false;
-  
+
   // Timer state for display
   const [timeLeft, setTimeLeft] = useState(0);
-  
+
   // Modal state
   const [isScoreboardModalOpen, setIsScoreboardModalOpen] = useState(false);
-  
+
   // Track if we've already auto-submitted for this round to prevent duplicates
   const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
 
@@ -61,7 +61,7 @@ export default function Game() {
   const hasConfirmedRef = useRef(hasConfirmedGuessForRound);
   const hasAutoSubmittedRef = useRef(hasAutoSubmitted);
   const confirmGuessRef = useRef(confirmCurrentGuess);
-  
+
   // Update refs when values change
   useEffect(() => {
     provisionalGuessRef.current = provisionalGuessLocation;
@@ -69,7 +69,7 @@ export default function Game() {
     hasAutoSubmittedRef.current = hasAutoSubmitted;
     confirmGuessRef.current = confirmCurrentGuess;
   });
-  
+
   // Effect 1: Initial Time Calculation (SSR + Client)
   useEffect(() => {
     if (!currentRound || showResults) {
@@ -135,7 +135,7 @@ export default function Game() {
 
     updateTimerAndAutoSubmit();
     const interval = setInterval(updateTimerAndAutoSubmit, 1000);
-    
+
     return () => clearInterval(interval);
 
   }, [
@@ -238,7 +238,7 @@ export default function Game() {
         isAwaitingConfirmation={isAwaitingConfirmation}
         onShowScoreboard={() => setIsScoreboardModalOpen(true)}
       />
-      
+
       <div className="max-w-7xl mx-auto p-2 sm:p-4">
 
         <div className="grid lg:grid-cols-4 gap-4 lg:gap-6">
@@ -267,11 +267,10 @@ export default function Game() {
               </div>
 
               <div className="mb-4 lg:mb-6">
-                <div className={`relative rounded-lg overflow-hidden ${
-                  showResults 
+                <div className={`relative rounded-lg overflow-hidden ${showResults
                     ? 'h-48 sm:h-64' // Smaller when showing results
                     : 'h-[calc(100vh-12rem)] sm:h-[calc(100vh-8rem)]' // Full height during gameplay
-                } lg:h-96`}>
+                  } lg:h-96`}>
                   <WorldMap
                     key={currentRound.id} // Keep key to re-mount map on round change if necessary
                     targetCity={currentRound.city}
@@ -283,7 +282,7 @@ export default function Game() {
                       // Only show guesses when round is complete (showResults is true)
                       // Hide all player guesses during active gameplay for suspense
                       const visibleGuesses = showResults ? currentGuesses : [];
-                      
+
                       return visibleGuesses.map(guess => {
                         const player = currentGame.players.find(p => p.id === guess.playerId);
                         return {
@@ -296,7 +295,7 @@ export default function Game() {
                     })()}
                     showTarget={showResults}
                   />
-                  
+
                   {/* Confirm Button positioned at bottom of map */}
                   {isAwaitingConfirmation && !showResults && provisionalGuessLocation && (
                     <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2" style={{ zIndex: 1000 }}>
@@ -387,7 +386,7 @@ export default function Game() {
                         </button>
                       </div>
                     )}
-                    
+
                     {!isHost && (
                       <div className="mt-3 lg:mt-4 text-center text-gray-600">
                         <p className="text-xs lg:text-sm">Waiting for host to continue...</p>
@@ -491,7 +490,7 @@ export default function Game() {
           </div>
         </div>
       </div>
-      
+
       {/* Scoreboard Modal for Mobile */}
       <ScoreboardModal
         isOpen={isScoreboardModalOpen}

@@ -10,15 +10,7 @@ import React from 'react'
 // Mock the WorldMap component since it uses Leaflet
 vi.mock('../../components/WorldMap', () => ({
   WorldMap: ({ onMapClick, targetCity }: any) => (
-    <div data-testid="world-map">
-      <button 
-        data-testid="map-click-btn"
-        onClick={() => onMapClick?.(targetCity.lat + 0.1, targetCity.lng + 0.1)}
-      >
-        Click near target (simulate guess)
-      </button>
-      <div data-testid="target-city">{targetCity.name}</div>
-    </div>
+    <div data-testid="mock-world-map" />
   )
 }))
 

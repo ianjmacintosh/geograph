@@ -11,22 +11,7 @@ import React from 'react'
 // Mock the WorldMap component since it uses Leaflet
 vi.mock('../../components/WorldMap', () => ({
   WorldMap: ({ onMapClick, targetCity, showTarget }: any) => (
-    <div data-testid="world-map">
-      <div data-testid="target-city">{targetCity.name}</div>
-      <div data-testid="show-target">{showTarget ? 'showing' : 'hidden'}</div>
-      <button 
-        data-testid="map-click-btn"
-        onClick={() => onMapClick?.(targetCity.lat + 0.1, targetCity.lng + 0.1)}
-      >
-        Click map (100km away)
-      </button>
-      <button 
-        data-testid="map-click-close-btn"
-        onClick={() => onMapClick?.(targetCity.lat + 0.01, targetCity.lng + 0.01)}
-      >
-        Click map (10km away)
-      </button>
-    </div>
+    <div data-testid="mock-world-map" />
   )
 }))
 
