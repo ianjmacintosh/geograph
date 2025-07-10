@@ -1,4 +1,7 @@
-import React, { memo, useEffect, useRef, useState } from 'react';
+import React, { memo } from 'react';
+import GameTimer from './GameHeader/GameTimer';
+import PlayerScore from './GameHeader/PlayerScore';
+import LeaderInfo from './GameHeader/LeaderInfo';
 import type { Game, GameRound } from '../types/game';
 
 interface PersistentGameHeaderProps {
@@ -17,7 +20,7 @@ interface PersistentGameHeaderProps {
 export const PersistentGameHeader = memo(function PersistentGameHeader({
   currentGame,
   currentRound,
-  timeLeft: initialTimeLeft,
+  timeLeft,
   roundNumber,
   currentPlayerScore,
   leaderName,
@@ -26,36 +29,7 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
   isAwaitingConfirmation,
   onShowScoreboard,
 }: PersistentGameHeaderProps) {
-  // Timer state for tenths of a second
-  const [displayTime, setDisplayTime] = useState(initialTimeLeft);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const lastTimeLeftRef = useRef(initialTimeLeft);
   const showResults = currentRound?.completed || false;
-  const isLowTime = displayTime <= 10;
-  const isCriticalTime = displayTime <= 5;
-
-  useEffect(() => {
-    if (showResults) {
-      setDisplayTime(0);
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      return;
-    }
-    setDisplayTime(initialTimeLeft);
-    lastTimeLeftRef.current = initialTimeLeft;
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    const start = Date.now();
-    intervalRef.current = setInterval(() => {
-      const elapsed = (Date.now() - start) / 1000;
-      const newTime = Math.max(0, lastTimeLeftRef.current - elapsed);
-      setDisplayTime(newTime);
-      if (newTime <= 0) {
-        clearInterval(intervalRef.current!);
-      }
-    }, 100);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [initialTimeLeft, showResults, currentRound?.id]);
 
   return (
     <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
@@ -68,35 +42,7 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
             </div>
           </div>
           <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
-            {/* Timer only, tenths precision, with label and 's' */}
-            {!showResults && (
-              <div className={`text-sm font-bold px-2 py-1 rounded flex items-center gap-2 ${
-                isCriticalTime
-                  ? 'text-white bg-red-600 animate-pulse-fast'
-                  : isLowTime
-                  ? 'text-red-600 bg-red-50 animate-pulse'
-                  : 'text-blue-600 bg-blue-50'
-              }`}>
-                <span>{`Time: ${displayTime.toFixed(1)}s`}</span>
-                <style>{`
-                  @keyframes pulse-fast {
-                    0%, 100% { background-color: #dc2626; color: #fff; }
-                    50% { background-color: #fff; color: #dc2626; }
-                  }
-                  .animate-pulse-fast {
-                    animation: pulse-fast 0.7s cubic-bezier(0.4,0,0.6,1) infinite;
-                  }
-                `}</style>
-              </div>
-            )}
-
-            {/* Round Complete indicator */}
-            {showResults && (
-              <div className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
-                Complete
-              </div>
-            )}
-
+            <GameTimer timeLeft={timeLeft} showResults={showResults} />
             {/* Scores Button */}
             <button
               onClick={onShowScoreboard}
@@ -116,25 +62,16 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
             </div>
 
             {/* Current Score */}
-            <div className="font-medium">
-              <span className="text-gray-500">Score:</span>{' '}
-              <span className="text-blue-600 font-semibold">{currentPlayerScore}</span>
-            </div>
+            <PlayerScore currentPlayerScore={currentPlayerScore} />
           </div>
 
           {/* Leader Info */}
           <div className="flex-shrink-0">
-            {isCurrentPlayerLeader ? (
-              <div className="text-green-600 font-semibold">
-                🥇 YOU LEAD ({leaderScore})
-              </div>
-            ) : (
-              <div className="text-gray-600">
-                <span className="text-gray-500">LEADER:</span>{' '}
-                <span className="font-semibold">{leaderName}</span>{' '}
-                <span className="text-gray-800">({leaderScore})</span>
-              </div>
-            )}
+            <LeaderInfo
+              isCurrentPlayerLeader={isCurrentPlayerLeader}
+              leaderName={leaderName}
+              leaderScore={leaderScore}
+            />
           </div>
         </div>
       </div>
