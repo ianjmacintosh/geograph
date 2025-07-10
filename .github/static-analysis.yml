@@ -1,0 +1,17 @@
+name: Static Analysis
+description: Run static analysis tools like Prettier on code changes.
+on:
+  pull_request:
+  push:
+permissions: {}
+jobs:
+  prettier:
+    name: Prettier
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: |
+          npm install
+          npm run format:check

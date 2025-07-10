@@ -8,6 +8,7 @@
     "dev:network": "concurrently \"npm run dev:websocket\" \"react-router dev --host\"",
     "dev:websocket": "tsx app/server/index.ts",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "start": "concurrently \"npm run start:websocket\" \"react-router-serve ./build/server/index.js\"",
     "start:railway": "tsx build/server.js",
     "start:websocket": "tsx app/server/index.ts",
