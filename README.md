@@ -10,6 +10,7 @@ A multiplayer geography guessing game where friends can test their geography kno
 - Scoring system with placement and distance bonuses
 - Computer players for testing
 - Mobile-responsive design
+- QR code sharing for easy game invites
 
 ## Technology Stack
 
