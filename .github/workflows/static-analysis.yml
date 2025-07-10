@@ -2,7 +2,10 @@ name: Static Analysis
 description: Run static analysis tools like Prettier on code changes.
 on:
   pull_request:
-  push:
+    types:
+      - opened
+      - reopened
+      - synchronize
 permissions: {}
 jobs:
   prettier:
