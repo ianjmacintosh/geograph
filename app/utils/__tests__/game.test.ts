@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateBonusPoints, calculatePlacementPoints, calculateDistance } from '../game'
+import { calculateBonusPoints, calculatePlacementPoints, calculateDistance, calculateFinalPlacements } from '../game'
 
 describe('Scoring System', () => {
   describe('calculateBonusPoints', () => {
@@ -98,5 +98,60 @@ describe('Scoring System', () => {
       const distance = calculateDistance(40.7128, -74.0060, 40.7128, -74.0060)
       expect(distance).toBe(0)
     })
+  })
+
+  describe('calculateFinalPlacements', () => {
+    it('should handle final placement ties correctly', () => {
+      const playerScores = [
+        { playerId: 'player1', playerName: 'Alice', isComputer: false, totalScore: 100, finalPlacement: 0 },
+        { playerId: 'player2', playerName: 'Bob', isComputer: false, totalScore: 100, finalPlacement: 0 }, // tied for 1st
+        { playerId: 'player3', playerName: 'Charlie', isComputer: false, totalScore: 80, finalPlacement: 0 },
+      ];
+      
+      const results = calculateFinalPlacements(playerScores);
+      
+      // Both tied players should get 1st place
+      expect(results[0].finalPlacement).toBe(1);
+      expect(results[1].finalPlacement).toBe(1);
+      expect(results[2].finalPlacement).toBe(3); // 3rd place (2nd is skipped due to tie)
+      
+      // Results should be sorted by score
+      expect(results[0].totalScore).toBe(100);
+      expect(results[1].totalScore).toBe(100);
+      expect(results[2].totalScore).toBe(80);
+    });
+
+    it('should handle three-way tie for first place', () => {
+      const playerScores = [
+        { playerId: 'player1', playerName: 'Alice', isComputer: false, totalScore: 100, finalPlacement: 0 },
+        { playerId: 'player2', playerName: 'Bob', isComputer: false, totalScore: 100, finalPlacement: 0 },
+        { playerId: 'player3', playerName: 'Charlie', isComputer: false, totalScore: 100, finalPlacement: 0 },
+        { playerId: 'player4', playerName: 'David', isComputer: false, totalScore: 50, finalPlacement: 0 },
+      ];
+      
+      const results = calculateFinalPlacements(playerScores);
+      
+      // All three tied players should get 1st place
+      expect(results[0].finalPlacement).toBe(1);
+      expect(results[1].finalPlacement).toBe(1);
+      expect(results[2].finalPlacement).toBe(1);
+      expect(results[3].finalPlacement).toBe(4); // 4th place (2nd and 3rd are skipped)
+    });
+
+    it('should handle tie for second place', () => {
+      const playerScores = [
+        { playerId: 'player1', playerName: 'Alice', isComputer: false, totalScore: 100, finalPlacement: 0 },
+        { playerId: 'player2', playerName: 'Bob', isComputer: false, totalScore: 80, finalPlacement: 0 },
+        { playerId: 'player3', playerName: 'Charlie', isComputer: false, totalScore: 80, finalPlacement: 0 }, // tied for 2nd
+        { playerId: 'player4', playerName: 'David', isComputer: false, totalScore: 50, finalPlacement: 0 },
+      ];
+      
+      const results = calculateFinalPlacements(playerScores);
+      
+      expect(results[0].finalPlacement).toBe(1); // 1st place
+      expect(results[1].finalPlacement).toBe(2); // tied for 2nd
+      expect(results[2].finalPlacement).toBe(2); // tied for 2nd
+      expect(results[3].finalPlacement).toBe(4); // 4th place (3rd is skipped)
+    });
   })
 })

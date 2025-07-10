@@ -45,7 +45,8 @@ export interface FinalResults {
     totalScore: number;
     finalPlacement: number;
   }>;
-  winnerId: string;
+  winnerId: string; // If tie, this is the first winner ID
+  winnerIds: string[]; // All players who tied for first place
   gameEndTime: number;
 }
 

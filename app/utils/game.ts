@@ -116,6 +116,30 @@ export function createHumanPlayer(name: string): Player {
   };
 }
 
+export function calculateFinalPlacements(playerScores: Array<{playerId: string, playerName: string, isComputer: boolean, totalScore: number, finalPlacement: number}>): Array<{playerId: string, playerName: string, isComputer: boolean, totalScore: number, finalPlacement: number}> {
+  // Sort by score (highest first)
+  const sortedScores = [...playerScores].sort((a, b) => b.totalScore - a.totalScore);
+  
+  let currentPlacement = 1;
+  
+  for (let i = 0; i < sortedScores.length; i++) {
+    const player = sortedScores[i];
+    
+    // Handle ties - if this score equals the previous score, use same placement
+    if (i > 0 && player.totalScore === sortedScores[i - 1].totalScore) {
+      // Same placement as previous
+      const prevPlayer = sortedScores[i - 1];
+      player.finalPlacement = prevPlayer.finalPlacement;
+    } else {
+      // New placement
+      currentPlacement = i + 1;
+      player.finalPlacement = currentPlacement;
+    }
+  }
+  
+  return sortedScores;
+}
+
 export function createNewGame(hostName: string): Game {
   const code = generateGameCode();
   const hostPlayer = createHumanPlayer(hostName);

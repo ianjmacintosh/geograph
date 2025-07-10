@@ -5,6 +5,7 @@ import {
   calculateDistance, 
   calculateBonusPoints, 
   calculatePlacementPoints, 
+  calculateFinalPlacements,
   generateComputerGuess,
   createComputerPlayer,
   createHumanPlayer,
@@ -429,15 +430,20 @@ export class GameManager {
       };
     });
     
-    // Sort by score and assign final placements
-    const sortedScores = playerScores.sort((a, b) => b.totalScore - a.totalScore);
-    sortedScores.forEach((player, index) => {
-      player.finalPlacement = index + 1;
-    });
+    // Sort by score and assign final placements (handles ties)
+    const sortedScores = calculateFinalPlacements(playerScores);
+    
+    // Find all players who tied for first place
+    const winnerIds: string[] = [];
+    if (sortedScores.length > 0) {
+      const topScore = sortedScores[0].totalScore;
+      winnerIds.push(...sortedScores.filter(p => p.totalScore === topScore).map(p => p.playerId));
+    }
     
     const finalResults: FinalResults = {
       playerScores: sortedScores,
       winnerId: sortedScores.length > 0 ? sortedScores[0].playerId : '',
+      winnerIds,
       gameEndTime: Date.now()
     };
     
