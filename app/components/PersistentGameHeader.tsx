@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import type { Game, GameRound } from '../types/game';
 
 interface PersistentGameHeaderProps {
@@ -17,7 +17,7 @@ interface PersistentGameHeaderProps {
 export const PersistentGameHeader = memo(function PersistentGameHeader({
   currentGame,
   currentRound,
-  timeLeft,
+  timeLeft: initialTimeLeft,
   roundNumber,
   currentPlayerScore,
   leaderName,
@@ -26,16 +26,40 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
   isAwaitingConfirmation,
   onShowScoreboard,
 }: PersistentGameHeaderProps) {
-  const totalTime = currentGame.settings.roundTimeLimit / 1000;
-  // Use fractions for chronograph
-  const elapsed = Math.max(0, totalTime - timeLeft);
-  // Show timeLeft with 2 decimals (e.g., 5.38)
-  const timeLeftPrecise = timeLeft.toFixed(2);
-  const elapsedPrecise = elapsed.toFixed(2);
-  const totalPrecise = totalTime.toFixed(2);
-  const isLowTime = timeLeft <= 10;
-  const isCriticalTime = timeLeft <= 5;
+  // High-precision timer state
+  const [displayTime, setDisplayTime] = useState(initialTimeLeft);
+  const rafRef = useRef<number | null>(null);
+  const startTimestampRef = useRef<number | null>(null);
+  const lastTimeLeftRef = useRef(initialTimeLeft);
   const showResults = currentRound?.completed || false;
+  const isLowTime = displayTime <= 10;
+  const isCriticalTime = displayTime <= 5;
+
+  // Sync displayTime with prop and animate at 10ms intervals
+  useEffect(() => {
+    if (showResults) {
+      setDisplayTime(0);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      return;
+    }
+    setDisplayTime(initialTimeLeft);
+    lastTimeLeftRef.current = initialTimeLeft;
+    startTimestampRef.current = performance.now();
+    let lastUpdate = performance.now();
+    function update() {
+      const now = performance.now();
+      const elapsed = (now - startTimestampRef.current!) / 1000;
+      const newTime = Math.max(0, lastTimeLeftRef.current - elapsed);
+      setDisplayTime(newTime);
+      if (newTime > 0) {
+        rafRef.current = requestAnimationFrame(update);
+      }
+    }
+    rafRef.current = requestAnimationFrame(update);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [initialTimeLeft, showResults, currentRound?.id]);
 
   return (
     <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
@@ -47,21 +71,17 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
               🎯 FIND: {currentRound.city.name}, {currentRound.city.country}
             </div>
           </div>
-
           <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
-            {/* Timer with chronograph */}
+            {/* Timer only, high precision */}
             {!showResults && (
-              <div className={`text-sm font-bold px-2 py-1 rounded flex items-center gap-2 ${isCriticalTime
+              <div className={`text-sm font-bold px-2 py-1 rounded flex items-center gap-2 ${
+                isCriticalTime
                   ? 'text-white bg-red-600 animate-pulse-fast'
                   : isLowTime
-                    ? 'text-red-600 bg-red-50 animate-pulse'
-                    : 'text-blue-600 bg-blue-50'
-                }`}>
-                <span>{timeLeftPrecise}</span>
-                <span className="text-xs text-gray-500 font-normal hidden sm:inline">
-                  {/* Chronograph: elapsed/total in seconds with decimals */}
-                  {elapsedPrecise} / {totalPrecise}
-                </span>
+                  ? 'text-red-600 bg-red-50 animate-pulse'
+                  : 'text-blue-600 bg-blue-50'
+              }`}>
+                <span>{displayTime.toFixed(2)}</span>
                 <style>{`
                   @keyframes pulse-fast {
                     0%, 100% { background-color: #dc2626; color: #fff; }

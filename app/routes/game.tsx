@@ -254,9 +254,6 @@ export default function Game() {
                   <p className="text-gray-600">Game Code: {currentGame.code}</p>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <div className="text-lg font-semibold">
-                    Time: <span className={timeLeft <= 10 ? 'text-red-500' : 'text-blue-600'}>{timeLeft}s</span>
-                  </div>
                   <button
                     onClick={() => {
                       leaveGame();
