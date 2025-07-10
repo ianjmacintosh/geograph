@@ -26,38 +26,34 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
   isAwaitingConfirmation,
   onShowScoreboard,
 }: PersistentGameHeaderProps) {
-  // High-precision timer state
+  // Timer state for tenths of a second
   const [displayTime, setDisplayTime] = useState(initialTimeLeft);
-  const rafRef = useRef<number | null>(null);
-  const startTimestampRef = useRef<number | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastTimeLeftRef = useRef(initialTimeLeft);
   const showResults = currentRound?.completed || false;
   const isLowTime = displayTime <= 10;
   const isCriticalTime = displayTime <= 5;
 
-  // Sync displayTime with prop and animate at 10ms intervals
   useEffect(() => {
     if (showResults) {
       setDisplayTime(0);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
       return;
     }
     setDisplayTime(initialTimeLeft);
     lastTimeLeftRef.current = initialTimeLeft;
-    startTimestampRef.current = performance.now();
-    let lastUpdate = performance.now();
-    function update() {
-      const now = performance.now();
-      const elapsed = (now - startTimestampRef.current!) / 1000;
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    const start = Date.now();
+    intervalRef.current = setInterval(() => {
+      const elapsed = (Date.now() - start) / 1000;
       const newTime = Math.max(0, lastTimeLeftRef.current - elapsed);
       setDisplayTime(newTime);
-      if (newTime > 0) {
-        rafRef.current = requestAnimationFrame(update);
+      if (newTime <= 0) {
+        clearInterval(intervalRef.current!);
       }
-    }
-    rafRef.current = requestAnimationFrame(update);
+    }, 100);
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [initialTimeLeft, showResults, currentRound?.id]);
 
@@ -72,7 +68,7 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
             </div>
           </div>
           <div className="flex items-center space-x-2 flex-shrink-0 ml-2">
-            {/* Timer only, high precision */}
+            {/* Timer only, tenths precision, with label and 's' */}
             {!showResults && (
               <div className={`text-sm font-bold px-2 py-1 rounded flex items-center gap-2 ${
                 isCriticalTime
@@ -81,7 +77,7 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
                   ? 'text-red-600 bg-red-50 animate-pulse'
                   : 'text-blue-600 bg-blue-50'
               }`}>
-                <span>{displayTime.toFixed(2)}</span>
+                <span>{`Time: ${displayTime.toFixed(1)}s`}</span>
                 <style>{`
                   @keyframes pulse-fast {
                     0%, 100% { background-color: #dc2626; color: #fff; }
