@@ -1,8 +1,8 @@
-import React, { memo } from 'react';
-import GameTimer from './GameHeader/GameTimer';
-import PlayerScore from './GameHeader/PlayerScore';
-import LeaderInfo from './GameHeader/LeaderInfo';
-import type { Game, GameRound } from '../types/game';
+import React, { memo } from "react";
+import GameTimer from "./GameHeader/GameTimer";
+import PlayerScore from "./GameHeader/PlayerScore";
+import LeaderInfo from "./GameHeader/LeaderInfo";
+import type { Game, GameRound } from "../types/game";
 
 interface PersistentGameHeaderProps {
   currentGame: Game;

@@ -24,7 +24,7 @@ A multiplayer geography guessing game where friends can test their geography kno
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm
 
 ### Setup
@@ -64,7 +64,7 @@ For traditional VPS deployment with separate processes:
 
 1. **Build Command**: `npm run build`
 2. **Start Command**: `npm run start`
-3. **Requirements**: 
+3. **Requirements**:
    - Nginx reverse proxy configuration
    - Separate WebSocket server on port 8080
    - SQLite database setup
@@ -91,6 +91,7 @@ The game uses WebSocket for real-time communication:
 ### Database
 
 SQLite database stores:
+
 - Game sessions
 - Player information
 - Round data and guesses

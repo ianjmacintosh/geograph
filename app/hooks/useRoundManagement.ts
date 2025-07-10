@@ -1,9 +1,15 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import type { GameRound, City, Game, FinalResults, Player } from '../types/game';
-import { getRandomCityByDifficulty } from '../data/cities';
-import { calculateFinalPlacements } from '../utils/game';
-import { useGame } from '../contexts/GameContext'; // Assuming GameContext provides finishGame
+import { useState, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router";
+import type {
+  GameRound,
+  City,
+  Game,
+  FinalResults,
+  Player,
+} from "../types/game";
+import { getRandomCityByDifficulty } from "../data/cities";
+import { calculateFinalPlacements } from "../utils/game";
+import { useGame } from "../contexts/GameContext"; // Assuming GameContext provides finishGame
 
 export interface UseRoundManagementProps {
   currentGame: Game | null;
@@ -29,8 +35,12 @@ export function useRoundManagement({
   const startNewRound = useCallback(() => {
     if (!currentGame) return;
 
-    const city = getRandomCityByDifficulty(currentGame.settings.cityDifficulty, usedCityIds);
-    const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
+    const city = getRandomCityByDifficulty(
+      currentGame.settings.cityDifficulty,
+      usedCityIds,
+    );
+    const generateId = () =>
+      Date.now().toString(36) + Math.random().toString(36).substr(2);
     const newRound: GameRound = {
       id: generateId(),
       city,
@@ -39,7 +49,7 @@ export function useRoundManagement({
       startTime: Date.now(),
     };
 
-    setUsedCityIds(prev => [...prev, city.id]);
+    setUsedCityIds((prev) => [...prev, city.id]);
     setCurrentRound(newRound);
     if (onRoundStart) {
       onRoundStart(newRound);
@@ -48,7 +58,12 @@ export function useRoundManagement({
 
   // Initialize first round
   useEffect(() => {
-    if (currentGame && currentGame.status === 'playing' && !currentRound && roundNumber === 1) {
+    if (
+      currentGame &&
+      currentGame.status === "playing" &&
+      !currentRound &&
+      roundNumber === 1
+    ) {
       startNewRound();
     }
   }, [currentGame, currentRound, roundNumber, startNewRound]);
@@ -58,21 +73,33 @@ export function useRoundManagement({
 
     let allRounds = [...completedRounds];
     // Ensure currentRound exists and has placement points before including
-    if (currentRound && currentRound.completed && currentRound.guesses.length > 0 && currentRound.guesses.some(g => g.totalPoints > 0)) {
-       // If currentRound is completed, it should already have placements.
-       // If not, it might need to be processed by updateRoundWithPlacements first.
-       // For now, assuming if it's completed, it's processed.
+    if (
+      currentRound &&
+      currentRound.completed &&
+      currentRound.guesses.length > 0 &&
+      currentRound.guesses.some((g) => g.totalPoints > 0)
+    ) {
+      // If currentRound is completed, it should already have placements.
+      // If not, it might need to be processed by updateRoundWithPlacements first.
+      // For now, assuming if it's completed, it's processed.
       allRounds = [...allRounds, currentRound];
-    } else if (currentRound && !currentRound.completed && currentRound.guesses.length > 0) {
+    } else if (
+      currentRound &&
+      !currentRound.completed &&
+      currentRound.guesses.length > 0
+    ) {
       // If current round is not completed but has guesses, process it first
       const processedCurrentRound = updateRoundWithPlacements(currentRound);
-      allRounds = [...allRounds, { ...processedCurrentRound, completed: true, endTime: Date.now() }];
+      allRounds = [
+        ...allRounds,
+        { ...processedCurrentRound, completed: true, endTime: Date.now() },
+      ];
     }
 
-    const playerScores = currentGame.players.map(player => {
+    const playerScores = currentGame.players.map((player) => {
       let totalScore = 0;
-      allRounds.forEach(round => {
-        const playerGuess = round.guesses.find(g => g.playerId === player.id);
+      allRounds.forEach((round) => {
+        const playerGuess = round.guesses.find((g) => g.playerId === player.id);
         if (playerGuess) {
           totalScore += playerGuess.totalPoints || 0; // Ensure totalPoints is defined
         }
@@ -92,27 +119,39 @@ export function useRoundManagement({
     const winnerIds: string[] = [];
     if (sortedScores.length > 0) {
       const topScore = sortedScores[0].totalScore;
-      winnerIds.push(...sortedScores.filter(p => p.totalScore === topScore).map(p => p.playerId));
+      winnerIds.push(
+        ...sortedScores
+          .filter((p) => p.totalScore === topScore)
+          .map((p) => p.playerId),
+      );
     }
 
     const finalResults: FinalResults = {
       playerScores: sortedScores,
-      winnerId: sortedScores.length > 0 ? sortedScores[0].playerId : '', // Handle empty scores
+      winnerId: sortedScores.length > 0 ? sortedScores[0].playerId : "", // Handle empty scores
       winnerIds,
       gameEndTime: Date.now(),
     };
 
     contextFinishGame(finalResults); // Use context's finishGame
-    
+
     if (onGameEnd) {
       onGameEnd(finalResults);
     }
-    
+
     // Small delay to ensure context state update completes before navigation
     setTimeout(() => {
       navigate("/results");
     }, 50);
-  }, [currentGame, completedRounds, currentRound, contextFinishGame, navigate, onGameEnd, updateRoundWithPlacements]);
+  }, [
+    currentGame,
+    completedRounds,
+    currentRound,
+    contextFinishGame,
+    navigate,
+    onGameEnd,
+    updateRoundWithPlacements,
+  ]);
 
   const handleNextRound = useCallback(() => {
     if (!currentGame) return;
@@ -124,26 +163,31 @@ export function useRoundManagement({
 
     // Save the current round to completed rounds (must be processed with placements)
     if (currentRound) {
-        // Ensure the round is processed for placements before adding to completedRounds
-        const roundToComplete = currentRound.completed
-            ? currentRound
-            : updateRoundWithPlacements(currentRound);
+      // Ensure the round is processed for placements before adding to completedRounds
+      const roundToComplete = currentRound.completed
+        ? currentRound
+        : updateRoundWithPlacements(currentRound);
 
-        // Ensure it's marked completed if it wasn't already (e.g. if round ended by all players guessing but not by timer)
-        const finalCurrentRound = {
-            ...roundToComplete,
-            completed: true,
-            endTime: roundToComplete.endTime || Date.now()
-        };
-        setCompletedRounds(prev => [...prev, finalCurrentRound]);
+      // Ensure it's marked completed if it wasn't already (e.g. if round ended by all players guessing but not by timer)
+      const finalCurrentRound = {
+        ...roundToComplete,
+        completed: true,
+        endTime: roundToComplete.endTime || Date.now(),
+      };
+      setCompletedRounds((prev) => [...prev, finalCurrentRound]);
     }
 
-
-    setRoundNumber(prev => prev + 1);
+    setRoundNumber((prev) => prev + 1);
     // startNewRound will be called, which also calls onRoundStart
     startNewRound();
-  }, [currentGame, roundNumber, currentRound, handleGameEnd, startNewRound, updateRoundWithPlacements]);
-
+  }, [
+    currentGame,
+    roundNumber,
+    currentRound,
+    handleGameEnd,
+    startNewRound,
+    updateRoundWithPlacements,
+  ]);
 
   return {
     currentRound,

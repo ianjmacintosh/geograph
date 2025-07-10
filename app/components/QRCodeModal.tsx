@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import QRCode from 'qrcode';
+import { useState, useEffect } from "react";
+import QRCode from "qrcode";
 
 interface QRCodeModalProps {
   isOpen: boolean;
@@ -8,7 +8,7 @@ interface QRCodeModalProps {
 }
 
 export function QRCodeModal({ isOpen, onClose, shareUrl }: QRCodeModalProps) {
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
 
   useEffect(() => {
     if (isOpen && shareUrl) {
@@ -17,16 +17,16 @@ export function QRCodeModal({ isOpen, onClose, shareUrl }: QRCodeModalProps) {
         width: 256,
         margin: 2,
         color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
       })
-      .then(url => {
-        setQrCodeDataUrl(url);
-      })
-      .catch(err => {
-        console.error('Failed to generate QR code:', err);
-      });
+        .then((url) => {
+          setQrCodeDataUrl(url);
+        })
+        .catch((err) => {
+          console.error("Failed to generate QR code:", err);
+        });
     }
   }, [isOpen, shareUrl]);
 
@@ -41,19 +41,29 @@ export function QRCodeModal({ isOpen, onClose, shareUrl }: QRCodeModalProps) {
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
-        
+
         <div className="text-center">
           {qrCodeDataUrl ? (
             <div className="space-y-4">
               <div className="flex justify-center">
-                <img 
-                  src={qrCodeDataUrl} 
-                  alt="QR Code for game invite" 
+                <img
+                  src={qrCodeDataUrl}
+                  alt="QR Code for game invite"
                   className="border border-gray-200 rounded-lg"
                 />
               </div>
@@ -70,7 +80,7 @@ export function QRCodeModal({ isOpen, onClose, shareUrl }: QRCodeModalProps) {
             </div>
           )}
         </div>
-        
+
         <div className="mt-6 flex justify-center">
           <button
             onClick={onClose}
@@ -82,4 +92,4 @@ export function QRCodeModal({ isOpen, onClose, shareUrl }: QRCodeModalProps) {
       </div>
     </div>
   );
-} 
+}

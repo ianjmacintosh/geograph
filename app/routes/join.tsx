@@ -14,7 +14,8 @@ export function meta({}: Route.MetaArgs) {
 export default function Join() {
   const { gameCode } = useParams<{ gameCode: string }>();
   const [playerName, setPlayerName] = useState("");
-  const { joinGame, isLoading, error, currentGame, connectionStatus } = useGame();
+  const { joinGame, isLoading, error, currentGame, connectionStatus } =
+    useGame();
   const navigate = useNavigate();
 
   // Validate game code from URL
@@ -25,17 +26,17 @@ export default function Join() {
       alert("Please enter your name");
       return;
     }
-    
+
     if (!isValidCode) {
       alert("Invalid game code");
       return;
     }
-    
+
     joinGame(gameCode!, playerName.trim());
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleJoinGame();
     }
   };
@@ -68,7 +69,10 @@ export default function Join() {
 
         <div className="space-y-6">
           <div>
-            <label htmlFor="playerName" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="playerName"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Your Name
             </label>
             <input
@@ -86,7 +90,11 @@ export default function Join() {
 
           <button
             onClick={handleJoinGame}
-            disabled={!playerName.trim() || isLoading || connectionStatus !== 'connected'}
+            disabled={
+              !playerName.trim() ||
+              isLoading ||
+              connectionStatus !== "connected"
+            }
             className="w-full bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-md transition duration-200 min-h-[48px] touch-manipulation"
           >
             {isLoading ? "Joining..." : "Join Game"}
@@ -101,22 +109,20 @@ export default function Join() {
         </div>
 
         <div className="mt-8 text-center text-sm">
-          {connectionStatus === 'connected' && (
+          {connectionStatus === "connected" && (
             <p className="text-green-600">🟢 Connected to server</p>
           )}
-          {connectionStatus === 'connecting' && (
+          {connectionStatus === "connecting" && (
             <p className="text-yellow-600">🟡 Connecting to server...</p>
           )}
-          {connectionStatus === 'disconnected' && (
+          {connectionStatus === "disconnected" && (
             <p className="text-red-600">🔴 Disconnected from server</p>
           )}
-          {connectionStatus === 'error' && (
+          {connectionStatus === "error" && (
             <p className="text-red-600">❌ Connection error</p>
           )}
-          
-          {error && (
-            <p className="text-red-600 mt-2">⚠️ {error}</p>
-          )}
+
+          {error && <p className="text-red-600 mt-2">⚠️ {error}</p>}
         </div>
       </div>
     </div>
