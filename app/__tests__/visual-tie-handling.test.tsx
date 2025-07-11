@@ -342,7 +342,8 @@ describe.skip("Visual Tie Handling Test", () => {
     console.log(
       "Output placements:",
       results.map(
-        (p: any) => `${p.playerName}: #${p.finalPlacement} (${p.totalScore} points)`,
+        (p: any) =>
+          `${p.playerName}: #${p.finalPlacement} (${p.totalScore} points)`,
       ),
     );
 
@@ -376,7 +377,8 @@ describe.skip("Visual Tie Handling Test", () => {
     console.log(
       "Output placements:",
       roundResults.map(
-        (r: any) => `${r.playerId}: #${r.placement} (${r.placementPoints} points)`,
+        (r: any) =>
+          `${r.playerId}: #${r.placement} (${r.placementPoints} points)`,
       ),
     );
 
