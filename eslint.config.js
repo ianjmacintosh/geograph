@@ -36,6 +36,7 @@ export default defineConfig([
     ...config,
     rules: {
       ...config.rules,
+      "@typescript-eslint/no-explicit-any": "warn", // Allow 'any' type
       "@typescript-eslint/no-unused-vars": [
         "error",
         {

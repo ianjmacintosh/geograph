@@ -1,10 +1,9 @@
-import type { Route } from "./+types/home";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { isValidGameCode } from "../utils/game";
 import { useGame } from "../contexts/GameContext";
 
-export function meta({}: Route.MetaArgs) {
+export function meta() {
   return [
     { title: "Geograph - Geography Game" },
     {

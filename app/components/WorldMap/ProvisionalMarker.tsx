@@ -26,7 +26,7 @@ export default function ProvisionalMarker({
         {
           icon: L.divIcon({
             className: "custom-marker provisional-marker",
-            html: `<div class=\"w-8 h-8 rounded-full border-4 border-yellow-400 animate-pulse\"></div>`,
+            html: `<div class="w-8 h-8 rounded-full border-4 border-yellow-400 animate-pulse"></div>`,
             iconSize: [32, 32],
             iconAnchor: [16, 16],
           }),

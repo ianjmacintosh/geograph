@@ -174,7 +174,7 @@ export default function Lobby() {
                 </h2>
                 {isHost &&
                   currentGame.players.length <
-                    currentGame.settings.maxPlayers && (
+                  currentGame.settings.maxPlayers && (
                     <button
                       onClick={handleAddComputers}
                       className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm font-semibold min-h-[44px] touch-manipulation transition duration-200"
@@ -373,7 +373,7 @@ export default function Lobby() {
           <div className="mt-6 p-4 bg-blue-50 rounded-md">
             <h3 className="font-semibold text-blue-800 mb-2">How to Play</h3>
             <ul className="text-sm text-blue-700 space-y-1">
-              <li>• You'll see a world map with a city marked</li>
+              <li>• You&apos;ll see a world map with a city marked</li>
               <li>• Guess the location by clicking on the map</li>
               <li>
                 • Play {currentGame.settings.totalRounds} rounds and see who

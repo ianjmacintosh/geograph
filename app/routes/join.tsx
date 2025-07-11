@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router";
 import { isValidGameCode } from "../utils/game";
 import { useGame } from "../contexts/GameContext";
 
-export function meta({}: Route.MetaArgs) {
+export function meta(_: Route.MetaArgs) {
   return [
     { title: "Join Game - Geograph" },
     { name: "description", content: "Join a geography game with friends!" },
