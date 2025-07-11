@@ -21,7 +21,8 @@
       "Bash(timeout:*)",
       "Bash(node:*)",
       "Bash(npm run build:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(npm run lint)"
     ],
     "deny": []
   }

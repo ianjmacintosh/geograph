@@ -34,7 +34,14 @@ export default defineConfig([
   // TypeScript config
   ...tseslint.configs.recommended,
   // React config
-  pluginReact.configs.flat.recommended,
+  {
+    ...pluginReact.configs.flat.recommended,
+    settings: {
+      react: {
+        version: "19.1.0", // Explicitly set React version
+      },
+    },
+  },
   // 🔥 SERVER OVERRIDE - Node.js environment for server code
   {
     files: ["app/server/**/*.{js,ts}", "server.js"],
@@ -64,14 +71,9 @@ export default defineConfig([
       "@typescript-eslint/no-explicit-any": "off", // Tests often need any types
     },
   },
-  // 🎯 REACT SETTINGS
+  // 🎯 REACT JSX RULES
   {
     files: ["**/*.{jsx,tsx}"],
-    settings: {
-      react: {
-        version: "19.1.0", // Explicitly set React version
-      },
-    },
     rules: {
       "react/react-in-jsx-scope": "off", // React 19 has automatic JSX transform
       "react/jsx-uses-react": "off", // Not needed with automatic JSX transform
