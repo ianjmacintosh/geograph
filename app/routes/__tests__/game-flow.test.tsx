@@ -12,9 +12,7 @@ import React from "react";
 
 // Mock the WorldMap component since it uses Leaflet
 vi.mock("../../components/WorldMap", () => ({
-  WorldMap: () => (
-    <div data-testid="mock-world-map" />
-  ),
+  WorldMap: () => <div data-testid="mock-world-map" />,
 }));
 
 // Mock navigation

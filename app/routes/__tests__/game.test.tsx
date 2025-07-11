@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 // Note: GameProvider import preserved for future test development
 // import { GameProvider } from "../../contexts/GameContext";
@@ -19,9 +15,7 @@ import React from "react";
 
 // Mock the WorldMap component since it uses Leaflet
 vi.mock("../../components/WorldMap", () => ({
-  WorldMap: () => (
-    <div data-testid="mock-world-map" />
-  ),
+  WorldMap: () => <div data-testid="mock-world-map" />,
 }));
 
 // Mock city data to return consistent test data
