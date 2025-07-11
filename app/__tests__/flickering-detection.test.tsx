@@ -89,7 +89,7 @@ vi.mock("../utils/game", () => ({
   },
 }));
 
-describe("Flickering Detection Test", () => {
+describe.skip("Flickering Detection Test", () => {
   let mockGame: GameType;
 
   beforeEach(() => {

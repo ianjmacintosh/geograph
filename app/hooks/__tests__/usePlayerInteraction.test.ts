@@ -3,6 +3,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { usePlayerInteraction } from "../usePlayerInteraction";
 import type { Game, GameRound, City, Player } from "../../types/game";
 
+// Mock the useGame hook
+const mockMakeGuess = vi.fn();
+const mockPlayerId = "player1";
+
+vi.mock("../../contexts/GameContext", () => ({
+  useGame: () => ({
+    makeGuess: mockMakeGuess,
+    playerId: mockPlayerId,
+  }),
+}));
+
 const mockCity: City = {
   id: "city1",
   name: "Test City",
@@ -54,6 +65,7 @@ describe("usePlayerInteraction", () => {
 
   beforeEach(() => {
     mockHasPlayerAlreadyGuessedInRound = false;
+    vi.clearAllMocks();
   });
 
   it("should initialize with hasConfirmedGuessForRound as false", () => {

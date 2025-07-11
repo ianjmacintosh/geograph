@@ -12,32 +12,15 @@ import type {
   FinalResults,
 } from "../../types/game";
 
-// Mocks
-vi.mock("react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("react-router")>();
-  return {
-    ...actual,
-    useNavigate: () => vi.fn(), // Default mock for useNavigate
-  };
-});
+// Mock modules
+vi.mock("react-router");
+vi.mock("../../contexts/GameContext");
+vi.mock("../../data/cities");
 
-vi.mock("../../contexts/GameContext", async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import("../../contexts/GameContext")>();
-  return {
-    ...actual,
-    useGame: () => ({
-      // Default mock for useGame
-      currentGame: null,
-      finishGame: vi.fn(),
-      clearGame: vi.fn(),
-    }),
-  };
-});
-
-vi.mock("../../data/cities", () => ({
-  getRandomCityByDifficulty: vi.fn(),
-}));
+// Create mock functions
+const mockNavigate = vi.fn();
+const mockFinishGameContext = vi.fn();
+const mockGetRandomCity = vi.fn();
 
 const mockCity1: City = {
   id: "city1",
@@ -81,9 +64,6 @@ const mockBaseGame: Game = {
 };
 
 describe("useRoundManagement", () => {
-  let mockFinishGameContext: ReturnType<typeof vi.fn>;
-  let mockNavigate: ReturnType<typeof vi.fn>;
-  let mockGetRandomCity: ReturnType<typeof vi.fn>;
   let mockUpdateRoundWithPlacements: ReturnType<typeof vi.fn>;
 
   const setupHook = async (
@@ -93,33 +73,27 @@ describe("useRoundManagement", () => {
     const currentGameData = { ...mockBaseGame, ...gameProps };
 
     // Reset mocks for each test run using this setup
-    mockFinishGameContext = vi.fn();
-    mockNavigate = vi.fn();
-    mockGetRandomCity = vi.fn();
+    vi.clearAllMocks();
     mockUpdateRoundWithPlacements = vi.fn((round) => ({
       ...round,
       completed: true,
       guesses: round.guesses.map((g: any) => ({ ...g, totalPoints: 10 })),
     }));
 
-    // Dynamically update the mock for useGame for this specific test
+    // Import and mock the modules
+    const { useNavigate } = await import("react-router");
     const { useGame } = await import("../../contexts/GameContext");
+    const { getRandomCityByDifficulty } = await import("../../data/cities");
+
+    // Setup mocks
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
     vi.mocked(useGame).mockReturnValue({
       currentGame: currentGameData,
       finishGame: mockFinishGameContext,
-      clearGame: vi.fn(), // or any other functions needed from useGame
-      // ... other useGame return values
-    } as any); // Using 'as any' to simplify mock structure for test
-
-    // Dynamically update mock for useNavigate
-    const { useNavigate } = await import("react-router");
-    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
-
-    // Dynamically update mock for getRandomCityByDifficulty
-    const citiesMock = await import("../../data/cities");
-    vi.mocked(citiesMock.getRandomCityByDifficulty).mockImplementation(
-      mockGetRandomCity,
-    );
+      clearGame: vi.fn(),
+    } as any);
+    vi.mocked(getRandomCityByDifficulty).mockImplementation(mockGetRandomCity);
+    
     mockGetRandomCity
       .mockReturnValueOnce(mockCity1)
       .mockReturnValueOnce(mockCity2);

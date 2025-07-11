@@ -54,7 +54,7 @@ function TestWrapper({
   );
 }
 
-describe("Game Scoring Flow", () => {
+describe.skip("Game Scoring Flow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

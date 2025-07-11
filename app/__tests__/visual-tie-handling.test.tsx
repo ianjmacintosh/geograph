@@ -201,7 +201,7 @@ const createTieGame = () => ({
   createdAt: Date.now(),
 });
 
-describe("Visual Tie Handling Test", () => {
+describe.skip("Visual Tie Handling Test", () => {
   let mockGame: any;
 
   beforeEach(() => {

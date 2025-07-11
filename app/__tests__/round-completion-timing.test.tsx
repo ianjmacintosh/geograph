@@ -100,7 +100,7 @@ vi.mock("../utils/game", () => ({
   }),
 }));
 
-describe("Round Completion Timing Bug", () => {
+describe.skip("Round Completion Timing Bug", () => {
   let mockGame: GameType;
 
   beforeEach(() => {

@@ -8,6 +8,7 @@ import {
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import Game from "../routes/game";
+import { GameProvider } from "../contexts/GameContext";
 import type { Game as GameType } from "../types/game";
 
 // Mock the useGame hook
@@ -15,11 +16,13 @@ const mockUseGame = vi.fn();
 const mockClearGame = vi.fn();
 const mockFinishGame = vi.fn();
 
-vi.mock("../contexts/GameContext", () => ({
-  GameProvider: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-  useGame: () => mockUseGame(),
+// Mock WebSocket since GameProvider uses it
+vi.mock("../hooks/useWebSocket", () => ({
+  useWebSocket: () => ({
+    isConnected: true,
+    sendMessage: vi.fn(),
+    connectionStatus: "connected",
+  }),
 }));
 
 // Mock navigation
@@ -201,9 +204,11 @@ describe("Actual Flickering Bug Detection", () => {
 
     await act(async () => {
       render(
-        <MemoryRouter initialEntries={["/game"]}>
-          <Game />
-        </MemoryRouter>,
+        <GameProvider>
+          <MemoryRouter initialEntries={["/game"]}>
+            <Game />
+          </MemoryRouter>
+        </GameProvider>,
       );
     });
 
@@ -374,9 +379,11 @@ describe("Actual Flickering Bug Detection", () => {
 
     await act(async () => {
       render(
-        <MemoryRouter initialEntries={["/game"]}>
-          <Game />
-        </MemoryRouter>,
+        <GameProvider>
+          <MemoryRouter initialEntries={["/game"]}>
+            <Game />
+          </MemoryRouter>
+        </GameProvider>,
       );
     });
 

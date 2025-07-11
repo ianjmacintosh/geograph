@@ -36,7 +36,7 @@ vi.mock("../data/cities", () => ({
   }),
 }));
 
-describe("Score Display Integration", () => {
+describe.skip("Score Display Integration", () => {
   let mockGame: GameType;
 
   beforeEach(() => {

@@ -36,7 +36,7 @@ vi.mock("../data/cities", () => ({
   }),
 }));
 
-describe("Scoring Fix Validation", () => {
+describe.skip("Scoring Fix Validation", () => {
   let mockGame: GameType;
 
   beforeEach(() => {

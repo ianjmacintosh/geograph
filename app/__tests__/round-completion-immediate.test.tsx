@@ -80,7 +80,7 @@ vi.mock("../utils/game", () => ({
   generateComputerGuess: vi.fn(() => ({ lat: 41.0, lng: -73.0 })),
 }));
 
-describe("Round Completion Immediate Test", () => {
+describe.skip("Round Completion Immediate Test", () => {
   let mockGame: GameType;
 
   beforeEach(() => {

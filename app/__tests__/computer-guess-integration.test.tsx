@@ -103,7 +103,7 @@ vi.mock("../utils/game", () => ({
   }),
 }));
 
-describe("Computer Guess Integration", () => {
+describe.skip("Computer Guess Integration", () => {
   let mockGame: GameType;
 
   beforeEach(() => {

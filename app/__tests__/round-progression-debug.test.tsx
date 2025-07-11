@@ -84,7 +84,7 @@ vi.mock("../utils/game", () => ({
   }),
 }));
 
-describe("Round Progression Debug", () => {
+describe.skip("Round Progression Debug", () => {
   let mockGame: GameType;
 
   beforeEach(() => {

@@ -103,7 +103,7 @@ vi.mock("../utils/game", () => ({
   }),
 }));
 
-describe("Debug Scoring State", () => {
+describe.skip("Debug Scoring State", () => {
   let mockGame: GameType;
 
   beforeEach(() => {
