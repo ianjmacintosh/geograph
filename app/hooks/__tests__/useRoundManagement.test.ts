@@ -93,7 +93,7 @@ describe("useRoundManagement", () => {
       clearGame: vi.fn(),
     } as any);
     vi.mocked(getRandomCityByDifficulty).mockImplementation(mockGetRandomCity);
-    
+
     // Set up the mock to handle multiple calls during initialization
     // The hook may call getRandomCityByDifficulty during setup, so we ensure consistent behavior
     mockGetRandomCity.mockReturnValue(mockCity1); // Always return mockCity1 for consistency

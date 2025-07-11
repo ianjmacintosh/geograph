@@ -6,8 +6,13 @@ import type { GameRound, Player, Guess, Game } from "../types/game";
 describe("New Regression Bugs", () => {
   describe("Game Logic Validation", () => {
     it("should prevent multiple guesses from the same player", () => {
-      const player: Player = { id: "player1", name: "Test Player", isComputer: false, score: 0 };
-      
+      const player: Player = {
+        id: "player1",
+        name: "Test Player",
+        isComputer: false,
+        score: 0,
+      };
+
       const round: GameRound = {
         id: "test-round",
         city: {
@@ -41,7 +46,7 @@ describe("New Regression Bugs", () => {
 
       // Check if player has already guessed
       const hasPlayerGuessed = roundWithFirstGuess.guesses.some(
-        guess => guess.playerId === player.id
+        (guess) => guess.playerId === player.id,
       );
       expect(hasPlayerGuessed).toBe(true);
 
@@ -51,7 +56,7 @@ describe("New Regression Bugs", () => {
 
       // Verify only one guess exists for this player
       const playerGuesses = roundWithFirstGuess.guesses.filter(
-        guess => guess.playerId === player.id
+        (guess) => guess.playerId === player.id,
       );
       expect(playerGuesses.length).toBe(1);
 
@@ -59,8 +64,18 @@ describe("New Regression Bugs", () => {
     });
 
     it("should hide other players guesses until human player guesses", () => {
-      const humanPlayer: Player = { id: "human", name: "Human", isComputer: false, score: 0 };
-      const computerPlayer: Player = { id: "comp1", name: "Computer", isComputer: true, score: 0 };
+      const humanPlayer: Player = {
+        id: "human",
+        name: "Human",
+        isComputer: false,
+        score: 0,
+      };
+      const computerPlayer: Player = {
+        id: "comp1",
+        name: "Computer",
+        isComputer: true,
+        score: 0,
+      };
 
       const computerGuess: Guess = {
         playerId: computerPlayer.id,
@@ -92,7 +107,7 @@ describe("New Regression Bugs", () => {
 
       // Check if human has guessed
       const hasHumanGuessed = round.guesses.some(
-        guess => guess.playerId === humanPlayer.id
+        (guess) => guess.playerId === humanPlayer.id,
       );
       expect(hasHumanGuessed).toBe(false);
 
@@ -117,21 +132,29 @@ describe("New Regression Bugs", () => {
         timestamp: Date.now() + 1000,
       };
 
-      const updatedRound = { ...round, guesses: [...round.guesses, humanGuess] };
+      const updatedRound = {
+        ...round,
+        guesses: [...round.guesses, humanGuess],
+      };
 
       // Now human has guessed, other guesses should be visible
       const hasHumanGuessedNow = updatedRound.guesses.some(
-        guess => guess.playerId === humanPlayer.id
+        (guess) => guess.playerId === humanPlayer.id,
       );
       expect(hasHumanGuessedNow).toBe(true);
 
-      const shouldShowOtherGuessesNow = hasHumanGuessedNow || updatedRound.completed;
+      const shouldShowOtherGuessesNow =
+        hasHumanGuessedNow || updatedRound.completed;
       expect(shouldShowOtherGuessesNow).toBe(true);
 
-      const visibleGuessesNow = shouldShowOtherGuessesNow ? updatedRound.guesses : [];
+      const visibleGuessesNow = shouldShowOtherGuessesNow
+        ? updatedRound.guesses
+        : [];
       expect(visibleGuessesNow.length).toBe(2); // Both human and computer guesses
 
-      console.log("✅ Other player guesses properly hidden until human guesses");
+      console.log(
+        "✅ Other player guesses properly hidden until human guesses",
+      );
     });
 
     it("should end round after all players guess OR timer expires", () => {
@@ -165,15 +188,18 @@ describe("New Regression Bugs", () => {
         distance: 100 * (index + 1),
         placementPoints: players.length - index,
         bonusPoints: calculateBonusPoints(100 * (index + 1)),
-        totalPoints: (players.length - index) + calculateBonusPoints(100 * (index + 1)),
+        totalPoints:
+          players.length - index + calculateBonusPoints(100 * (index + 1)),
         placement: index + 1,
         timestamp: Date.now() + index * 1000,
       }));
 
       const roundWithAllGuesses = { ...round, guesses: allGuesses };
 
-      const allPlayersGuessed = players.every(player =>
-        roundWithAllGuesses.guesses.some(guess => guess.playerId === player.id)
+      const allPlayersGuessed = players.every((player) =>
+        roundWithAllGuesses.guesses.some(
+          (guess) => guess.playerId === player.id,
+        ),
       );
       expect(allPlayersGuessed).toBe(true);
 
@@ -187,7 +213,8 @@ describe("New Regression Bugs", () => {
       const roundStartTime = currentTime - roundTimeLimit - 1000; // Round started 31 seconds ago
 
       const expiredRound = { ...round, startTime: roundStartTime };
-      const hasTimerExpired = (currentTime - expiredRound.startTime) >= roundTimeLimit;
+      const hasTimerExpired =
+        currentTime - expiredRound.startTime >= roundTimeLimit;
       expect(hasTimerExpired).toBe(true);
 
       // Round should be completable when timer expires
@@ -195,7 +222,8 @@ describe("New Regression Bugs", () => {
       expect(shouldCompleteRoundByTimer).toBe(true);
 
       // Final condition: Round completes if ALL players guessed OR timer expired
-      const shouldCompleteEitherCondition = allPlayersGuessed || hasTimerExpired;
+      const shouldCompleteEitherCondition =
+        allPlayersGuessed || hasTimerExpired;
       expect(shouldCompleteEitherCondition).toBe(true);
 
       console.log("✅ Round completion logic working for both conditions");
@@ -246,7 +274,10 @@ describe("New Regression Bugs", () => {
 
       // Complete first round
       const completedRound1 = { ...round1, completed: true };
-      const gameWithCompletedRound1 = { ...gameWithRound1, rounds: [completedRound1] };
+      const gameWithCompletedRound1 = {
+        ...gameWithRound1,
+        rounds: [completedRound1],
+      };
 
       // Add second round
       const round2: GameRound = {
@@ -265,9 +296,9 @@ describe("New Regression Bugs", () => {
         startTime: Date.now() + 60000,
       };
 
-      const gameWithBothRounds = { 
-        ...gameWithCompletedRound1, 
-        rounds: [...gameWithCompletedRound1.rounds, round2] 
+      const gameWithBothRounds = {
+        ...gameWithCompletedRound1,
+        rounds: [...gameWithCompletedRound1.rounds, round2],
       };
 
       expect(gameWithBothRounds.rounds.length).toBe(2);
@@ -276,7 +307,8 @@ describe("New Regression Bugs", () => {
 
       // Check if game should continue
       const currentRoundNumber = gameWithBothRounds.rounds.length;
-      const shouldContinue = currentRoundNumber < gameWithBothRounds.settings.totalRounds;
+      const shouldContinue =
+        currentRoundNumber < gameWithBothRounds.settings.totalRounds;
       expect(shouldContinue).toBe(true); // 2 < 3
 
       console.log("✅ Multiple round progression working correctly");

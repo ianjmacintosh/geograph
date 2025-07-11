@@ -8,8 +8,20 @@ describe("Actual Flickering Bug Detection", () => {
     it("should show scores for ALL players after round completion", () => {
       const players: Player[] = [
         { id: "player1", name: "Human Player", isComputer: false, score: 0 },
-        { id: "player2", name: "Computer1", isComputer: true, score: 0, accuracy: 0.5 },
-        { id: "player3", name: "Computer2", isComputer: true, score: 0, accuracy: 0.7 },
+        {
+          id: "player2",
+          name: "Computer1",
+          isComputer: true,
+          score: 0,
+          accuracy: 0.5,
+        },
+        {
+          id: "player3",
+          name: "Computer2",
+          isComputer: true,
+          score: 0,
+          accuracy: 0.7,
+        },
       ];
 
       // Simulate all players making guesses
@@ -66,50 +78,74 @@ describe("Actual Flickering Bug Detection", () => {
       };
 
       // Anti-flickering check: ALL players should have scores when round is completed
-      const allPlayersHaveGuesses = players.every(player =>
-        completedRound.guesses.some(guess => guess.playerId === player.id)
+      const allPlayersHaveGuesses = players.every((player) =>
+        completedRound.guesses.some((guess) => guess.playerId === player.id),
       );
       expect(allPlayersHaveGuesses).toBe(true);
 
       // All guesses should have non-zero total points (no flickering to 0)
-      completedRound.guesses.forEach(guess => {
+      completedRound.guesses.forEach((guess) => {
         expect(guess.totalPoints).toBeGreaterThan(0);
         expect(guess.placementPoints).toBeGreaterThan(0);
       });
 
       // Human player should have best score (perfect guess)
-      const humanGuess = completedRound.guesses.find(g => g.playerId === "player1");
-      const computerGuesses = completedRound.guesses.filter(g => g.playerId !== "player1");
-      
+      const humanGuess = completedRound.guesses.find(
+        (g) => g.playerId === "player1",
+      );
+      const computerGuesses = completedRound.guesses.filter(
+        (g) => g.playerId !== "player1",
+      );
+
       expect(humanGuess?.totalPoints).toBeGreaterThan(0);
-      computerGuesses.forEach(computerGuess => {
+      computerGuesses.forEach((computerGuess) => {
         expect(computerGuess.totalPoints).toBeGreaterThan(0);
-        expect(humanGuess!.totalPoints).toBeGreaterThanOrEqual(computerGuess.totalPoints);
+        expect(humanGuess!.totalPoints).toBeGreaterThanOrEqual(
+          computerGuess.totalPoints,
+        );
       });
 
-      console.log("✅ All players received proper scores - no flickering bug detected");
+      console.log(
+        "✅ All players received proper scores - no flickering bug detected",
+      );
     });
 
     it("should maintain score consistency throughout the scoring process", () => {
       // Test that scores don't flicker between 0 and non-zero values
-      const scoringHistory: Array<{ playerId: string; score: number; timestamp: number }> = [];
+      const scoringHistory: Array<{
+        playerId: string;
+        score: number;
+        timestamp: number;
+      }> = [];
 
       // Simulate the scoring process for multiple players
       const players = ["human", "comp1", "comp2"];
-      
+
       // Step 1: Initial state - all scores should be 0
-      players.forEach(playerId => {
+      players.forEach((playerId) => {
         scoringHistory.push({ playerId, score: 0, timestamp: Date.now() });
       });
 
       // Step 2: Human makes guess - gets score immediately
-      scoringHistory.push({ playerId: "human", score: 8, timestamp: Date.now() + 1000 });
+      scoringHistory.push({
+        playerId: "human",
+        score: 8,
+        timestamp: Date.now() + 1000,
+      });
 
       // Step 3: Computer 1 makes guess - gets score
-      scoringHistory.push({ playerId: "comp1", score: 4, timestamp: Date.now() + 2000 });
+      scoringHistory.push({
+        playerId: "comp1",
+        score: 4,
+        timestamp: Date.now() + 2000,
+      });
 
       // Step 4: Computer 2 makes guess - gets score
-      scoringHistory.push({ playerId: "comp2", score: 3, timestamp: Date.now() + 3000 });
+      scoringHistory.push({
+        playerId: "comp2",
+        score: 3,
+        timestamp: Date.now() + 3000,
+      });
 
       // Anti-flickering validation: Once a player gets a non-zero score, it should never go back to 0
       const playerScoreTracker: Record<string, number[]> = {
@@ -118,16 +154,18 @@ describe("Actual Flickering Bug Detection", () => {
         comp2: [],
       };
 
-      scoringHistory.forEach(entry => {
+      scoringHistory.forEach((entry) => {
         playerScoreTracker[entry.playerId].push(entry.score);
       });
 
       // Check each player's score history for flickering (score going from non-zero back to zero)
       Object.entries(playerScoreTracker).forEach(([playerId, scores]) => {
         let hasSeenNonZero = false;
-        scores.forEach(score => {
+        scores.forEach((score) => {
           if (hasSeenNonZero && score === 0) {
-            throw new Error(`Flickering detected for ${playerId}: score went from non-zero back to 0`);
+            throw new Error(
+              `Flickering detected for ${playerId}: score went from non-zero back to 0`,
+            );
           }
           if (score > 0) {
             hasSeenNonZero = true;

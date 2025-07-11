@@ -44,8 +44,8 @@ describe("Critical Bugs", () => {
       const updatedRound = { ...round, guesses };
 
       // Check that when all players have guessed, we can mark the round as completed
-      const allPlayersGuessed = players.every(player => 
-        updatedRound.guesses.some(guess => guess.playerId === player.id)
+      const allPlayersGuessed = players.every((player) =>
+        updatedRound.guesses.some((guess) => guess.playerId === player.id),
       );
 
       expect(allPlayersGuessed).toBe(true);
@@ -59,8 +59,13 @@ describe("Critical Bugs", () => {
     });
 
     it("should prevent multiple guesses by checking player has already guessed", () => {
-      const player: Player = { id: "human", name: "Human", isComputer: false, score: 0 };
-      
+      const player: Player = {
+        id: "human",
+        name: "Human",
+        isComputer: false,
+        score: 0,
+      };
+
       const existingGuess: Guess = {
         playerId: player.id,
         lat: 40.7128,
@@ -90,7 +95,9 @@ describe("Critical Bugs", () => {
       };
 
       // Check if player has already guessed
-      const hasPlayerGuessed = round.guesses.some(guess => guess.playerId === player.id);
+      const hasPlayerGuessed = round.guesses.some(
+        (guess) => guess.playerId === player.id,
+      );
       expect(hasPlayerGuessed).toBe(true);
 
       // Logic should prevent additional guesses
