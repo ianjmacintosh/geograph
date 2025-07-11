@@ -174,7 +174,7 @@ export default function Lobby() {
                 </h2>
                 {isHost &&
                   currentGame.players.length <
-                  currentGame.settings.maxPlayers && (
+                    currentGame.settings.maxPlayers && (
                     <button
                       onClick={handleAddComputers}
                       className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm font-semibold min-h-[44px] touch-manipulation transition duration-200"
