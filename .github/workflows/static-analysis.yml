@@ -1,5 +1,5 @@
 name: Static Analysis
-description: Run static analysis tools like Prettier on code changes.
+description: Run static analysis tools like Prettier and ESLint on code changes.
 on:
   pull_request:
     types:
@@ -8,12 +8,19 @@ on:
       - synchronize
 permissions: {}
 jobs:
-  prettier:
-    name: Prettier
+  static-analysis:
+    name: Code Quality Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-      - run: |
-          npm install
-          npm run format:check
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - name: 🎨 Check Prettier formatting
+        run: npm run format:check
+      - name: 🔍 Run ESLint
+        run: npm run lint
+      - name: 🔧 Check TypeScript
+        run: npm run typecheck

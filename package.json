@@ -9,6 +9,8 @@
     "dev:websocket": "tsx app/server/index.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "start": "concurrently \"npm run start:websocket\" \"react-router-serve ./build/server/index.js\"",
     "start:railway": "tsx build/server.js",
     "start:websocket": "tsx app/server/index.ts",
@@ -37,6 +39,7 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.30.1",
     "@playwright/test": "^1.54.1",
     "@react-router/dev": "^7.5.3",
     "@tailwindcss/vite": "^4.1.4",
@@ -46,10 +49,14 @@
     "@types/node": "^20",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "eslint": "^9.30.1",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.3.0",
     "jsdom": "^26.1.0",
     "prettier": "3.6.2",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.36.0",
     "vite": "^6.3.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
