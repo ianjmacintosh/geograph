@@ -32,7 +32,20 @@ export default defineConfig([
     languageOptions: { globals: globals.browser },
   },
   // TypeScript config
-  ...tseslint.configs.recommended,
+  ...tseslint.configs.recommended.map(config => ({
+    ...config,
+    rules: {
+      ...config.rules,
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { 
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_"
+        }
+      ]
+    }
+  })),
   // React config
   {
     ...pluginReact.configs.flat.recommended,

@@ -73,7 +73,7 @@ vi.mock("../data/cities", () => ({
 // Mock game utilities
 vi.mock("../utils/game", () => ({
   calculateDistance: vi.fn(
-    (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    (lat1: number, lng1: number, _lat2: number, _lng2: number) => {
       if (lat1 === 40.7128 && lng1 === -74.006) return 0; // Human perfect guess
       if (lat1 === 41.0 && lng1 === -73.0) return 150; // Computer 1
       return 500;

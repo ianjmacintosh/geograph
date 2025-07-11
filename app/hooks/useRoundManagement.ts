@@ -2,10 +2,11 @@ import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router";
 import type {
   GameRound,
-  City,
+  // Note: City and Player types preserved for future development
+  // City,
   Game,
   FinalResults,
-  Player,
+  // Player,
 } from "../types/game";
 import { getRandomCityByDifficulty } from "../data/cities";
 import { calculateFinalPlacements } from "../utils/game";

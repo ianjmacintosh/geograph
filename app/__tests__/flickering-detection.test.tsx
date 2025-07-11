@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  act,
-} from "@testing-library/react";
-import { MemoryRouter } from "react-router";
-import Game from "../routes/game";
+// Note: These imports are preserved for future test development
+// import {
+//   render,
+//   screen,
+//   fireEvent,
+//   waitFor,
+//   act,
+// } from "@testing-library/react";
+// import { MemoryRouter } from "react-router";
+// import Game from "../routes/game";
 import type { Game as GameType } from "../types/game";
 
 // Mock the useGame hook directly
@@ -55,8 +56,8 @@ vi.mock("../utils/game", () => ({
   calculateDistance: (
     lat1: number,
     lng1: number,
-    lat2: number,
-    lng2: number,
+    _lat2: number,
+    _lng2: number,
   ) => {
     // Return predictable distances for testing
     if (lat1 === 40.7128 && lng1 === -74.006) return 0; // Perfect guess

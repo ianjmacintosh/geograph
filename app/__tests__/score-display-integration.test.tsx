@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import Game from "../routes/game";
-import type { Game as GameType, GameRound, Guess } from "../types/game";
+import type { Game as GameType, GameRound } from "../types/game";
 
 // Mock the useGame hook directly
 const mockUseGame = vi.fn();
@@ -15,7 +15,7 @@ vi.mock("../contexts/GameContext", () => ({
 
 // Mock the WorldMap component
 vi.mock("../components/WorldMap", () => ({
-  WorldMap: ({ onMapClick, guesses, showTarget }: any) => (
+  WorldMap: ({ guesses, showTarget }: any) => (
     <div data-testid="world-map">
       <div data-testid="target-shown">{showTarget ? "visible" : "hidden"}</div>
       <div data-testid="guess-count">{guesses.length}</div>

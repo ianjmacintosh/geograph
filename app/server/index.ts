@@ -1,4 +1,5 @@
-import { createServer } from "http";
+// Note: createServer import preserved for future development
+// import { createServer } from "http";
 import { getWebSocketServer } from "./websocket";
 
 // Start WebSocket server

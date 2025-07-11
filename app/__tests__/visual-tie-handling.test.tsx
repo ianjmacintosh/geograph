@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { GameProvider } from "../contexts/GameContext";
-import Game from "../routes/game";
+// Note: Game import preserved for future test development
+// import Game from "../routes/game";
 import Results from "../routes/results";
-import { calculateFinalPlacements } from "../utils/game";
+// Note: calculateFinalPlacements import preserved for future test development
+// import { calculateFinalPlacements } from "../utils/game";
 
 // Mock WebSocket
 vi.mock("../hooks/useWebSocket", () => ({

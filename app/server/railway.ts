@@ -1,13 +1,16 @@
 import { createServer } from "http";
-import { readFileSync } from "fs";
+// Note: readFileSync import preserved for future development
+// import { readFileSync } from "fs";
 import { WebSocketServer } from "ws";
 import { GameWebSocketServer } from "./websocket.js";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+// import { fileURLToPath } from "url";
+// import { dirname } from "path";
+// Note: join import preserved for future development
+// import { join } from "path";
 
 const PORT = parseInt(process.env.PORT || "3000");
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = dirname(__filename); // Not currently used but may be needed for file paths
 
 console.log("🚂 Starting Railway deployment server...");
 

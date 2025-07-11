@@ -26,7 +26,7 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
   leaderName,
   leaderScore,
   isCurrentPlayerLeader,
-  isAwaitingConfirmation,
+  isAwaitingConfirmation: _isAwaitingConfirmation,
   onShowScoreboard,
 }: PersistentGameHeaderProps) {
   const showResults = currentRound?.completed || false;

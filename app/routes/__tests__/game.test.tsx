@@ -2,24 +2,24 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   render,
   screen,
-  fireEvent,
   waitFor,
-  act,
 } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
-import { GameProvider } from "../../contexts/GameContext";
+// Note: GameProvider import preserved for future test development
+// import { GameProvider } from "../../contexts/GameContext";
 import Game from "../game";
 import Results from "../results";
-import {
-  calculatePlacementPoints,
-  calculateBonusPoints,
-} from "../../utils/game";
+// Note: These imports preserved for future test development
+// import {
+//   calculatePlacementPoints,
+//   calculateBonusPoints,
+// } from "../../utils/game";
 import type { Game as GameType } from "../../types/game";
 import React from "react";
 
 // Mock the WorldMap component since it uses Leaflet
 vi.mock("../../components/WorldMap", () => ({
-  WorldMap: ({ onMapClick, targetCity, showTarget }: any) => (
+  WorldMap: () => (
     <div data-testid="mock-world-map" />
   ),
 }));
@@ -48,7 +48,7 @@ vi.mock("../../contexts/GameContext", () => ({
 // Test wrapper with proper router context
 function TestWrapper({
   children,
-  game,
+  game: _game,
 }: {
   children: React.ReactNode;
   game: GameType;

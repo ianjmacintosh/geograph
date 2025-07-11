@@ -96,7 +96,7 @@ describe("🎮 Visual Tie Handling Demonstration", () => {
 
     console.log("\n🏆 FINAL STANDINGS (with tie handling):");
     const winners: string[] = [];
-    finalResults.forEach((player, index) => {
+    finalResults.forEach((player) => {
       const tieIndicator =
         player.finalPlacement === 1 &&
         finalResults.filter((p) => p.finalPlacement === 1).length > 1

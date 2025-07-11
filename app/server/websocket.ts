@@ -1,10 +1,12 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { IncomingMessage } from "http";
 import { parse } from "url";
-import { v4 as uuidv4 } from "uuid";
+// Note: uuidv4 import preserved for future development
+// import { v4 as uuidv4 } from "uuid";
 import { getDatabase } from "./database.js";
 import { GameManager } from "./game-manager.js";
-import type { Game, Player } from "../types/game.js";
+// Note: Game and Player types preserved for future development
+// import type { Game, Player } from "../types/game.js";
 
 export interface WebSocketMessage {
   type: string;

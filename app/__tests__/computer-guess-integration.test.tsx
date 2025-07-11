@@ -64,7 +64,7 @@ vi.mock("../data/cities", () => ({
 // Mock game utilities
 vi.mock("../utils/game", () => ({
   calculateDistance: vi.fn(
-    (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    (lat1: number, lng1: number, _lat2: number, _lng2: number) => {
       // Human perfect guess
       if (lat1 === 40.7128 && lng1 === -74.006) return 0;
       // Computer 1 guess
@@ -214,7 +214,7 @@ describe.skip("Computer Guess Integration", () => {
   }, 30000);
 
   it("should have consistent state updates for computer guesses", async () => {
-    let stateSnapshots: Array<{
+    const stateSnapshots: Array<{
       time: number;
       guessCount: number;
       event: string;
@@ -231,7 +231,7 @@ describe.skip("Computer Guess Integration", () => {
           event,
         });
         console.log(`[${event}] Guess count: ${guessCount}`);
-      } catch (e) {
+      } catch {
         console.log(`[${event}] Could not capture state`);
       }
     };

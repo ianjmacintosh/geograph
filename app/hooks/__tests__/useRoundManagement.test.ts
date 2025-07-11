@@ -68,7 +68,7 @@ describe("useRoundManagement", () => {
 
   const setupHook = async (
     gameProps: Partial<Game> = {},
-    initialRoundNumber = 1,
+    _initialRoundNumber = 1,
   ) => {
     const currentGameData = { ...mockBaseGame, ...gameProps };
 

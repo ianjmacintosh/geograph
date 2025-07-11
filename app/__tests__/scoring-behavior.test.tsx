@@ -55,8 +55,8 @@ vi.mock("../utils/game", () => ({
   calculateDistance: (
     lat1: number,
     lng1: number,
-    lat2: number,
-    lng2: number,
+    _lat2: number,
+    _lng2: number,
   ) => {
     // Return predictable distances for testing
     if (lat1 === 40.7128 && lng1 === -74.006) return 0; // Perfect guess
@@ -162,7 +162,7 @@ describe.skip("Scoring Behavior", () => {
   });
 
   it("should maintain score consistency during state updates", async () => {
-    let scoreChanges: { [key: string]: string[] } = {
+    const scoreChanges: { [key: string]: string[] } = {
       player1: [],
       player2: [],
       player3: [],

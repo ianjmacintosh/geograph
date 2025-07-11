@@ -595,8 +595,8 @@ export class GameManager {
         (p) => p.id !== playerId && !p.isComputer,
       );
       if (remainingPlayers.length > 0) {
-        // Assign new host (first human player)
-        const newHost = remainingPlayers[0];
+        // TODO: Assign new host (first human player)
+        // const newHost = remainingPlayers[0];
         // Update host in database
         this.db.updateGameStatus(gameId, "waiting"); // This doesn't actually change the host, we'd need a separate method
       }

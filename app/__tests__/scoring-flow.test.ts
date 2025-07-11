@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { calculateBonusPoints, calculatePlacementPoints } from "../utils/game";
-import type { Guess, GameRound, Player } from "../types/game";
+import type { Guess, Player } from "../types/game";
 
 // Mock city for testing
 const testCity = {
@@ -130,7 +130,7 @@ describe("Scoring Flow Validation", () => {
 
   describe("Multi-Round Score Accumulation", () => {
     it("should correctly accumulate scores across rounds", () => {
-      const players: Player[] = [
+      const _players: Player[] = [
         { id: "player1", name: "Player 1", isComputer: false, score: 0 },
       ];
 

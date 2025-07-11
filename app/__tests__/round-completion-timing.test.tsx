@@ -68,7 +68,7 @@ vi.mock("../data/cities", () => ({
 // Mock game utilities
 vi.mock("../utils/game", () => ({
   calculateDistance: vi.fn(
-    (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    (lat1: number, lng1: number, _lat2: number, _lng2: number) => {
       if (lat1 === 40.7128 && lng1 === -74.006) return 0; // Human perfect guess
       if (lat1 === 41.0 && lng1 === -73.0) return 150; // Computer 1
       if (lat1 === 39.0 && lng1 === -75.0) return 300; // Computer 2
@@ -192,7 +192,7 @@ describe.skip("Round Completion Timing Bug", () => {
     }
 
     // Record the time before human guesses
-    const timeBeforeHumanGuess = Date.now();
+    const _timeBeforeHumanGuess = Date.now();
 
     // Check that timer is still running (not showing results yet)
     expect(screen.getByTestId("show-target").textContent).toBe("target-hidden");
@@ -328,7 +328,7 @@ describe.skip("Round Completion Timing Bug", () => {
     // Check initial timer value
     let timerElement = screen.getByText(/Time:/);
     let timerMatch = timerElement.textContent?.match(/(\d+)s/);
-    let initialTimer = timerMatch ? parseInt(timerMatch[1]) : 0;
+    const initialTimer = timerMatch ? parseInt(timerMatch[1]) : 0;
     console.log("Initial timer:", initialTimer, "seconds");
 
     // Wait 3 seconds
@@ -339,7 +339,7 @@ describe.skip("Round Completion Timing Bug", () => {
     // Check timer decreased
     timerElement = screen.getByText(/Time:/);
     timerMatch = timerElement.textContent?.match(/(\d+)s/);
-    let laterTimer = timerMatch ? parseInt(timerMatch[1]) : 0;
+    const laterTimer = timerMatch ? parseInt(timerMatch[1]) : 0;
     console.log("Timer after 3 seconds:", laterTimer, "seconds");
 
     // Should have decreased by approximately 3 seconds (allow some variance for test timing)

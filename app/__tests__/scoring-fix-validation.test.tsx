@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import Game from "../routes/game";
+// Note: Game import preserved for future test development
+// import Game from "../routes/game";
 import type { Game as GameType, GameRound } from "../types/game";
 
 // Mock the useGame hook directly

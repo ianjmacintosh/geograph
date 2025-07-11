@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import Game from "../routes/game";
-import type { Game as GameType, GameRound, Guess } from "../types/game";
+// Note: Game import preserved for future test development
+// import Game from "../routes/game";
+import type { Game as GameType, GameRound } from "../types/game";
 
 // Mock the useGame hook directly
 const mockUseGame = vi.fn();
@@ -133,8 +134,8 @@ describe.skip("Scoring Verification", () => {
 
     // Mock useState to return our test round
     const mockUseState = vi.fn();
-    let currentRoundState = mockRound;
-    let showResultsState = true;
+    const currentRoundState = mockRound;
+    const showResultsState = true;
 
     mockUseState
       .mockReturnValueOnce([currentRoundState, vi.fn()]) // currentRound

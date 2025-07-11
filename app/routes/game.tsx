@@ -30,7 +30,7 @@ export default function Game() {
     currentRound?.guesses?.some((g) => g.playerId === playerId) || false;
 
   // Check if all players have guessed (round is complete)
-  const allPlayersGuessed =
+  const _allPlayersGuessed =
     currentRound && currentGame
       ? currentRound.guesses.length >= currentGame.players.length
       : false;

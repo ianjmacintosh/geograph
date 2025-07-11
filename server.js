@@ -50,7 +50,7 @@ const httpServer = createServer(async (req, res) => {
       res.writeHead(200, { "Content-Type": contentType });
       res.end(content);
       return;
-    } catch (error) {
+    } catch {
       res.writeHead(404);
       res.end("Not found");
       return;
@@ -68,7 +68,7 @@ const wss = new WebSocketServer({
 });
 
 // Initialize GameWebSocketServer with the existing WebSocket server
-const gameWebSocketServer = new GameWebSocketServer(undefined, wss);
+new GameWebSocketServer(undefined, wss);
 console.log("🎮 GameWebSocketServer initialized with Railway WebSocket server");
 
 // Start unified server

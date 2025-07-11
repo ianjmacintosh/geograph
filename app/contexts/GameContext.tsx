@@ -10,7 +10,9 @@ import {
   type ReactNode,
 } from "react";
 import type { Game, GameState, Player, FinalResults } from "../types/game";
-import { useWebSocket, type WebSocketMessage } from "../hooks/useWebSocket";
+// Note: useWebSocket import preserved for future development
+// import { useWebSocket, type WebSocketMessage } from "../hooks/useWebSocket";
+import type { WebSocketMessage } from "../hooks/useWebSocket";
 
 type GameAction =
   | { type: "SET_GAME"; payload: Game }
@@ -174,7 +176,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Prevent multiple WebSocket connections
-  const wsInitializedRef = useRef(false);
+  const _wsInitializedRef = useRef(false);
 
   const handleWebSocketMessage = useCallback(
     (message: WebSocketMessage) => {
@@ -263,13 +265,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   // Memoize callback functions to prevent re-renders
 
-  const onDisconnect = useCallback(() => {
+  const _onDisconnect = useCallback(() => {
     dispatch({ type: "SET_CONNECTION_STATUS", payload: "disconnected" });
     console.log("📱 WebSocket disconnected");
   }, [dispatch]);
 
-  const onError = useCallback(
-    (error: Event) => {
+  const _onError = useCallback(
+    (_error: Event) => {
       dispatch({ type: "SET_CONNECTION_STATUS", payload: "error" });
       dispatch({ type: "SET_ERROR", payload: "Connection error" });
       console.error("❌ WebSocket error:", error);
