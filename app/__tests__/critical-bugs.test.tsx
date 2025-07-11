@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { calculateBonusPoints, calculatePlacementPoints } from "../utils/game";
+import { describe, it, expect } from "vitest";
+import { calculateBonusPoints } from "../utils/game";
 import type { GameRound, Player, Guess, Game } from "../types/game";
 
 // Test critical game logic without complex UI integration

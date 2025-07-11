@@ -1,4 +1,4 @@
-import type { Game, Player, City, Guess } from "../types/game";
+import type { Game, Player, City } from "../types/game";
 
 export function generateGameCode(): string {
   return Math.floor(1000 + Math.random() * 9000).toString();

@@ -5,6 +5,21 @@ import pluginReact from "eslint-plugin-react";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
+  // 🚫 IGNORE uninvited guests - build files, reports, generated code
+  {
+    ignores: [
+      "**/node_modules/**",
+      "**/build/**",
+      "**/dist/**",
+      "**/.react-router/**",
+      "**/playwright-report/**",
+      "**/test-results/**",
+      "**/coverage/**",
+      "**/.next/**",
+      "**/.nuxt/**",
+      "**/tests-examples/**", // Example/demo files
+    ],
+  },
   // Base config for all files
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
@@ -22,7 +37,7 @@ export default defineConfig([
   pluginReact.configs.flat.recommended,
   // 🔥 SERVER OVERRIDE - Node.js environment for server code
   {
-    files: ["app/server/**/*.{js,ts}"],
+    files: ["app/server/**/*.{js,ts}", "server.js"],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -30,7 +45,10 @@ export default defineConfig([
     },
     rules: {
       "no-console": "off", // Console.log is totally fine in server code
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }], // Allow _unused variables
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_" },
+      ], // Allow _unused variables
     },
   },
   // 🧪 TEST OVERRIDE - Test environment globals
@@ -51,8 +69,12 @@ export default defineConfig([
     files: ["**/*.{jsx,tsx}"],
     settings: {
       react: {
-        version: "detect", // Automatically detect React version
+        version: "19.1.0", // Explicitly set React version
       },
+    },
+    rules: {
+      "react/react-in-jsx-scope": "off", // React 19 has automatic JSX transform
+      "react/jsx-uses-react": "off", // Not needed with automatic JSX transform
     },
   },
 ]);

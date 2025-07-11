@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateBonusPoints, calculatePlacementPoints } from "../utils/game";
+import { calculateBonusPoints } from "../utils/game";
 import type { GameRound, Player, Guess } from "../types/game";
 
 // Test anti-flickering logic as unit tests instead of complex integration tests
@@ -180,7 +180,7 @@ describe("Actual Flickering Bug Detection", () => {
         comp2: playerScoreTracker.comp2[playerScoreTracker.comp2.length - 1],
       };
 
-      Object.entries(finalScores).forEach(([playerId, score]) => {
+      Object.entries(finalScores).forEach(([, score]) => {
         expect(score).toBeGreaterThan(0);
       });
 
