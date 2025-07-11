@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 interface UseLeafletMapProps {
-  mapRef: React.RefObject<HTMLDivElement>;
+  mapRef: React.RefObject<HTMLDivElement | null>;
   isClient: boolean;
   onProvisionalGuess?: (lat: number, lng: number) => void;
   isGuessDisabled?: boolean;

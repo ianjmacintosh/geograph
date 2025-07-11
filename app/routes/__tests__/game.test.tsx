@@ -214,6 +214,7 @@ describe.skip("Game Integration Tests (Simplified)", () => {
           },
         ],
         winnerId: "player1",
+        winnerIds: ["player1"],
         gameEndTime: Date.now(),
       },
       createdAt: Date.now(),

@@ -230,27 +230,32 @@ describe.skip("Visual Tie Handling Test", () => {
       },
     );
 
-    // Mock GameContext to provide our tie game
-    const MockGameProvider = ({ children }: { children: React.ReactNode }) => {
-      const mockContextValue = {
-        currentGame: mockGame,
-        finalResults: mockGame.finalResults,
-        isLoading: false,
-        error: null,
-        createGame: vi.fn(),
-        joinGame: vi.fn(),
-        startGame: vi.fn(),
-        makeGuess: vi.fn(),
-        nextRound: vi.fn(),
-        finishGame: vi.fn(),
-        resetGame: vi.fn(),
-        addComputerPlayers: vi.fn(),
-        updateGameSettings: vi.fn(),
-        removePlayer: vi.fn(),
-        setCurrentGame: vi.fn(),
-      };
+    // Mock the useGame hook to return our tie game
+    const mockUseGame = vi.fn(() => ({
+      currentGame: mockGame,
+      finalResults: mockGame.finalResults,
+      isLoading: false,
+      error: null,
+      createGame: vi.fn(),
+      joinGame: vi.fn(),
+      startGame: vi.fn(),
+      makeGuess: vi.fn(),
+      nextRound: vi.fn(),
+      finishGame: vi.fn(),
+      resetGame: vi.fn(),
+      addComputerPlayers: vi.fn(),
+      updateGameSettings: vi.fn(),
+      removePlayer: vi.fn(),
+      setCurrentGame: vi.fn(),
+    }));
 
-      return <GameProvider value={mockContextValue}>{children}</GameProvider>;
+    vi.doMock("../contexts/GameContext", () => ({
+      useGame: mockUseGame,
+      GameProvider: ({ children }: { children: React.ReactNode }) => children,
+    }));
+
+    const MockGameProvider = ({ children }: { children: React.ReactNode }) => {
+      return <GameProvider>{children}</GameProvider>;
     };
 
     // Render the Results component
@@ -332,12 +337,12 @@ describe.skip("Visual Tie Handling Test", () => {
     console.log("🔍 Testing actual tie handling logic:");
     console.log(
       "Input scores:",
-      playerScores.map((p) => `${p.playerName}: ${p.totalScore}`),
+      playerScores.map((p: any) => `${p.playerName}: ${p.totalScore}`),
     );
     console.log(
       "Output placements:",
       results.map(
-        (p) => `${p.playerName}: #${p.finalPlacement} (${p.totalScore} points)`,
+        (p: any) => `${p.playerName}: #${p.finalPlacement} (${p.totalScore} points)`,
       ),
     );
 
@@ -366,12 +371,12 @@ describe.skip("Visual Tie Handling Test", () => {
     console.log("🔍 Round tie handling:");
     console.log(
       "Input distances:",
-      roundGuesses.map((g) => `${g.playerId}: ${g.distance}km`),
+      roundGuesses.map((g: any) => `${g.playerId}: ${g.distance}km`),
     );
     console.log(
       "Output placements:",
       roundResults.map(
-        (r) => `${r.playerId}: #${r.placement} (${r.placementPoints} points)`,
+        (r: any) => `${r.playerId}: #${r.placement} (${r.placementPoints} points)`,
       ),
     );
 

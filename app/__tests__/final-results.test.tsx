@@ -43,6 +43,7 @@ describe("Final Results Screen", () => {
         },
       ],
       winnerId: "player1",
+      winnerIds: ["player1"],
       gameEndTime: Date.now(),
     };
 

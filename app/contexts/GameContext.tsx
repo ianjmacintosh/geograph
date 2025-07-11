@@ -274,7 +274,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     (_error: Event) => {
       dispatch({ type: "SET_CONNECTION_STATUS", payload: "error" });
       dispatch({ type: "SET_ERROR", payload: "Connection error" });
-      console.error("❌ WebSocket error:", error);
+      console.error("❌ WebSocket error:", _error);
     },
     [dispatch],
   );
