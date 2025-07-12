@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/ianjmacintosh/geograph/badge.svg)](https://coveralls.io/github/ianjmacintosh/geograph)
+
 # Geograph
 
 A multiplayer geography guessing game where friends can test their geography knowledge by identifying cities on a map without country labels.

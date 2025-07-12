@@ -32,12 +32,16 @@ export default function Results() {
       return () => clearTimeout(timeout);
     }
 
-    // Trigger animations
-    setTimeout(() => setAnimateIn(true), 100);
-    setTimeout(() => setShowConfetti(true), 800);
+    // Trigger animations with cleanup
+    const animationTimeout = setTimeout(() => setAnimateIn(true), 100);
+    const confettiStartTimeout = setTimeout(() => setShowConfetti(true), 800);
+    const confettiStopTimeout = setTimeout(() => setShowConfetti(false), 5000);
 
-    // Stop confetti after a while
-    setTimeout(() => setShowConfetti(false), 5000);
+    return () => {
+      clearTimeout(animationTimeout);
+      clearTimeout(confettiStartTimeout);
+      clearTimeout(confettiStopTimeout);
+    };
   }, [currentGame, navigate]);
 
   const handlePlayAgain = () => {

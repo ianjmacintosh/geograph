@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import Results from "../routes/results";
 import type { Game as GameType, FinalResults } from "../types/game";
@@ -18,6 +18,8 @@ describe("Final Results Screen", () => {
   let mockFinalResults: FinalResults;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.clearAllTimers();
     mockFinalResults = {
       playerScores: [
         {
@@ -85,6 +87,13 @@ describe("Final Results Screen", () => {
       clearGame: vi.fn(),
       finishGame: vi.fn(),
     });
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.runOnlyPendingTimers();
+    vi.clearAllTimers();
+    vi.useRealTimers();
   });
 
   it("should display final results when available", () => {
