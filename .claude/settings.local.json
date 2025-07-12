@@ -26,5 +26,18 @@
       "Bash(npx eslint:*)"
     ],
     "deny": []
+  },
+  "hooks": {
+    "Write": [
+      {
+        "matcher": "*.tsx,*.ts,*.js,*.jsx,*.json",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run format"
+          }
+        ]
+      }
+    ]
   }
 }

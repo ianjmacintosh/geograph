@@ -42,6 +42,41 @@ A multiplayer geography guessing game where friends can test their geography kno
 - `npm run start` - Start production server (requires build)
 - `npm run start:railway` - Start unified server for Railway deployment
 - `npm run typecheck` - Run TypeScript type checking
+- `npm run test` - Run unit tests with Vitest
+- `npm run test:coverage` - Run tests with coverage report
+- `npm run test:ui` - Run tests with Vitest UI
+- `npm run lint` - Run ESLint code quality checks
+- `npm run format` - Format code with Prettier
+
+## Testing & Coverage
+
+This project uses Vitest for unit testing and Coveralls for coverage tracking.
+
+### Running Tests
+
+```bash
+# Run all tests
+npm run test
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Run tests with interactive UI
+npm run test:ui
+```
+
+### Coverage Reports
+
+- **Local**: Coverage reports are generated in the `coverage/` directory
+- **CI/CD**: Coverage is automatically uploaded to [Coveralls](https://coveralls.io) on pull requests
+- **Current Coverage**: See badge in repository or Coveralls dashboard
+
+### Test Structure
+
+- **Unit Tests**: Located in `app/__tests__/` and `app/*/__tests__/`
+- **Test Framework**: Vitest with jsdom environment
+- **Assertions**: Built-in Vitest assertions with React Testing Library
+- **Mocking**: Component and module mocking for isolated testing
 
 ## Deployment
 
