@@ -1,5 +1,5 @@
 import { WorldMap } from "./WorldMap";
-import type { Game, GameRound } from "../types/game";
+import type { Game, GameRound, Guess } from "../types/game";
 
 interface GameResultsProps {
   currentGame: Game;
@@ -14,6 +14,48 @@ interface GameResultsProps {
     isComputer: boolean;
     totalScore: number;
   }>;
+}
+
+function getPlacementEmoji(placement: number): string {
+  if (placement === 1) return "🥇";
+  if (placement === 2) return "🥈";
+  if (placement === 3) return "🥉";
+  return "👤";
+}
+
+function renderGuessResult(guess: Guess, currentGame: Game) {
+  const player = currentGame.players.find((p) => p.id === guess.playerId);
+  const placementEmoji = getPlacementEmoji(guess.placement);
+
+  return (
+    <div
+      key={guess.playerId}
+      className="flex justify-between items-center py-1"
+    >
+      <div className="flex items-center space-x-1 lg:space-x-2 min-w-0 flex-1">
+        <span className="text-sm lg:text-lg flex-shrink-0">
+          {placementEmoji}
+        </span>
+        <span className="font-medium text-sm lg:text-base truncate">
+          {player?.name}
+        </span>
+        <span className="text-xs lg:text-sm text-gray-500 hidden sm:inline">
+          {player?.isComputer ? "(AI)" : "(You)"}
+        </span>
+      </div>
+      <div className="text-right flex-shrink-0">
+        <div className="font-semibold text-blue-600 text-sm lg:text-base">
+          {guess.totalPoints || 0}
+        </div>
+        <div className="text-xs text-gray-500 hidden lg:block">
+          {guess.placementPoints || 0} + {guess.bonusPoints || 0} bonus
+        </div>
+        <div className="text-xs text-gray-500">
+          {Math.round(guess.distance || 0)}km
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function GameResults({
@@ -74,46 +116,7 @@ export function GameResults({
           <div className="space-y-1 lg:space-y-2">
             {(currentRound.guesses || [])
               .sort((a, b) => (a.placement || 0) - (b.placement || 0))
-              .map((guess) => {
-                const player = currentGame.players.find(
-                  (p) => p.id === guess.playerId,
-                );
-                let placementEmoji = "👤";
-                if (guess.placement === 1) placementEmoji = "🥇";
-                else if (guess.placement === 2) placementEmoji = "🥈";
-                else if (guess.placement === 3) placementEmoji = "🥉";
-
-                return (
-                  <div
-                    key={guess.playerId}
-                    className="flex justify-between items-center py-1"
-                  >
-                    <div className="flex items-center space-x-1 lg:space-x-2 min-w-0 flex-1">
-                      <span className="text-sm lg:text-lg flex-shrink-0">
-                        {placementEmoji}
-                      </span>
-                      <span className="font-medium text-sm lg:text-base truncate">
-                        {player?.name}
-                      </span>
-                      <span className="text-xs lg:text-sm text-gray-500 hidden sm:inline">
-                        {player?.isComputer ? "(AI)" : "(You)"}
-                      </span>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="font-semibold text-blue-600 text-sm lg:text-base">
-                        {guess.totalPoints || 0}
-                      </div>
-                      <div className="text-xs text-gray-500 hidden lg:block">
-                        {guess.placementPoints || 0} + {guess.bonusPoints || 0}{" "}
-                        bonus
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {Math.round(guess.distance || 0)}km
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              .map((guess) => renderGuessResult(guess, currentGame))}
           </div>
 
           {isHost && (

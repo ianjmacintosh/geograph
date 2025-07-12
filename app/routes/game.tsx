@@ -5,8 +5,13 @@ import { PersistentGameHeader } from "../components/PersistentGameHeader";
 import { ScoreboardModal } from "../components/ScoreboardModal";
 import { GamePlayArea } from "../components/GamePlayArea";
 import { GameResults } from "../components/GameResults";
+import { GameScoreboard } from "../components/GameScoreboard";
+import { GameDesktopHeader } from "../components/GameDesktopHeader";
+import { GameLoadingState } from "../components/GameLoadingState";
 import { usePlayerInteraction } from "../hooks/usePlayerInteraction";
 import { useAutoSubmit } from "../hooks/useAutoSubmit";
+import { useGameScoring } from "../hooks/useGameScoring";
+import { useGameNavigation } from "../hooks/useGameNavigation";
 
 export function meta() {
   return [
@@ -66,6 +71,13 @@ export default function Game() {
     onConfirmGuess: confirmCurrentGuess,
   });
 
+  const { hasPlayerGuessedThisRound, getPlayerScores, getLeaderInfo } = useGameScoring(
+    currentGame,
+    currentRound,
+  );
+
+  useGameNavigation(currentGame);
+
   // Reset guess state when round changes
   useEffect(() => {
     if (currentRound?.id) {
@@ -78,77 +90,13 @@ export default function Game() {
     nextRound();
   }, [nextRound]);
 
-  // Navigation logic
-  useEffect(() => {
-    if (!currentGame) {
-      navigate("/");
-      return;
-    }
-    if (currentGame.status === "finished") {
-      navigate("/results");
-      return;
-    }
-    if (currentGame.status !== "playing") {
-      navigate("/lobby");
-      return;
-    }
-  }, [currentGame, navigate]);
-
-  // Check if a player (human or computer) has made a guess in the current round
-  // This is used for UI display (e.g., checkmarks next to player names)
-  const hasPlayerGuessedThisRound = useCallback(
-    (playerId: string): boolean => {
-      if (!currentRound || !currentRound.guesses) return false;
-      return currentRound.guesses.some((guess) => guess.playerId === playerId);
-    },
-    [currentRound],
-  );
-
-  // Calculate cumulative scores for display on the scoreboard
-  const getPlayerScores = useCallback(() => {
-    if (!currentGame) return [];
-
-    const playerScoresMap = new Map<string, number>();
-    currentGame.players.forEach((p) => playerScoresMap.set(p.id, 0));
-
-    // Calculate scores from all completed rounds
-    currentGame.rounds.forEach((round) => {
-      if (round.completed) {
-        round.guesses.forEach((guess) => {
-          if (guess.totalPoints && playerScoresMap.has(guess.playerId)) {
-            playerScoresMap.set(
-              guess.playerId,
-              (playerScoresMap.get(guess.playerId) || 0) + guess.totalPoints,
-            );
-          }
-        });
-      }
-    });
-
-    return currentGame.players
-      .map((player) => ({
-        ...player,
-        totalScore: playerScoresMap.get(player.id) || 0,
-      }))
-      .sort((a, b) => b.totalScore - a.totalScore);
-  }, [currentGame]);
-
   // Calculate leader information for persistent header
-  const playerScores = getPlayerScores();
-  const currentPlayerScore =
-    playerScores.find((p) => p.id === playerId)?.totalScore || 0;
-  const leader = playerScores[0];
+  const { playerScores, leader, leaderName, leaderScore } = getLeaderInfo();
+  const currentPlayerScore = playerScores.find((p) => p.id === playerId)?.totalScore || 0;
   const isCurrentPlayerLeader = leader?.id === playerId;
 
   if (!currentGame || !currentRound) {
-    // currentRound from useRoundManagement
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-        <div className="bg-white rounded-lg p-8">
-          <p>Loading game...</p>
-        </div>
-      </div>
-    );
+    return <GameLoadingState />;
   }
 
   return (
@@ -160,8 +108,8 @@ export default function Game() {
         timeLeft={timeLeft}
         roundNumber={roundNumber}
         currentPlayerScore={currentPlayerScore}
-        leaderName={leader?.name || ""}
-        leaderScore={leader?.totalScore || 0}
+        leaderName={leaderName}
+        leaderScore={leaderScore}
         isCurrentPlayerLeader={isCurrentPlayerLeader}
         isAwaitingConfirmation={isAwaitingConfirmation}
         onShowScoreboard={() => setIsScoreboardModalOpen(true)}
@@ -172,26 +120,14 @@ export default function Game() {
           {/* Main Game Area - Full width on mobile, 3/4 on desktop */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-xl p-3 sm:p-6">
-              {/* Desktop Header */}
-              <div className="hidden lg:flex justify-between items-center mb-6">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-800">
-                    Round {roundNumber} of {currentGame.settings.totalRounds}
-                  </h1>
-                  <p className="text-gray-600">Game Code: {currentGame.code}</p>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => {
-                      leaveGame();
-                      navigate("/");
-                    }}
-                    className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-md"
-                  >
-                    Leave Game
-                  </button>
-                </div>
-              </div>
+              <GameDesktopHeader
+                currentGame={currentGame}
+                roundNumber={roundNumber}
+                onLeaveGame={() => {
+                  leaveGame();
+                  navigate("/");
+                }}
+              />
 
               {showResults ? (
                 <GameResults
@@ -233,91 +169,14 @@ export default function Game() {
             </div>
           </div>
 
-          {/* Scoreboard - Hidden on mobile, visible on desktop */}
-          <div className="hidden lg:block lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-xl p-3 sm:p-4">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">
-                Scoreboard
-              </h2>
-              <div className="space-y-2">
-                {getPlayerScores().map((player, index) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded"
-                  >
-                    <div className="flex items-center space-x-2 min-w-0 flex-1">
-                      <span className="text-base sm:text-lg flex-shrink-0">
-                        {index === 0
-                          ? "🥇"
-                          : index === 1
-                            ? "🥈"
-                            : index === 2
-                              ? "🥉"
-                              : "👤"}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-medium text-sm sm:text-base flex items-center gap-1 sm:gap-2">
-                          <span className="truncate">{player.name}</span>
-                          {!showResults &&
-                            currentRound &&
-                            !currentRound.completed && (
-                              <span className="text-sm flex-shrink-0">
-                                {hasPlayerGuessedThisRound(player.id)
-                                  ? "✅"
-                                  : "⏳"}
-                              </span>
-                            )}
-                        </div>
-                        <div className="text-xs text-gray-500 truncate">
-                          {player.isComputer ? "Computer" : "Human"}
-                          {!showResults &&
-                            currentRound &&
-                            !currentRound.completed &&
-                            hasPlayerGuessedThisRound(player.id) && (
-                              <span className="text-green-600 ml-1">
-                                • Guessed
-                              </span>
-                            )}
-                          {!showResults &&
-                            currentRound &&
-                            !currentRound.completed &&
-                            !hasPlayerGuessedThisRound(player.id) && (
-                              <span className="text-orange-600 ml-1">
-                                • Waiting
-                              </span>
-                            )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div
-                        className="font-bold text-blue-600"
-                        data-testid={`player-score-${player.id}`}
-                      >
-                        {player.totalScore}
-                      </div>
-                      <div className="text-xs text-gray-500">pts</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Round Progress */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="text-sm text-gray-600 mb-2">
-                  Round {roundNumber} of {currentGame.settings.totalRounds}
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${(roundNumber / currentGame.settings.totalRounds) * 100}%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <GameScoreboard
+            currentGame={currentGame}
+            currentRound={currentRound}
+            showResults={showResults}
+            roundNumber={roundNumber}
+            getPlayerScores={getPlayerScores}
+            hasPlayerGuessedThisRound={hasPlayerGuessedThisRound}
+          />
         </div>
       </div>
 

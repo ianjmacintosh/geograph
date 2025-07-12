@@ -63,59 +63,65 @@ export function useAutoSubmit({
     calculateInitialTime();
   }, [currentRound, currentGame, showResults]);
 
+  // Helper functions to reduce complexity
+  const calculateTimeRemaining = (currentRound: GameRound, currentGame: Game | null): number => {
+    const timeLimit = currentGame?.settings?.roundTimeLimit || 30000;
+    const startTime = typeof currentRound.startTime === "number" ? currentRound.startTime : Date.now();
+    const elapsed = Date.now() - startTime;
+    return Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
+  };
+
+  const shouldAutoSubmitGuess = (
+    timeLeft: number,
+    currentGame: Game | null,
+    playerId: string | null
+  ): boolean => {
+    const isHumanPlayer = currentGame?.players.find((p) => p.id === playerId && !p.isComputer);
+    return (
+      timeLeft <= 1 &&
+      !!provisionalGuessRef.current &&
+      !hasConfirmedRef.current &&
+      !hasAutoSubmittedRef.current &&
+      !showResults &&
+      !!isHumanPlayer
+    );
+  };
+
+  const logDebugInfo = (timeLeft: number, currentRound: GameRound, shouldAutoSubmit: boolean) => {
+    if (timeLeft <= 3) {
+      console.log(`Timer: ${timeLeft}s, conditions:`, {
+        timeExpired: timeLeft <= 1,
+        hasProvisionalGuess: !!provisionalGuessRef.current,
+        notConfirmed: !hasConfirmedRef.current,
+        notAutoSubmitted: !hasAutoSubmittedRef.current,
+        roundCompleted: currentRound.completed,
+        notShowingResults: !showResults,
+        shouldAutoSubmit,
+      });
+    }
+  };
+
+  const performAutoSubmit = (playerId: string | null) => {
+    console.log(`Client Timer: Auto-submitting tentative guess for player ${playerId} at 1 second remaining.`);
+    setHasAutoSubmitted(true);
+    confirmGuessRef.current();
+  };
+
   // Effect 2: Client-Side Interval Timer and Auto-Submit
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    if (!currentRound || showResults || currentRound.completed) {
+    if (typeof window === "undefined" || !currentRound || showResults || currentRound.completed) {
       return;
     }
 
     const updateTimerAndAutoSubmit = () => {
-      const timeLimit = currentGame?.settings?.roundTimeLimit || 30000;
-      const startTime =
-        typeof currentRound.startTime === "number"
-          ? currentRound.startTime
-          : Date.now();
-      const elapsed = Date.now() - startTime;
-      const newRemaining = Math.max(0, Math.ceil((timeLimit - elapsed) / 1000));
-      setTimeLeft(newRemaining);
+      const newTimeLeft = calculateTimeRemaining(currentRound, currentGame);
+      setTimeLeft(newTimeLeft);
 
-      // Auto-submit tentative guess when timer reaches 1 second (to beat server timer race)
-      const shouldAutoSubmit =
-        newRemaining <= 1 &&
-        provisionalGuessRef.current &&
-        !hasConfirmedRef.current &&
-        !hasAutoSubmittedRef.current &&
-        !showResults &&
-        currentGame &&
-        currentGame.players.find((p) => p.id === playerId && !p.isComputer);
-
-      // Debug logs (remove after testing)
-      if (newRemaining <= 3) {
-        console.log(`Timer: ${newRemaining}s, conditions:`, {
-          timeExpired: newRemaining <= 1,
-          hasProvisionalGuess: !!provisionalGuessRef.current,
-          notConfirmed: !hasConfirmedRef.current,
-          notAutoSubmitted: !hasAutoSubmittedRef.current,
-          roundCompleted: currentRound.completed,
-          notShowingResults: !showResults,
-          isHumanPlayer: !!(
-            currentGame &&
-            currentGame.players.find((p) => p.id === playerId && !p.isComputer)
-          ),
-          shouldAutoSubmit,
-        });
-      }
+      const shouldAutoSubmit = shouldAutoSubmitGuess(newTimeLeft, currentGame, playerId);
+      logDebugInfo(newTimeLeft, currentRound, shouldAutoSubmit);
 
       if (shouldAutoSubmit) {
-        console.log(
-          `Client Timer: Auto-submitting tentative guess for player ${playerId} at 1 second remaining.`,
-        );
-        setHasAutoSubmitted(true);
-        confirmGuessRef.current();
+        performAutoSubmit(playerId);
       }
     };
 

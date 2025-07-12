@@ -6,7 +6,7 @@ import type {
   // City,
   Game,
   FinalResults,
-  // Player,
+  Player,
 } from "../types/game";
 import { getRandomCityByDifficulty } from "../data/cities";
 import { calculateFinalPlacements } from "../utils/game";
@@ -69,40 +69,32 @@ export function useRoundManagement({
     }
   }, [currentGame, currentRound, roundNumber, startNewRound]);
 
-  const handleGameEnd = useCallback(() => {
-    if (!currentGame) return;
-
+  // Helper function to process all rounds for final scoring
+  const prepareAllRounds = useCallback(() => {
     let allRounds = [...completedRounds];
-    // Ensure currentRound exists and has placement points before including
-    if (
-      currentRound &&
-      currentRound.completed &&
-      currentRound.guesses.length > 0 &&
-      currentRound.guesses.some((g) => g.totalPoints > 0)
-    ) {
-      // If currentRound is completed, it should already have placements.
-      // If not, it might need to be processed by updateRoundWithPlacements first.
-      // For now, assuming if it's completed, it's processed.
-      allRounds = [...allRounds, currentRound];
-    } else if (
-      currentRound &&
-      !currentRound.completed &&
-      currentRound.guesses.length > 0
-    ) {
-      // If current round is not completed but has guesses, process it first
-      const processedCurrentRound = updateRoundWithPlacements(currentRound);
-      allRounds = [
-        ...allRounds,
-        { ...processedCurrentRound, completed: true, endTime: Date.now() },
-      ];
+    
+    if (!currentRound || currentRound.guesses.length === 0) {
+      return allRounds;
     }
 
-    const playerScores = currentGame.players.map((player) => {
+    if (currentRound.completed && currentRound.guesses.some((g) => g.totalPoints > 0)) {
+      allRounds = [...allRounds, currentRound];
+    } else if (!currentRound.completed) {
+      const processedCurrentRound = updateRoundWithPlacements(currentRound);
+      allRounds = [...allRounds, { ...processedCurrentRound, completed: true, endTime: Date.now() }];
+    }
+    
+    return allRounds;
+  }, [completedRounds, currentRound, updateRoundWithPlacements]);
+
+  // Helper function to calculate player scores from all rounds
+  const calculatePlayerScores = useCallback((allRounds: GameRound[], players: Player[]) => {
+    return players.map((player) => {
       let totalScore = 0;
       allRounds.forEach((round) => {
         const playerGuess = round.guesses.find((g) => g.playerId === player.id);
         if (playerGuess) {
-          totalScore += playerGuess.totalPoints || 0; // Ensure totalPoints is defined
+          totalScore += playerGuess.totalPoints || 0;
         }
       });
       return {
@@ -113,45 +105,53 @@ export function useRoundManagement({
         finalPlacement: 0,
       };
     });
+  }, []);
 
+  // Helper function to find winner IDs
+  const findWinnerIds = useCallback((sortedScores: Array<{
+    playerId: string;
+    playerName: string;
+    isComputer: boolean;
+    totalScore: number;
+    finalPlacement: number;
+  }>) => {
+    if (sortedScores.length === 0) return [];
+    
+    const topScore = sortedScores[0].totalScore;
+    return sortedScores
+      .filter((p) => p.totalScore === topScore)
+      .map((p) => p.playerId);
+  }, []);
+
+  const handleGameEnd = useCallback(() => {
+    if (!currentGame) return;
+
+    const allRounds = prepareAllRounds();
+    const playerScores = calculatePlayerScores(allRounds, currentGame.players);
     const sortedScores = calculateFinalPlacements(playerScores);
-
-    // Find all players who tied for first place
-    const winnerIds: string[] = [];
-    if (sortedScores.length > 0) {
-      const topScore = sortedScores[0].totalScore;
-      winnerIds.push(
-        ...sortedScores
-          .filter((p) => p.totalScore === topScore)
-          .map((p) => p.playerId),
-      );
-    }
+    const winnerIds = findWinnerIds(sortedScores);
 
     const finalResults: FinalResults = {
       playerScores: sortedScores,
-      winnerId: sortedScores.length > 0 ? sortedScores[0].playerId : "", // Handle empty scores
+      winnerId: sortedScores.length > 0 ? sortedScores[0].playerId : "",
       winnerIds,
       gameEndTime: Date.now(),
     };
 
-    contextFinishGame(finalResults); // Use context's finishGame
-
+    contextFinishGame(finalResults);
     if (onGameEnd) {
       onGameEnd(finalResults);
     }
 
-    // Small delay to ensure context state update completes before navigation
-    setTimeout(() => {
-      navigate("/results");
-    }, 50);
+    setTimeout(() => navigate("/results"), 50);
   }, [
     currentGame,
-    completedRounds,
-    currentRound,
+    prepareAllRounds,
+    calculatePlayerScores,
+    findWinnerIds,
     contextFinishGame,
     navigate,
     onGameEnd,
-    updateRoundWithPlacements,
   ]);
 
   const handleNextRound = useCallback(() => {

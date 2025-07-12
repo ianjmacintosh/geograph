@@ -44,97 +44,102 @@ const initialExtendedState: ExtendedGameState = {
   playerId: "",
 };
 
-function gameReducer(
-  state: ExtendedGameState,
-  action: GameAction,
-): ExtendedGameState {
+// Helper functions to reduce reducer complexity
+function addPlayerToGame(state: ExtendedGameState, player: any): ExtendedGameState {
+  if (!state.currentGame) return state;
+  return {
+    ...state,
+    currentGame: {
+      ...state.currentGame,
+      players: [...state.currentGame.players, player],
+    },
+  };
+}
+
+function removePlayerFromGame(state: ExtendedGameState, playerId: string): ExtendedGameState {
+  if (!state.currentGame) return state;
+  return {
+    ...state,
+    currentGame: {
+      ...state.currentGame,
+      players: state.currentGame.players.filter((p) => p.id !== playerId),
+    },
+  };
+}
+
+function updateGameSettings(state: ExtendedGameState, settings: any): ExtendedGameState {
+  if (!state.currentGame) return state;
+  return {
+    ...state,
+    currentGame: {
+      ...state.currentGame,
+      settings: {
+        ...state.currentGame.settings,
+        ...settings,
+      },
+    },
+  };
+}
+
+function finishGame(state: ExtendedGameState, finalResults: any): ExtendedGameState {
+  if (!state.currentGame) return state;
+  return {
+    ...state,
+    currentGame: {
+      ...state.currentGame,
+      status: "finished" as const,
+      finalResults,
+    },
+  };
+}
+
+// Handle game-related actions
+function handleGameActions(state: ExtendedGameState, action: GameAction): ExtendedGameState | null {
   switch (action.type) {
     case "SET_GAME":
-      return {
-        ...state,
-        currentGame: action.payload,
-        error: null,
-      };
+      return { ...state, currentGame: action.payload, error: null };
     case "ADD_PLAYER":
-      if (!state.currentGame) return state;
-      return {
-        ...state,
-        currentGame: {
-          ...state.currentGame,
-          players: [...state.currentGame.players, action.payload],
-        },
-      };
+      return addPlayerToGame(state, action.payload);
     case "REMOVE_PLAYER":
-      if (!state.currentGame) return state;
-      return {
-        ...state,
-        currentGame: {
-          ...state.currentGame,
-          players: state.currentGame.players.filter(
-            (p) => p.id !== action.payload,
-          ),
-        },
-      };
+      return removePlayerFromGame(state, action.payload);
     case "START_GAME":
       if (!state.currentGame) return state;
-      return {
-        ...state,
-        currentGame: {
-          ...state.currentGame,
-          status: "playing",
-        },
-      };
-    case "SET_LOADING":
-      return {
-        ...state,
-        isLoading: action.payload,
-      };
-    case "SET_ERROR":
-      return {
-        ...state,
-        error: action.payload,
-      };
-    case "CLEAR_GAME":
-      return {
-        ...initialExtendedState,
-        connectionStatus: state.connectionStatus,
-        playerId: "",
-      };
+      return { ...state, currentGame: { ...state.currentGame, status: "playing" } };
     case "UPDATE_SETTINGS":
-      if (!state.currentGame) return state;
-      return {
-        ...state,
-        currentGame: {
-          ...state.currentGame,
-          settings: {
-            ...state.currentGame.settings,
-            ...action.payload,
-          },
-        },
-      };
+      return updateGameSettings(state, action.payload);
     case "FINISH_GAME":
-      if (!state.currentGame) return state;
-      return {
-        ...state,
-        currentGame: {
-          ...state.currentGame,
-          status: "finished" as const,
-          finalResults: action.payload,
-        },
-      };
-    case "SET_CONNECTION_STATUS":
-      return {
-        ...state,
-        connectionStatus: action.payload,
-      };
-    case "SET_PLAYER_ID":
-      return {
-        ...state,
-        playerId: action.payload,
-      };
+      return finishGame(state, action.payload);
+    case "CLEAR_GAME":
+      return { ...initialExtendedState, connectionStatus: state.connectionStatus, playerId: "" };
     default:
-      return state;
+      return null; // Not handled by this function
   }
+}
+
+// Handle state-related actions
+function handleStateActions(state: ExtendedGameState, action: GameAction): ExtendedGameState | null {
+  switch (action.type) {
+    case "SET_LOADING":
+      return { ...state, isLoading: action.payload };
+    case "SET_ERROR":
+      return { ...state, error: action.payload };
+    case "SET_CONNECTION_STATUS":
+      return { ...state, connectionStatus: action.payload };
+    case "SET_PLAYER_ID":
+      return { ...state, playerId: action.payload };
+    default:
+      return null; // Not handled by this function
+  }
+}
+
+function gameReducer(state: ExtendedGameState, action: GameAction): ExtendedGameState {
+  const gameResult = handleGameActions(state, action);
+  if (gameResult) return gameResult;
+  
+  const stateResult = handleStateActions(state, action);
+  if (stateResult) return stateResult;
+  
+  return state; // Default case
 }
 
 const GameContext = createContext<{
@@ -178,80 +183,64 @@ export function GameProvider({ children }: { children: ReactNode }) {
   // Prevent multiple WebSocket connections
   const _wsInitializedRef = useRef(false);
 
+  // Helper functions for WebSocket message handling
+  const handleGameCreationMessages = useCallback((message: WebSocketMessage) => {
+    dispatch({ type: "SET_GAME", payload: message.payload.game });
+    dispatch({ type: "SET_PLAYER_ID", payload: message.payload.playerId });
+    dispatch({ type: "SET_LOADING", payload: false });
+  }, [dispatch]);
+
+  const handleGameUpdateMessages = useCallback((message: WebSocketMessage) => {
+    dispatch({ type: "SET_GAME", payload: message.payload.game });
+  }, [dispatch]);
+
+  const handlePlayerGuessedMessage = useCallback((message: WebSocketMessage) => {
+    console.log("👤 Player guessed:", message.payload.playerName);
+    if (message.payload.game) {
+      dispatch({ type: "SET_GAME", payload: message.payload.game });
+    }
+  }, [dispatch]);
+
+  const handleErrorMessage = useCallback((message: WebSocketMessage) => {
+    // Don't show error for "Round is already completed" - this is expected when auto-submit races with server timer
+    if (message.payload.message !== "Round is already completed") {
+      dispatch({ type: "SET_ERROR", payload: message.payload.message });
+    }
+    dispatch({ type: "SET_LOADING", payload: false });
+  }, [dispatch]);
+
+  // Message type categorization helpers
+  const isGameCreationMessage = (type: string) => 
+    ["GAME_CREATED", "GAME_JOINED", "RECONNECTED"].includes(type);
+  
+  const isGameUpdateMessage = (type: string) => 
+    ["PLAYER_JOINED", "COMPUTER_PLAYERS_ADDED", "SETTINGS_UPDATED", 
+     "GAME_STARTED", "ROUND_STARTED", "GAME_FINISHED", "ROUND_RESULTS"].includes(type);
+  
+  const isPlayerAction = (type: string) => 
+    ["PLAYER_LEFT", "PLAYER_DISCONNECTED"].includes(type);
+
   const handleWebSocketMessage = useCallback(
     (message: WebSocketMessage) => {
-      console.log(
-        "📩 Received WebSocket message:",
-        message.type,
-        message.payload,
-      );
-
-      switch (message.type) {
-        case "GAME_CREATED":
-        case "GAME_JOINED":
-        case "RECONNECTED":
-          dispatch({ type: "SET_GAME", payload: message.payload.game });
-          dispatch({
-            type: "SET_PLAYER_ID",
-            payload: message.payload.playerId,
-          });
-          dispatch({ type: "SET_LOADING", payload: false });
-          break;
-
-        case "PLAYER_JOINED":
-        case "COMPUTER_PLAYERS_ADDED":
-          dispatch({ type: "SET_GAME", payload: message.payload.game });
-          break;
-
-        case "SETTINGS_UPDATED":
-          dispatch({ type: "SET_GAME", payload: message.payload.game });
-          break;
-
-        case "GAME_STARTED":
-        case "ROUND_STARTED":
-          dispatch({ type: "SET_GAME", payload: message.payload.game });
-          break;
-
-        case "GAME_FINISHED":
-          dispatch({ type: "SET_GAME", payload: message.payload.game });
-          break;
-
-        case "GUESS_MADE":
-          // Confirmation that our guess was received and processed
-          console.log("✅ Guess confirmed:", message.payload.guess);
-          // The server will send updated game state via other messages
-          break;
-
-        case "PLAYER_GUESSED":
-          // A player has made a guess - update the game state to show it
-          console.log("👤 Player guessed:", message.payload.playerName);
-          if (message.payload.game) {
-            dispatch({ type: "SET_GAME", payload: message.payload.game });
-          }
-          break;
-
-        case "ROUND_RESULTS":
-          dispatch({ type: "SET_GAME", payload: message.payload.game });
-          break;
-
-        case "PLAYER_LEFT":
-        case "PLAYER_DISCONNECTED":
-          // Handle player leaving/disconnecting
-          break;
-
-        case "ERROR":
-          // Don't show error for "Round is already completed" - this is expected when auto-submit races with server timer
-          if (message.payload.message !== "Round is already completed") {
-            dispatch({ type: "SET_ERROR", payload: message.payload.message });
-          }
-          dispatch({ type: "SET_LOADING", payload: false });
-          break;
-
-        default:
-          console.warn("Unknown WebSocket message type:", message.type);
+      console.log("📩 Received WebSocket message:", message.type, message.payload);
+      
+      if (isGameCreationMessage(message.type)) {
+        handleGameCreationMessages(message);
+      } else if (isGameUpdateMessage(message.type)) {
+        handleGameUpdateMessages(message);
+      } else if (message.type === "GUESS_MADE") {
+        console.log("✅ Guess confirmed:", message.payload.guess);
+      } else if (message.type === "PLAYER_GUESSED") {
+        handlePlayerGuessedMessage(message);
+      } else if (isPlayerAction(message.type)) {
+        // Handle player leaving/disconnecting
+      } else if (message.type === "ERROR") {
+        handleErrorMessage(message);
+      } else {
+        console.warn("Unknown WebSocket message type:", message.type);
       }
     },
-    [dispatch],
+    [handleGameCreationMessages, handleGameUpdateMessages, handlePlayerGuessedMessage, handleErrorMessage],
   );
 
   // Debug the WebSocket URL (only log once per URL change)

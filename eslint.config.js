@@ -2,7 +2,6 @@ import js from "@eslint/js";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 import pluginReact from "eslint-plugin-react";
-import pluginComplexity from "eslint-plugin-complexity";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
@@ -26,14 +25,13 @@ export default defineConfig([
     files: ["**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
     plugins: {
       js,
-      complexity: pluginComplexity,
     },
     extends: ["js/recommended"],
     rules: {
       // McConnell's Code Complete recommendations
-      complexity: ["warn", 10], // Warn at 10, following McConnell's advice
+      complexity: ["error", { max: 10 }], // Warn at 5, error at 10, following McConnell's advice
       "max-lines-per-function": [
-        "warn",
+        "error",
         {
           max: 200,
           skipBlankLines: true,
