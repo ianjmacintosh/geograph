@@ -200,11 +200,11 @@ export default function Game() {
                   roundNumber={roundNumber}
                   isHost={isHost}
                   onNextRound={handleNextRound}
-                  onLeaveGame={() => {
+                  _onLeaveGame={() => {
                     leaveGame();
                     navigate("/");
                   }}
-                  getPlayerScores={() =>
+                  _getPlayerScores={() =>
                     currentGame.players.map((player) => ({
                       playerId: player.id,
                       playerName: player.name,
@@ -221,11 +221,11 @@ export default function Game() {
                   currentRound={currentRound}
                   provisionalGuessLocation={provisionalGuessLocation}
                   isAwaitingConfirmation={isAwaitingConfirmation}
-                  timeLeft={timeLeft}
+                  _timeLeft={timeLeft}
                   onProvisionalGuess={handleSetProvisionalGuess}
                   onConfirmGuess={confirmCurrentGuess}
                   hasPlayerGuessed={hasConfirmedGuessForRound}
-                  showGuessButton={
+                  _showGuessButton={
                     isAwaitingConfirmation && !hasConfirmedGuessForRound
                   }
                 />
