@@ -19,6 +19,7 @@ Geograph is a multiplayer geography guessing game where friends can test their g
 
 - No test framework configured yet - check with user before adding tests
 - TypeScript checking available via `npm run typecheck`
+- ALWAYS run linters and tests after completing meaningful development work
 
 ## Architecture Overview
 
