@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import type { GameRound } from '../types/game';
+import { useState, useEffect, useRef } from "react";
+import type { GameRound } from "../types/game";
 
 export interface UseGameTimerProps {
   currentRound: GameRound | null;
@@ -41,8 +41,8 @@ export function useGameTimer({
           clearInterval(intervalId);
           // Call the onTimerEnd callback only once
           if (timerCallbackRef.current) {
-             // Check if it hasn't been called by timeLeft === 0 effect yet
-            if(timeLeft > 0) timerCallbackRef.current();
+            // Check if it hasn't been called by timeLeft === 0 effect yet
+            if (timeLeft > 0) timerCallbackRef.current();
           }
           return 0;
         }
@@ -70,7 +70,6 @@ export function useGameTimer({
       // Let's simplify: the interval is responsible.
     }
   }, [timeLeft, currentRound, showResults, timerCallbackRef]);
-
 
   return timeLeft;
 }

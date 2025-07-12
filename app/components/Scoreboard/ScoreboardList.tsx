@@ -1,5 +1,5 @@
-import React from 'react';
-import PlayerScoreRow from './PlayerScoreRow';
+import React from "react";
+import PlayerScoreRow from "./PlayerScoreRow";
 
 interface ScoreboardListProps {
   playerScores: Array<{
@@ -14,7 +14,12 @@ interface ScoreboardListProps {
 }
 
 // Renders the list of player scores
-export default function ScoreboardList({ playerScores, showResults, currentRound, hasPlayerGuessedThisRound }: ScoreboardListProps) {
+export default function ScoreboardList({
+  playerScores,
+  showResults,
+  currentRound,
+  hasPlayerGuessedThisRound,
+}: ScoreboardListProps) {
   return (
     <div className="space-y-2 mb-4">
       {playerScores.map((player, index) => (

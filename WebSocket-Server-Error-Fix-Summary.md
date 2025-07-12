@@ -5,7 +5,8 @@
 The server was experiencing a critical error when implementing the two-stage guess confirmation feature ([PR #29](https://github.com/ianjmacintosh/geograph/pull/29) / [Issue #5](https://github.com/ianjmacintosh/geograph/issues/5)):
 
 **Client Error:** "Oops!" error message displayed to users
-**Server Error:** 
+**Server Error:**
+
 ```
 WebSocket server not available: ReferenceError: require is not defined
     at GameManager.getWebSocketServer (/app/build/server/game-manager.ts:33:38)
@@ -22,6 +23,7 @@ The issue was caused by a module system incompatibility:
 3. **Circular Dependency**: Attempting to import the WebSocket module created a circular dependency issue
 
 The problematic code was:
+
 ```typescript
 private getWebSocketServer() {
   try {
@@ -41,6 +43,7 @@ The fix used **Dependency Injection** to eliminate the circular dependency and m
 ### 1. GameManager Changes (`app/server/game-manager.ts`)
 
 **Added dependency injection pattern:**
+
 ```typescript
 export class GameManager {
   private wsServerInstance: GameWebSocketServerType | null = null;
@@ -48,11 +51,11 @@ export class GameManager {
   public setWebSocketServer(server: GameWebSocketServerType): void {
     this.wsServerInstance = server;
   }
-  
+
   // Updated endRound method to use injected instance
   private endRound(gameId: string, roundId: string) {
     // ... game logic ...
-    
+
     // Use injected WebSocket server instance
     if (this.wsServerInstance) {
       const updatedGame = this.db.getGameById(gameId);
@@ -60,11 +63,11 @@ export class GameManager {
         this.wsServerInstance.revealRoundResults(gameId, {
           game: updatedGame,
           round: round,
-          completed: true
+          completed: true,
         });
       }
     } else {
-      console.warn('GameManager: WebSocket server instance not set.');
+      console.warn("GameManager: WebSocket server instance not set.");
     }
   }
 }
@@ -73,14 +76,15 @@ export class GameManager {
 ### 2. WebSocket Server Changes (`app/server/websocket.ts`)
 
 **Implemented dependency injection in constructor:**
+
 ```typescript
 export class GameWebSocketServer {
   constructor(port?: number, existingWss?: WebSocketServer) {
     // ... setup code ...
-    
+
     this.gameManager = new GameManager();
     this.gameManager.setWebSocketServer(this); // ✅ Inject WebSocket server
-    
+
     // ... rest of setup ...
   }
 }
@@ -89,8 +93,9 @@ export class GameWebSocketServer {
 ### 3. Type Safety
 
 **Added proper TypeScript import:**
+
 ```typescript
-import type { GameWebSocketServer as GameWebSocketServerType } from './websocket.js';
+import type { GameWebSocketServer as GameWebSocketServerType } from "./websocket.js";
 ```
 
 ## Benefits of This Solution
@@ -106,13 +111,16 @@ import type { GameWebSocketServer as GameWebSocketServerType } from './websocket
 After resolving the server-side ES module issue, a **client-side JavaScript error** was discovered that was still causing WebSocket disconnections:
 
 ### **Problem**: Variable Reference Before Declaration
+
 The `game.tsx` component was referencing variables from the `usePlayerInteraction` hook in a `useEffect` **before** those variables were declared:
 
 ```typescript
 // ❌ BROKEN: useEffect runs before variables are declared
 useEffect(() => {
   // References isAwaitingConfirmation, confirmCurrentGuess, etc.
-  if (isAwaitingConfirmation && confirmCurrentGuess) { /* ... */ }
+  if (isAwaitingConfirmation && confirmCurrentGuess) {
+    /* ... */
+  }
 }, [isAwaitingConfirmation, confirmCurrentGuess]);
 
 // Variables declared AFTER the useEffect that uses them
@@ -120,6 +128,7 @@ const { isAwaitingConfirmation, confirmCurrentGuess } = usePlayerInteraction();
 ```
 
 ### **Solution**: Reorder Hook Calls
+
 Moved the `usePlayerInteraction` hook call **before** the `useEffect` that references its variables:
 
 ```typescript
@@ -128,7 +137,9 @@ const { isAwaitingConfirmation, confirmCurrentGuess } = usePlayerInteraction();
 
 // useEffect can now safely reference the variables
 useEffect(() => {
-  if (isAwaitingConfirmation && confirmCurrentGuess) { /* ... */ }
+  if (isAwaitingConfirmation && confirmCurrentGuess) {
+    /* ... */
+  }
 }, [isAwaitingConfirmation, confirmCurrentGuess]);
 ```
 
@@ -139,13 +150,16 @@ This **ReferenceError** was causing the React component to crash when processing
 After fixing the crashes, a **user experience issue** was discovered with the two-stage guess confirmation feature:
 
 ### **Problem**: Provisional Marker Persisted After Confirmation
+
 The yellow provisional marker (pulsing circle) remained visible and interactive even after the player confirmed their guess and after the round ended.
 
-### **Root Cause**: 
+### **Root Cause**:
+
 1. **Incomplete State Cleanup**: The `confirmCurrentGuess` function wasn't clearing the `provisionalGuessLocation` state
 2. **Incorrect Disable Logic**: Map was disabled during confirmation phase, preventing users from adjusting their provisional guess
 
-### **Solution**: 
+### **Solution**:
+
 1. **Clear Provisional Marker**: Added `setProvisionalGuessLocation(null)` when guess is confirmed
 2. **Fixed Interaction Logic**: Removed `isAwaitingConfirmation` from `isGuessDisabled` condition
 
@@ -163,6 +177,7 @@ isGuessDisabled={showResults || hasConfirmedGuessForRound} // Removed isAwaiting
 ```
 
 ### **Improved User Experience**:
+
 - **During confirmation**: Users can still click the map to reposition their provisional guess
 - **After confirmation**: Yellow marker disappears, map becomes non-interactive
 - **After round ends**: No provisional markers visible, only final results
@@ -184,7 +199,7 @@ isGuessDisabled={showResults || hasConfirmedGuessForRound} // Removed isAwaiting
 - ✅ WebSocket communication functions properly
 - ✅ Two-stage guess confirmation feature works correctly:
   - Click map → provisional yellow marker appears with "Confirm your guess" tooltip
-  - Click elsewhere → provisional marker moves (repositioning allowed) 
+  - Click elsewhere → provisional marker moves (repositioning allowed)
   - Click "Confirm Guess" button → provisional marker disappears, map disabled
   - Round ends → no provisional markers visible, only final results
 
@@ -193,8 +208,9 @@ isGuessDisabled={showResults || hasConfirmedGuessForRound} // Removed isAwaiting
 **Branch:** `cursor/troubleshoot-websocket-server-error-68c6`
 **Status:** Ready for merge
 **Files Modified:**
+
 - `app/server/game-manager.ts` - Implemented dependency injection pattern
-- `app/server/websocket.ts` - Added GameManager injection in constructor  
+- `app/server/websocket.ts` - Added GameManager injection in constructor
 - `app/routes/game.tsx` - Fixed variable reference order + improved map disable logic + simplified UI
 - `app/hooks/usePlayerInteraction.ts` - Fixed provisional marker cleanup after confirmation
 - `app/components/WorldMap.tsx` - Updated provisional marker tooltip text

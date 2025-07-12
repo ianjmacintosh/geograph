@@ -1,8 +1,8 @@
-import Database from 'better-sqlite3';
-import { join } from 'path';
-import type { Game, Player, GameRound, Guess } from '../types/game';
+import Database from "better-sqlite3";
+import { join } from "path";
+import type { Game, Player, GameRound, Guess } from "../types/game";
 
-const DB_PATH = process.env.DATABASE_PATH || join(process.cwd(), 'geograph.db');
+const DB_PATH = process.env.DATABASE_PATH || join(process.cwd(), "geograph.db");
 
 export class GameDatabase {
   private db: Database.Database;
@@ -14,7 +14,7 @@ export class GameDatabase {
 
   private init() {
     // Enable foreign keys
-    this.db.pragma('foreign_keys = ON');
+    this.db.pragma("foreign_keys = ON");
 
     // Create tables
     this.db.exec(`
@@ -83,14 +83,14 @@ export class GameDatabase {
       INSERT INTO games (id, code, host_id, status, settings, created_at)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
-    
+
     stmt.run(
       game.id,
       game.code,
       game.hostId,
       game.status,
       JSON.stringify(game.settings),
-      game.createdAt
+      game.createdAt,
     );
 
     // Add host player
@@ -101,7 +101,7 @@ export class GameDatabase {
     const stmt = this.db.prepare(`
       SELECT * FROM games WHERE code = ?
     `);
-    
+
     const row = stmt.get(code) as any;
     if (!row) return null;
 
@@ -112,7 +112,7 @@ export class GameDatabase {
     const stmt = this.db.prepare(`
       SELECT * FROM games WHERE id = ?
     `);
-    
+
     const row = stmt.get(id) as any;
     if (!row) return null;
 
@@ -131,16 +131,18 @@ export class GameDatabase {
       rounds,
       status: row.status,
       settings: JSON.parse(row.settings),
-      finalResults: row.final_results ? JSON.parse(row.final_results) : undefined,
+      finalResults: row.final_results
+        ? JSON.parse(row.final_results)
+        : undefined,
       createdAt: row.created_at,
     };
   }
 
-  updateGameStatus(gameId: string, status: Game['status']): void {
+  updateGameStatus(gameId: string, status: Game["status"]): void {
     const stmt = this.db.prepare(`
       UPDATE games SET status = ?, updated_at = ? WHERE id = ?
     `);
-    
+
     stmt.run(status, Date.now(), gameId);
   }
 
@@ -148,15 +150,15 @@ export class GameDatabase {
     const stmt = this.db.prepare(`
       UPDATE games SET final_results = ?, status = 'finished', updated_at = ? WHERE id = ?
     `);
-    
+
     stmt.run(JSON.stringify(finalResults), Date.now(), gameId);
   }
 
-  updateGameSettings(gameId: string, settings: Game['settings']): void {
+  updateGameSettings(gameId: string, settings: Game["settings"]): void {
     const stmt = this.db.prepare(`
       UPDATE games SET settings = ?, updated_at = ? WHERE id = ?
     `);
-    
+
     stmt.run(JSON.stringify(settings), Date.now(), gameId);
   }
 
@@ -166,7 +168,7 @@ export class GameDatabase {
       INSERT INTO players (id, game_id, name, is_computer, score, accuracy, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
-    
+
     stmt.run(
       player.id,
       gameId,
@@ -174,7 +176,7 @@ export class GameDatabase {
       player.isComputer ? 1 : 0,
       player.score,
       player.accuracy || null,
-      Date.now()
+      Date.now(),
     );
   }
 
@@ -182,7 +184,7 @@ export class GameDatabase {
     const stmt = this.db.prepare(`
       DELETE FROM players WHERE game_id = ? AND id = ?
     `);
-    
+
     stmt.run(gameId, playerId);
   }
 
@@ -190,10 +192,10 @@ export class GameDatabase {
     const stmt = this.db.prepare(`
       SELECT * FROM players WHERE game_id = ? ORDER BY created_at ASC
     `);
-    
+
     const rows = stmt.all(gameId) as any[];
-    
-    return rows.map(row => ({
+
+    return rows.map((row) => ({
       id: row.id,
       name: row.name,
       isComputer: Boolean(row.is_computer),
@@ -214,7 +216,7 @@ export class GameDatabase {
       SELECT COUNT(*) as count FROM rounds WHERE game_id = ?
     `);
     const roundNumber = (countStmt.get(gameId) as any).count + 1;
-    
+
     stmt.run(
       round.id,
       gameId,
@@ -222,7 +224,7 @@ export class GameDatabase {
       JSON.stringify(round.city),
       round.completed ? 1 : 0,
       round.startTime,
-      roundNumber
+      roundNumber,
     );
   }
 
@@ -230,7 +232,7 @@ export class GameDatabase {
     const stmt = this.db.prepare(`
       UPDATE rounds SET completed = 1, end_time = ? WHERE id = ?
     `);
-    
+
     stmt.run(Date.now(), roundId);
   }
 
@@ -238,12 +240,12 @@ export class GameDatabase {
     const stmt = this.db.prepare(`
       SELECT * FROM rounds WHERE game_id = ? ORDER BY round_number ASC
     `);
-    
+
     const rows = stmt.all(gameId) as any[];
-    
-    return rows.map(row => {
+
+    return rows.map((row) => {
       const guesses = this.getGuessesForRound(row.id);
-      
+
       return {
         id: row.id,
         city: JSON.parse(row.city_data),
@@ -261,9 +263,9 @@ export class GameDatabase {
       INSERT INTO guesses (id, round_id, player_id, lat, lng, distance, placement_points, bonus_points, total_points, placement, timestamp)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    
+
     const id = `${roundId}-${guess.playerId}`;
-    
+
     stmt.run(
       id,
       roundId,
@@ -275,7 +277,7 @@ export class GameDatabase {
       guess.bonusPoints,
       guess.totalPoints,
       guess.placement,
-      guess.timestamp
+      guess.timestamp,
     );
   }
 
@@ -285,13 +287,13 @@ export class GameDatabase {
       SET placement_points = ?, total_points = ?, placement = ?
       WHERE round_id = ? AND player_id = ?
     `);
-    
+
     stmt.run(
       guess.placementPoints,
       guess.totalPoints,
       guess.placement,
       roundId,
-      guess.playerId
+      guess.playerId,
     );
   }
 
@@ -299,10 +301,10 @@ export class GameDatabase {
     const stmt = this.db.prepare(`
       SELECT * FROM guesses WHERE round_id = ? ORDER BY timestamp ASC
     `);
-    
+
     const rows = stmt.all(roundId) as any[];
-    
-    return rows.map(row => ({
+
+    return rows.map((row) => ({
       playerId: row.player_id,
       lat: row.lat,
       lng: row.lng,
@@ -322,12 +324,12 @@ export class GameDatabase {
 
   // Clean up old games (called periodically)
   cleanupOldGames(olderThanHours: number = 24): void {
-    const cutoff = Date.now() - (olderThanHours * 60 * 60 * 1000);
-    
+    const cutoff = Date.now() - olderThanHours * 60 * 60 * 1000;
+
     const stmt = this.db.prepare(`
       DELETE FROM games WHERE updated_at < ? AND status != 'playing'
     `);
-    
+
     stmt.run(cutoff);
   }
 }

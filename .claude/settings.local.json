@@ -21,8 +21,23 @@
       "Bash(timeout:*)",
       "Bash(node:*)",
       "Bash(npm run build:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(npm run lint)",
+      "Bash(npx eslint:*)"
     ],
     "deny": []
+  },
+  "hooks": {
+    "Write": [
+      {
+        "matcher": "*.tsx,*.ts,*.js,*.jsx,*.json,*.yml,*.yaml,*.md,*.css,*.scss,*.html",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run format"
+          }
+        ]
+      }
+    ]
   }
 }

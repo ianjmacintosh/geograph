@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 
 interface GameTimerProps {
   timeLeft: number;
@@ -6,7 +6,10 @@ interface GameTimerProps {
 }
 
 // Handles timer display and logic
-export default function GameTimer({ timeLeft: initialTimeLeft, showResults }: GameTimerProps) {
+export default function GameTimer({
+  timeLeft: initialTimeLeft,
+  showResults,
+}: GameTimerProps) {
   const [displayTime, setDisplayTime] = useState(initialTimeLeft);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastTimeLeftRef = useRef(initialTimeLeft);
@@ -45,13 +48,15 @@ export default function GameTimer({ timeLeft: initialTimeLeft, showResults }: Ga
   }
 
   return (
-    <div className={`text-sm font-bold px-2 py-1 rounded flex items-center gap-2 ${
-      isCriticalTime
-        ? 'text-white bg-red-600 animate-pulse-fast'
-        : isLowTime
-        ? 'text-red-600 bg-red-50 animate-pulse'
-        : 'text-blue-600 bg-blue-50'
-    }`}>
+    <div
+      className={`text-sm font-bold px-2 py-1 rounded flex items-center gap-2 ${
+        isCriticalTime
+          ? "text-white bg-red-600 animate-pulse-fast"
+          : isLowTime
+            ? "text-red-600 bg-red-50 animate-pulse"
+            : "text-blue-600 bg-blue-50"
+      }`}
+    >
       <span>{`Time: ${displayTime.toFixed(1)}s`}</span>
       <style>{`
         @keyframes pulse-fast {

@@ -1,13 +1,18 @@
-import { useRef, useEffect, useState } from 'react';
-import MapMarkers from './MapMarkers';
-import TargetCityMarker from './TargetCityMarker';
-import ProvisionalMarker from './ProvisionalMarker';
-import useLeafletMap from './useLeafletMap';
+import { useRef, useEffect, useState } from "react";
+import MapMarkers from "./MapMarkers";
+import TargetCityMarker from "./TargetCityMarker";
+import ProvisionalMarker from "./ProvisionalMarker";
+import useLeafletMap from "./useLeafletMap";
 
 interface WorldMapContainerProps {
   onProvisionalGuess?: (lat: number, lng: number) => void;
   targetCity?: { lat: number; lng: number; name: string };
-  guesses?: Array<{ lat: number; lng: number; playerName: string; isComputer: boolean }>;
+  guesses?: Array<{
+    lat: number;
+    lng: number;
+    playerName: string;
+    isComputer: boolean;
+  }>;
   provisionalGuessLocation?: { lat: number; lng: number } | null;
   showTarget?: boolean;
   isGuessDisabled?: boolean;
@@ -20,7 +25,7 @@ export default function WorldMapContainer({
   guesses = [],
   provisionalGuessLocation = null,
   showTarget = false,
-  isGuessDisabled = false
+  isGuessDisabled = false,
 }: WorldMapContainerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
@@ -40,7 +45,7 @@ export default function WorldMapContainer({
     mapRef,
     isClient,
     onProvisionalGuess,
-    isGuessDisabled
+    isGuessDisabled,
   });
 
   if (!isClient) {
@@ -60,12 +65,7 @@ export default function WorldMapContainer({
         className="w-full h-full border border-gray-300 rounded-lg touch-manipulation"
       />
       {/* Markers and overlays will be handled by subcomponents */}
-      <MapMarkers
-        map={map}
-        L={L}
-        guesses={guesses}
-        showTarget={showTarget}
-      />
+      <MapMarkers map={map} L={L} guesses={guesses} showTarget={showTarget} />
       <TargetCityMarker
         map={map}
         L={L}

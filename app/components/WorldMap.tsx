@@ -1,1 +1,1 @@
-export { default as WorldMap } from './WorldMap/WorldMapContainer';
+export { default as WorldMap } from "./WorldMap/WorldMapContainer";

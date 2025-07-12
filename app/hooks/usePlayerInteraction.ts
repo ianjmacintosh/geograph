@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
-import type { Game, GameRound } from '../types/game';
-import { useGame } from '../contexts/GameContext';
+import { useState, useCallback, useEffect } from "react";
+import type { Game, GameRound } from "../types/game";
+import { useGame } from "../contexts/GameContext";
 
 interface UsePlayerInteractionProps {
   currentGame: Game | null;
@@ -16,12 +16,16 @@ export function usePlayerInteraction({
   currentRound,
   hasPlayerAlreadyGuessedInRound,
 }: UsePlayerInteractionProps) {
-  const [provisionalGuessLocation, setProvisionalGuessLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [provisionalGuessLocation, setProvisionalGuessLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [isAwaitingConfirmation, setIsAwaitingConfirmation] = useState(false);
   // 'hasGuessed' now means the player has *confirmed* a guess for the current round.
   // This will be derived from `hasPlayerAlreadyGuessedInRound` passed from game.tsx initially,
   // and then set true after confirmation.
-  const [hasConfirmedGuessForRound, setHasConfirmedGuessForRound] = useState(false);
+  const [hasConfirmedGuessForRound, setHasConfirmedGuessForRound] =
+    useState(false);
 
   const { makeGuess, playerId } = useGame();
 
@@ -33,22 +37,45 @@ export function usePlayerInteraction({
 
   // This function is called when the player clicks on the map.
   // It sets the provisional guess.
-  const handleSetProvisionalGuess = useCallback((lat: number, lng: number) => {
-    // Do not allow setting a new provisional guess if:
-    // - Player has already confirmed a guess for this round.
-    // - It's not a valid game/round context.
-    // - There's no player ID.
-    // - The round is already completed (showing results).
-    if (hasConfirmedGuessForRound || hasPlayerAlreadyGuessedInRound || !currentRound || !currentGame || !playerId || currentRound.completed) {
-      return;
-    }
+  const handleSetProvisionalGuess = useCallback(
+    (lat: number, lng: number) => {
+      // Do not allow setting a new provisional guess if:
+      // - Player has already confirmed a guess for this round.
+      // - It's not a valid game/round context.
+      // - There's no player ID.
+      // - The round is already completed (showing results).
+      if (
+        hasConfirmedGuessForRound ||
+        hasPlayerAlreadyGuessedInRound ||
+        !currentRound ||
+        !currentGame ||
+        !playerId ||
+        currentRound.completed
+      ) {
+        return;
+      }
 
-    setProvisionalGuessLocation({ lat, lng });
-    setIsAwaitingConfirmation(true);
-  }, [hasConfirmedGuessForRound, hasPlayerAlreadyGuessedInRound, currentRound, currentGame, playerId]);
+      setProvisionalGuessLocation({ lat, lng });
+      setIsAwaitingConfirmation(true);
+    },
+    [
+      hasConfirmedGuessForRound,
+      hasPlayerAlreadyGuessedInRound,
+      currentRound,
+      currentGame,
+      playerId,
+    ],
+  );
 
   const confirmCurrentGuess = useCallback(() => {
-    if (!provisionalGuessLocation || !currentRound || !currentGame || !playerId || hasConfirmedGuessForRound || hasPlayerAlreadyGuessedInRound) {
+    if (
+      !provisionalGuessLocation ||
+      !currentRound ||
+      !currentGame ||
+      !playerId ||
+      hasConfirmedGuessForRound ||
+      hasPlayerAlreadyGuessedInRound
+    ) {
       return;
     }
 
@@ -56,7 +83,15 @@ export function usePlayerInteraction({
     setHasConfirmedGuessForRound(true); // Player has now officially guessed for this round.
     setIsAwaitingConfirmation(false);
     setProvisionalGuessLocation(null); // Clear provisional marker once guess is confirmed
-  }, [provisionalGuessLocation, currentRound, currentGame, playerId, makeGuess, hasConfirmedGuessForRound, hasPlayerAlreadyGuessedInRound]);
+  }, [
+    provisionalGuessLocation,
+    currentRound,
+    currentGame,
+    playerId,
+    makeGuess,
+    hasConfirmedGuessForRound,
+    hasPlayerAlreadyGuessedInRound,
+  ]);
 
   const cancelProvisionalGuess = useCallback(() => {
     setProvisionalGuessLocation(null);
@@ -71,7 +106,6 @@ export function usePlayerInteraction({
       setHasConfirmedGuessForRound(true);
     }
   }, [hasPlayerAlreadyGuessedInRound]);
-
 
   return {
     provisionalGuessLocation,
