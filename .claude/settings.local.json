@@ -30,7 +30,7 @@
   "hooks": {
     "Write": [
       {
-        "matcher": "*.tsx,*.ts,*.js,*.jsx,*.json",
+        "matcher": "*.tsx,*.ts,*.js,*.jsx,*.json,*.yml,*.yaml,*.md,*.css,*.scss,*.html",
         "hooks": [
           {
             "type": "command",
