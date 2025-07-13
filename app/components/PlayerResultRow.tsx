@@ -57,7 +57,8 @@ export function PlayerResultRow({ player, index }: PlayerResultRowProps) {
             {isWinner && <span className="ml-2 text-yellow-600">👑</span>}
           </div>
           <div className="text-sm text-gray-600">
-            {player.isComputer ? "Computer" : "Human"} • #{player.finalPlacement}
+            {player.isComputer ? "Computer" : "Human"} • #
+            {player.finalPlacement}
           </div>
         </div>
       </div>

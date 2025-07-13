@@ -160,14 +160,16 @@ describe.skip("Debug Scoring State", () => {
     const getGuessCount = (): number => {
       const mapElement = document.querySelector('[data-testid="map-click"]');
       if (!mapElement) return 0;
-      
+
       const match = mapElement.textContent?.match(/\((\d+) guesses\)/);
       return match ? parseInt(match[1]) : 0;
     };
 
     // Helper function to get player score
     const getPlayerScore = (playerId: string): string => {
-      const element = document.querySelector(`[data-testid="player-score-${playerId}"]`);
+      const element = document.querySelector(
+        `[data-testid="player-score-${playerId}"]`,
+      );
       return element?.textContent || "0";
     };
 

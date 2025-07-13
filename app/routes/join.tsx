@@ -12,7 +12,10 @@ export function meta(_: Route.MetaArgs) {
 }
 
 // Helper function to validate join form
-function validateJoinForm(playerName: string, isValidCode: boolean): string | null {
+function validateJoinForm(
+  playerName: string,
+  isValidCode: boolean,
+): string | null {
   if (!playerName.trim()) {
     return "Please enter your name";
   }
@@ -28,7 +31,10 @@ function getConnectionStatus(connectionStatus: string) {
     case "connected":
       return { text: "🟢 Connected to server", className: "text-green-600" };
     case "connecting":
-      return { text: "🟡 Connecting to server...", className: "text-yellow-600" };
+      return {
+        text: "🟡 Connecting to server...",
+        className: "text-yellow-600",
+      };
     case "disconnected":
       return { text: "🔴 Disconnected from server", className: "text-red-600" };
     case "error":
@@ -41,7 +47,8 @@ function getConnectionStatus(connectionStatus: string) {
 export default function Join() {
   const { gameCode } = useParams<{ gameCode: string }>();
   const [playerName, setPlayerName] = useState("");
-  const { joinGame, isLoading, error, currentGame, connectionStatus } = useGame();
+  const { joinGame, isLoading, error, currentGame, connectionStatus } =
+    useGame();
   const navigate = useNavigate();
 
   // Validate game code from URL
@@ -132,7 +139,9 @@ export default function Join() {
         <div className="mt-8 text-center text-sm">
           {(() => {
             const status = getConnectionStatus(connectionStatus);
-            return status ? <p className={status.className}>{status.text}</p> : null;
+            return status ? (
+              <p className={status.className}>{status.text}</p>
+            ) : null;
           })()}
           {error && <p className="text-red-600 mt-2">⚠️ {error}</p>}
         </div>

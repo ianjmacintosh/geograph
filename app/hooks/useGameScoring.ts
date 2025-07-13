@@ -1,7 +1,10 @@
 import { useCallback } from "react";
 import type { Game, GameRound } from "../types/game";
 
-export function useGameScoring(currentGame: Game | null, currentRound: GameRound | null) {
+export function useGameScoring(
+  currentGame: Game | null,
+  currentRound: GameRound | null,
+) {
   // Check if a player (human or computer) has made a guess in the current round
   const hasPlayerGuessedThisRound = useCallback(
     (playerId: string): boolean => {
@@ -44,7 +47,7 @@ export function useGameScoring(currentGame: Game | null, currentRound: GameRound
   const getLeaderInfo = useCallback(() => {
     const playerScores = getPlayerScores();
     const leader = playerScores[0];
-    
+
     return {
       playerScores,
       leader,

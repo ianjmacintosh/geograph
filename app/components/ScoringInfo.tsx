@@ -5,16 +5,17 @@ interface ScoringInfoProps {
   variant?: "blue" | "green";
 }
 
-export function ScoringInfo({ currentGame, variant = "green" }: ScoringInfoProps) {
+export function ScoringInfo({
+  currentGame,
+  variant = "green",
+}: ScoringInfoProps) {
   const bgColor = variant === "blue" ? "bg-blue-50" : "bg-green-50";
   const textColor = variant === "blue" ? "text-blue-800" : "text-green-800";
   const contentColor = variant === "blue" ? "text-blue-700" : "text-green-700";
 
   return (
     <div className={`mt-4 p-4 ${bgColor} rounded-md`}>
-      <h3 className={`font-semibold ${textColor} mb-2`}>
-        🏆 Scoring System
-      </h3>
+      <h3 className={`font-semibold ${textColor} mb-2`}>🏆 Scoring System</h3>
       <div className={`text-sm ${contentColor} space-y-2`}>
         <div>
           <strong>Placement Points:</strong>

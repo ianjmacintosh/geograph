@@ -24,11 +24,17 @@ vi.mock("../data/cities", () => ({
 function createBasicTestGame(): GameType {
   return {
     id: "1",
-    code: "123456", 
+    code: "123456",
     hostId: "player1",
     players: [
       { id: "player1", name: "Human Player", isComputer: false, score: 0 },
-      { id: "player2", name: "Computer Player", isComputer: true, score: 0, accuracy: 0.5 },
+      {
+        id: "player2",
+        name: "Computer Player",
+        isComputer: true,
+        score: 0,
+        accuracy: 0.5,
+      },
     ],
     rounds: [],
     status: "playing" as const,
@@ -63,7 +69,7 @@ describe.skip("Scoring Verification - Core Tests", () => {
   });
 
   it("should handle computer player accuracy", () => {
-    const computerPlayer = mockGame.players.find(p => p.isComputer);
+    const computerPlayer = mockGame.players.find((p) => p.isComputer);
     expect(computerPlayer?.accuracy).toBe(0.5);
   });
 
@@ -76,7 +82,7 @@ describe.skip("Scoring Verification - Core Tests", () => {
 describe.skip("Scoring Verification - Edge Cases", () => {
   it("should handle empty scores", () => {
     const game = createBasicTestGame();
-    expect(game.players.every(p => p.score === 0)).toBe(true);
+    expect(game.players.every((p) => p.score === 0)).toBe(true);
   });
 
   it("should handle different difficulty levels", () => {

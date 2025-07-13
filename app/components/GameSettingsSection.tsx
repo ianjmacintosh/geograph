@@ -39,11 +39,15 @@ export function GameSettingsSection({
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Game Settings</h2>
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">
+        Game Settings
+      </h2>
       <div className="space-y-3">
         <div className="flex justify-between">
           <span className="text-gray-600">Rounds:</span>
-          <span className="font-semibold">{currentGame.settings.totalRounds}</span>
+          <span className="font-semibold">
+            {currentGame.settings.totalRounds}
+          </span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Time per round:</span>
@@ -53,11 +57,16 @@ export function GameSettingsSection({
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Max players:</span>
-          <span className="font-semibold">{currentGame.settings.maxPlayers}</span>
+          <span className="font-semibold">
+            {currentGame.settings.maxPlayers}
+          </span>
         </div>
 
         {isHost && (
-          <DifficultyRadio currentGame={currentGame} updateSettings={updateSettings} />
+          <DifficultyRadio
+            currentGame={currentGame}
+            updateSettings={updateSettings}
+          />
         )}
 
         {!isHost && (

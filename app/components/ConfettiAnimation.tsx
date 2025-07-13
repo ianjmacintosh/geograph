@@ -4,7 +4,7 @@ interface ConfettiAnimationProps {
 
 const confettiColors = [
   "#FFD700",
-  "#FF6B6B", 
+  "#FF6B6B",
   "#4ECDC4",
   "#45B7D1",
   "#96CEB4",
@@ -23,7 +23,8 @@ export function ConfettiAnimation({ showConfetti }: ConfettiAnimationProps) {
           style={{
             left: `${Math.random() * 100}%`,
             top: `-10px`,
-            backgroundColor: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+            backgroundColor:
+              confettiColors[Math.floor(Math.random() * confettiColors.length)],
             animationDelay: `${Math.random() * 2}s`,
             animationDuration: `${3 + Math.random() * 2}s`,
             transform: `rotate(${Math.random() * 360}deg)`,

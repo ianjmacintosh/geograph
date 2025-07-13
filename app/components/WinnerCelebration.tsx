@@ -24,12 +24,17 @@ export function WinnerCelebration({ winner }: WinnerCelebrationProps) {
             <h3 className="text-4xl font-extrabold text-yellow-900">
               {winner.playerName}
             </h3>
-            <p className="text-xl text-yellow-800 mt-2">{winner.totalScore} points</p>
+            <p className="text-xl text-yellow-800 mt-2">
+              {winner.totalScore} points
+            </p>
             <p className="text-sm text-yellow-700">
               {winner.isComputer ? "Computer" : "Human"}
             </p>
           </div>
-          <span className="text-6xl animate-bounce" style={{ animationDelay: "0.2s" }}>
+          <span
+            className="text-6xl animate-bounce"
+            style={{ animationDelay: "0.2s" }}
+          >
             🎉
           </span>
         </div>

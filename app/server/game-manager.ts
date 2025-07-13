@@ -435,7 +435,7 @@ export class GameManager {
 
     this.generateMissingComputerGuesses(game, round);
     this.updateGuessPlacements(game, round);
-    
+
     this.db.completeRound(roundId);
     this.clearRoundTimer(roundId);
     this.notifyRoundCompletion(gameId, round);

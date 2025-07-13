@@ -79,7 +79,8 @@ describe("useComputerPlayers - Basic Tests", () => {
   beforeEach(() => {
     const mocks = setupCommonMocks();
     mockSetCurrentRound = mocks.mockSetCurrentRound;
-    mockOnComputerGuessesCompleteRound = mocks.mockOnComputerGuessesCompleteRound;
+    mockOnComputerGuessesCompleteRound =
+      mocks.mockOnComputerGuessesCompleteRound;
   });
 
   afterEach(() => {
@@ -171,7 +172,6 @@ describe("useComputerPlayers - Basic Tests", () => {
     expect(newRound.guesses.length).toBe(1);
     expect(newRound.guesses[0].playerId).toBe(computerPlayer1.id);
   });
-
 });
 
 describe("useComputerPlayers - Advanced Tests", () => {
@@ -181,7 +181,8 @@ describe("useComputerPlayers - Advanced Tests", () => {
   beforeEach(() => {
     const mocks = setupCommonMocks();
     mockSetCurrentRound = mocks.mockSetCurrentRound;
-    mockOnComputerGuessesCompleteRound = mocks.mockOnComputerGuessesCompleteRound;
+    mockOnComputerGuessesCompleteRound =
+      mocks.mockOnComputerGuessesCompleteRound;
   });
 
   afterEach(() => {

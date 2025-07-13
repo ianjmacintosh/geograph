@@ -45,7 +45,10 @@ const initialExtendedState: ExtendedGameState = {
 };
 
 // Helper functions to reduce reducer complexity
-function addPlayerToGame(state: ExtendedGameState, player: any): ExtendedGameState {
+function addPlayerToGame(
+  state: ExtendedGameState,
+  player: any,
+): ExtendedGameState {
   if (!state.currentGame) return state;
   return {
     ...state,
@@ -56,7 +59,10 @@ function addPlayerToGame(state: ExtendedGameState, player: any): ExtendedGameSta
   };
 }
 
-function removePlayerFromGame(state: ExtendedGameState, playerId: string): ExtendedGameState {
+function removePlayerFromGame(
+  state: ExtendedGameState,
+  playerId: string,
+): ExtendedGameState {
   if (!state.currentGame) return state;
   return {
     ...state,
@@ -67,7 +73,10 @@ function removePlayerFromGame(state: ExtendedGameState, playerId: string): Exten
   };
 }
 
-function updateGameSettings(state: ExtendedGameState, settings: any): ExtendedGameState {
+function updateGameSettings(
+  state: ExtendedGameState,
+  settings: any,
+): ExtendedGameState {
   if (!state.currentGame) return state;
   return {
     ...state,
@@ -81,7 +90,10 @@ function updateGameSettings(state: ExtendedGameState, settings: any): ExtendedGa
   };
 }
 
-function finishGame(state: ExtendedGameState, finalResults: any): ExtendedGameState {
+function finishGame(
+  state: ExtendedGameState,
+  finalResults: any,
+): ExtendedGameState {
   if (!state.currentGame) return state;
   return {
     ...state,
@@ -94,7 +106,10 @@ function finishGame(state: ExtendedGameState, finalResults: any): ExtendedGameSt
 }
 
 // Handle game-related actions
-function handleGameActions(state: ExtendedGameState, action: GameAction): ExtendedGameState | null {
+function handleGameActions(
+  state: ExtendedGameState,
+  action: GameAction,
+): ExtendedGameState | null {
   switch (action.type) {
     case "SET_GAME":
       return { ...state, currentGame: action.payload, error: null };
@@ -104,20 +119,30 @@ function handleGameActions(state: ExtendedGameState, action: GameAction): Extend
       return removePlayerFromGame(state, action.payload);
     case "START_GAME":
       if (!state.currentGame) return state;
-      return { ...state, currentGame: { ...state.currentGame, status: "playing" } };
+      return {
+        ...state,
+        currentGame: { ...state.currentGame, status: "playing" },
+      };
     case "UPDATE_SETTINGS":
       return updateGameSettings(state, action.payload);
     case "FINISH_GAME":
       return finishGame(state, action.payload);
     case "CLEAR_GAME":
-      return { ...initialExtendedState, connectionStatus: state.connectionStatus, playerId: "" };
+      return {
+        ...initialExtendedState,
+        connectionStatus: state.connectionStatus,
+        playerId: "",
+      };
     default:
       return null; // Not handled by this function
   }
 }
 
 // Handle state-related actions
-function handleStateActions(state: ExtendedGameState, action: GameAction): ExtendedGameState | null {
+function handleStateActions(
+  state: ExtendedGameState,
+  action: GameAction,
+): ExtendedGameState | null {
   switch (action.type) {
     case "SET_LOADING":
       return { ...state, isLoading: action.payload };
@@ -132,13 +157,16 @@ function handleStateActions(state: ExtendedGameState, action: GameAction): Exten
   }
 }
 
-function gameReducer(state: ExtendedGameState, action: GameAction): ExtendedGameState {
+function gameReducer(
+  state: ExtendedGameState,
+  action: GameAction,
+): ExtendedGameState {
   const gameResult = handleGameActions(state, action);
   if (gameResult) return gameResult;
-  
+
   const stateResult = handleStateActions(state, action);
   if (stateResult) return stateResult;
-  
+
   return state; // Default case
 }
 
@@ -184,46 +212,69 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const _wsInitializedRef = useRef(false);
 
   // Helper functions for WebSocket message handling
-  const handleGameCreationMessages = useCallback((message: WebSocketMessage) => {
-    dispatch({ type: "SET_GAME", payload: message.payload.game });
-    dispatch({ type: "SET_PLAYER_ID", payload: message.payload.playerId });
-    dispatch({ type: "SET_LOADING", payload: false });
-  }, [dispatch]);
-
-  const handleGameUpdateMessages = useCallback((message: WebSocketMessage) => {
-    dispatch({ type: "SET_GAME", payload: message.payload.game });
-  }, [dispatch]);
-
-  const handlePlayerGuessedMessage = useCallback((message: WebSocketMessage) => {
-    console.log("👤 Player guessed:", message.payload.playerName);
-    if (message.payload.game) {
+  const handleGameCreationMessages = useCallback(
+    (message: WebSocketMessage) => {
       dispatch({ type: "SET_GAME", payload: message.payload.game });
-    }
-  }, [dispatch]);
+      dispatch({ type: "SET_PLAYER_ID", payload: message.payload.playerId });
+      dispatch({ type: "SET_LOADING", payload: false });
+    },
+    [dispatch],
+  );
 
-  const handleErrorMessage = useCallback((message: WebSocketMessage) => {
-    // Don't show error for "Round is already completed" - this is expected when auto-submit races with server timer
-    if (message.payload.message !== "Round is already completed") {
-      dispatch({ type: "SET_ERROR", payload: message.payload.message });
-    }
-    dispatch({ type: "SET_LOADING", payload: false });
-  }, [dispatch]);
+  const handleGameUpdateMessages = useCallback(
+    (message: WebSocketMessage) => {
+      dispatch({ type: "SET_GAME", payload: message.payload.game });
+    },
+    [dispatch],
+  );
+
+  const handlePlayerGuessedMessage = useCallback(
+    (message: WebSocketMessage) => {
+      console.log("👤 Player guessed:", message.payload.playerName);
+      if (message.payload.game) {
+        dispatch({ type: "SET_GAME", payload: message.payload.game });
+      }
+    },
+    [dispatch],
+  );
+
+  const handleErrorMessage = useCallback(
+    (message: WebSocketMessage) => {
+      // Don't show error for "Round is already completed" - this is expected when auto-submit races with server timer
+      if (message.payload.message !== "Round is already completed") {
+        dispatch({ type: "SET_ERROR", payload: message.payload.message });
+      }
+      dispatch({ type: "SET_LOADING", payload: false });
+    },
+    [dispatch],
+  );
 
   // Message type categorization helpers
-  const isGameCreationMessage = (type: string) => 
+  const isGameCreationMessage = (type: string) =>
     ["GAME_CREATED", "GAME_JOINED", "RECONNECTED"].includes(type);
-  
-  const isGameUpdateMessage = (type: string) => 
-    ["PLAYER_JOINED", "COMPUTER_PLAYERS_ADDED", "SETTINGS_UPDATED", 
-     "GAME_STARTED", "ROUND_STARTED", "GAME_FINISHED", "ROUND_RESULTS"].includes(type);
-  
-  const isPlayerAction = (type: string) => 
+
+  const isGameUpdateMessage = (type: string) =>
+    [
+      "PLAYER_JOINED",
+      "COMPUTER_PLAYERS_ADDED",
+      "SETTINGS_UPDATED",
+      "GAME_STARTED",
+      "ROUND_STARTED",
+      "GAME_FINISHED",
+      "ROUND_RESULTS",
+    ].includes(type);
+
+  const isPlayerAction = (type: string) =>
     ["PLAYER_LEFT", "PLAYER_DISCONNECTED"].includes(type);
 
   const handleWebSocketMessage = useCallback(
     (message: WebSocketMessage) => {
-      console.log("📩 Received WebSocket message:", message.type, message.payload);
-      
+      console.log(
+        "📩 Received WebSocket message:",
+        message.type,
+        message.payload,
+      );
+
       if (isGameCreationMessage(message.type)) {
         handleGameCreationMessages(message);
       } else if (isGameUpdateMessage(message.type)) {
@@ -240,7 +291,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
         console.warn("Unknown WebSocket message type:", message.type);
       }
     },
-    [handleGameCreationMessages, handleGameUpdateMessages, handlePlayerGuessedMessage, handleErrorMessage],
+    [
+      handleGameCreationMessages,
+      handleGameUpdateMessages,
+      handlePlayerGuessedMessage,
+      handleErrorMessage,
+    ],
   );
 
   // Debug the WebSocket URL (only log once per URL change)

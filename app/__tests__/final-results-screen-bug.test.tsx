@@ -136,7 +136,6 @@ function setupMockGame(game: GameType) {
   });
 }
 
-
 describe.skip("Final Results Screen Navigation Bug", () => {
   let mockGame: GameType;
 

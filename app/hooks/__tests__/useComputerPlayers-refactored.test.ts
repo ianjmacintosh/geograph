@@ -30,7 +30,13 @@ const mockCurrentGameOneComputer: Game = {
   hostId: "player1",
   players: [
     { id: "player1", name: "Human Player", isComputer: false, score: 0 },
-    { id: "computer1", name: "Computer 1", isComputer: true, score: 0, accuracy: 0.5 },
+    {
+      id: "computer1",
+      name: "Computer 1",
+      isComputer: true,
+      score: 0,
+      accuracy: 0.5,
+    },
   ],
   rounds: [],
   status: "playing",
@@ -61,7 +67,8 @@ function setupTestMocks() {
 
 // Helper function to create useComputerPlayers props
 function createUseComputerPlayersProps(overrides: any = {}) {
-  const { mockSetCurrentRound, mockOnComputerGuessesCompleteRound } = setupTestMocks();
+  const { mockSetCurrentRound, mockOnComputerGuessesCompleteRound } =
+    setupTestMocks();
   return {
     currentGame: mockCurrentGameOneComputer,
     currentRound: mockInitialRound,
@@ -89,8 +96,8 @@ describe("useComputerPlayers - Basic Validation", () => {
   });
 
   it("should not do anything if currentRound is completed", () => {
-    const props = createUseComputerPlayersProps({ 
-      currentRound: { ...mockInitialRound, completed: true } 
+    const props = createUseComputerPlayersProps({
+      currentRound: { ...mockInitialRound, completed: true },
     });
     renderHook(() => useComputerPlayers(props));
 
@@ -102,8 +109,8 @@ describe("useComputerPlayers - Basic Validation", () => {
   });
 
   it("should not do anything if isHumanPlayerTurnOrResultsShown is true", () => {
-    const props = createUseComputerPlayersProps({ 
-      isHumanPlayerTurnOrResultsShown: true 
+    const props = createUseComputerPlayersProps({
+      isHumanPlayerTurnOrResultsShown: true,
     });
     renderHook(() => useComputerPlayers(props));
 
@@ -140,11 +147,19 @@ describe("useComputerPlayers - Computer Guess Logic", () => {
       ...mockCurrentGameOneComputer,
       players: [
         ...mockCurrentGameOneComputer.players,
-        { id: "computer2", name: "Computer 2", isComputer: true, score: 0, accuracy: 0.7 },
+        {
+          id: "computer2",
+          name: "Computer 2",
+          isComputer: true,
+          score: 0,
+          accuracy: 0.7,
+        },
       ],
     };
-    
-    const props = createUseComputerPlayersProps({ currentGame: gameWithTwoComputers });
+
+    const props = createUseComputerPlayersProps({
+      currentGame: gameWithTwoComputers,
+    });
     renderHook(() => useComputerPlayers(props));
 
     act(() => {

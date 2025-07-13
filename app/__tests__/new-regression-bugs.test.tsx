@@ -71,7 +71,7 @@ describe("New Regression Bugs - Player Logic", () => {
     const round = createTestRound([guess1]);
 
     // Should not allow duplicate guesses from same player
-    const existingGuess = round.guesses.find(g => g.playerId === player.id);
+    const existingGuess = round.guesses.find((g) => g.playerId === player.id);
     expect(existingGuess).toBeDefined();
     expect(round.guesses.length).toBe(1);
 

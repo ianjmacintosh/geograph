@@ -4,12 +4,7 @@ import {
   useRoundManagement,
   type UseRoundManagementProps,
 } from "../useRoundManagement";
-import type {
-  Game,
-  GameRound,
-  City,
-  FinalResults,
-} from "../../types/game";
+import type { Game, GameRound, City, FinalResults } from "../../types/game";
 
 // Helper functions to reduce test complexity
 function createMockCity(id: string, name: string): City {
@@ -75,7 +70,7 @@ describe("useRoundManagement", () => {
   async function setupMocks(gameProps: Partial<Game> = {}) {
     const currentGameData = { ...mockBaseGame, ...gameProps };
     vi.clearAllMocks();
-    
+
     const { useNavigate } = await import("react-router");
     const { useGame } = await import("../../contexts/GameContext");
     const { getRandomCityByDifficulty } = await import("../../data/cities");
@@ -88,7 +83,7 @@ describe("useRoundManagement", () => {
     } as any);
     vi.mocked(getRandomCityByDifficulty).mockImplementation(mockGetRandomCity);
     mockGetRandomCity.mockReturnValue(mockCity1);
-    
+
     return currentGameData;
   }
 
@@ -143,7 +138,7 @@ describe("useRoundManagement", () => {
     // SKIPPED: Test expectations don't match current mock setup
     const { result } = await setupHook();
     const firstRound = result.current.currentRound!;
-    
+
     act(() => {
       result.current.setCurrentRound({
         ...firstRound,
@@ -167,7 +162,7 @@ describe("useRoundManagement", () => {
     };
     const { result } = await setupHook(gameSettings);
     const firstRound = result.current.currentRound!;
-    
+
     act(() => {
       result.current.setCurrentRound({
         ...firstRound,
@@ -189,22 +184,24 @@ describe("useRoundManagement", () => {
     const testRound: GameRound = {
       id: "r1",
       city: mockCity1,
-      guesses: [{
-        playerId: "p1",
-        lat: 0,
-        lng: 0,
-        distance: 10,
-        bonusPoints: 5,
-        totalPoints: 15,
-        placement: 1,
-        placementPoints: 10,
-        timestamp: Date.now(),
-      }],
+      guesses: [
+        {
+          playerId: "p1",
+          lat: 0,
+          lng: 0,
+          distance: 10,
+          bonusPoints: 5,
+          totalPoints: 15,
+          placement: 1,
+          placementPoints: 10,
+          timestamp: Date.now(),
+        },
+      ],
       completed: true,
       startTime: Date.now(),
       endTime: Date.now(),
     };
-    
+
     act(() => {
       result.current.setCurrentRound(testRound);
     });
@@ -223,7 +220,7 @@ describe("useRoundManagement", () => {
       ...firstRound,
       guesses: [createTestGuess("p1")],
     };
-    
+
     act(() => {
       result.current.setCurrentRound(roundWithGuesses);
     });
@@ -248,20 +245,22 @@ describe("useRoundManagement", () => {
     const currentRoundInProgress = result.current.currentRound!;
     const roundWithGuessNotCompleted: GameRound = {
       ...currentRoundInProgress,
-      guesses: [{
-        playerId: "p1",
-        lat: 0,
-        lng: 0,
-        distance: 50,
-        bonusPoints: 2,
-        placement: 0,
-        placementPoints: 0,
-        timestamp: 0,
-        totalPoints: 0,
-      }],
+      guesses: [
+        {
+          playerId: "p1",
+          lat: 0,
+          lng: 0,
+          distance: 50,
+          bonusPoints: 2,
+          placement: 0,
+          placementPoints: 0,
+          timestamp: 0,
+          totalPoints: 0,
+        },
+      ],
       completed: false,
     };
-    
+
     act(() => {
       result.current.setCurrentRound(roundWithGuessNotCompleted);
     });

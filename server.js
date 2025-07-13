@@ -52,7 +52,7 @@ async function handleStaticAsset(req, res) {
     const filePath = join(process.cwd(), "build/client", req.url);
     const content = await readFile(filePath);
     const contentType = getContentType(req.url);
-    
+
     res.writeHead(200, { "Content-Type": contentType });
     res.end(content);
     return true;

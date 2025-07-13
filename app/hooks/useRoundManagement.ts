@@ -72,56 +72,72 @@ export function useRoundManagement({
   // Helper function to process all rounds for final scoring
   const prepareAllRounds = useCallback(() => {
     let allRounds = [...completedRounds];
-    
+
     if (!currentRound || currentRound.guesses.length === 0) {
       return allRounds;
     }
 
-    if (currentRound.completed && currentRound.guesses.some((g) => g.totalPoints > 0)) {
+    if (
+      currentRound.completed &&
+      currentRound.guesses.some((g) => g.totalPoints > 0)
+    ) {
       allRounds = [...allRounds, currentRound];
     } else if (!currentRound.completed) {
       const processedCurrentRound = updateRoundWithPlacements(currentRound);
-      allRounds = [...allRounds, { ...processedCurrentRound, completed: true, endTime: Date.now() }];
+      allRounds = [
+        ...allRounds,
+        { ...processedCurrentRound, completed: true, endTime: Date.now() },
+      ];
     }
-    
+
     return allRounds;
   }, [completedRounds, currentRound, updateRoundWithPlacements]);
 
   // Helper function to calculate player scores from all rounds
-  const calculatePlayerScores = useCallback((allRounds: GameRound[], players: Player[]) => {
-    return players.map((player) => {
-      let totalScore = 0;
-      allRounds.forEach((round) => {
-        const playerGuess = round.guesses.find((g) => g.playerId === player.id);
-        if (playerGuess) {
-          totalScore += playerGuess.totalPoints || 0;
-        }
+  const calculatePlayerScores = useCallback(
+    (allRounds: GameRound[], players: Player[]) => {
+      return players.map((player) => {
+        let totalScore = 0;
+        allRounds.forEach((round) => {
+          const playerGuess = round.guesses.find(
+            (g) => g.playerId === player.id,
+          );
+          if (playerGuess) {
+            totalScore += playerGuess.totalPoints || 0;
+          }
+        });
+        return {
+          playerId: player.id,
+          playerName: player.name,
+          isComputer: player.isComputer,
+          totalScore,
+          finalPlacement: 0,
+        };
       });
-      return {
-        playerId: player.id,
-        playerName: player.name,
-        isComputer: player.isComputer,
-        totalScore,
-        finalPlacement: 0,
-      };
-    });
-  }, []);
+    },
+    [],
+  );
 
   // Helper function to find winner IDs
-  const findWinnerIds = useCallback((sortedScores: Array<{
-    playerId: string;
-    playerName: string;
-    isComputer: boolean;
-    totalScore: number;
-    finalPlacement: number;
-  }>) => {
-    if (sortedScores.length === 0) return [];
-    
-    const topScore = sortedScores[0].totalScore;
-    return sortedScores
-      .filter((p) => p.totalScore === topScore)
-      .map((p) => p.playerId);
-  }, []);
+  const findWinnerIds = useCallback(
+    (
+      sortedScores: Array<{
+        playerId: string;
+        playerName: string;
+        isComputer: boolean;
+        totalScore: number;
+        finalPlacement: number;
+      }>,
+    ) => {
+      if (sortedScores.length === 0) return [];
+
+      const topScore = sortedScores[0].totalScore;
+      return sortedScores
+        .filter((p) => p.totalScore === topScore)
+        .map((p) => p.playerId);
+    },
+    [],
+  );
 
   const handleGameEnd = useCallback(() => {
     if (!currentGame) return;

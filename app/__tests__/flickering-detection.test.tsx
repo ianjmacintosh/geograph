@@ -97,7 +97,8 @@ function createMockGuess(playerId: string, distance: number) {
     lng: -73.0,
     distance,
     placementPoints: 0,
-    bonusPoints: distance < 100 ? 5 : distance < 500 ? 2 : distance < 1000 ? 1 : 0,
+    bonusPoints:
+      distance < 100 ? 5 : distance < 500 ? 2 : distance < 1000 ? 1 : 0,
     totalPoints: 0,
     placement: 0,
     timestamp: Date.now(),
@@ -111,26 +112,26 @@ describe.skip("Flickering Detection Test", () => {
 
   it("should detect score flickering during computer guess processing", () => {
     const guess = createMockGuess("player1", 50);
-    
+
     // Simulate the problematic scenario where guesses start with totalPoints: 0
     expect(guess.totalPoints).toBe(0);
     expect(guess.bonusPoints).toBeGreaterThan(0);
-    
+
     // The bug: scores hidden when totalPoints is 0 but should be visible
     const isVisible = guess.totalPoints > 0;
     const shouldBeVisible = guess.bonusPoints > 0;
-    
+
     expect(isVisible).toBe(false);
     expect(shouldBeVisible).toBe(true);
   });
 
   it("should verify scores become visible after placement calculation", () => {
     const guess = createMockGuess("player1", 50);
-    
+
     // After proper calculation
     guess.placementPoints = 3;
     guess.totalPoints = guess.bonusPoints + guess.placementPoints;
-    
+
     const isVisible = guess.totalPoints > 0;
     expect(isVisible).toBe(true);
   });
@@ -141,15 +142,15 @@ describe.skip("Flickering Detection Test", () => {
       createMockGuess("player2", 150),
       createMockGuess("player3", 300),
     ];
-    
+
     // Simulate placement calculation
     guesses.forEach((guess, index) => {
       guess.placement = index + 1;
       guess.placementPoints = guesses.length - index;
       guess.totalPoints = guess.bonusPoints + guess.placementPoints;
     });
-    
-    guesses.forEach(guess => {
+
+    guesses.forEach((guess) => {
       expect(guess.totalPoints).toBeGreaterThan(0);
     });
   });

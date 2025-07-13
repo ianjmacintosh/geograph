@@ -24,25 +24,26 @@ function getPlayerTypeLabel(isComputer: boolean): string {
   return isComputer ? "Computer" : "Human";
 }
 
-function shouldShowGuessStatus(showResults: boolean, currentRound: any): boolean {
+function shouldShowGuessStatus(
+  showResults: boolean,
+  currentRound: any,
+): boolean {
   return !showResults && currentRound && !currentRound.completed;
 }
 
 function renderGuessStatus(
   playerId: string,
-  hasPlayerGuessedThisRound: (playerId: string) => boolean
+  hasPlayerGuessedThisRound: (playerId: string) => boolean,
 ) {
   const hasGuessed = hasPlayerGuessedThisRound(playerId);
   return (
-    <span className="text-sm flex-shrink-0">
-      {hasGuessed ? "✅" : "⏳"}
-    </span>
+    <span className="text-sm flex-shrink-0">{hasGuessed ? "✅" : "⏳"}</span>
   );
 }
 
 function renderStatusText(
   playerId: string,
-  hasPlayerGuessedThisRound: (playerId: string) => boolean
+  hasPlayerGuessedThisRound: (playerId: string) => boolean,
 ) {
   const hasGuessed = hasPlayerGuessedThisRound(playerId);
   if (hasGuessed) {
@@ -70,11 +71,13 @@ export default function PlayerScoreRow({
         <div className="min-w-0 flex-1">
           <div className="font-medium text-base flex items-center gap-2">
             <span className="truncate">{player.name}</span>
-            {showGuessStatus && renderGuessStatus(player.id, hasPlayerGuessedThisRound)}
+            {showGuessStatus &&
+              renderGuessStatus(player.id, hasPlayerGuessedThisRound)}
           </div>
           <div className="text-xs text-gray-500 truncate">
             {getPlayerTypeLabel(player.isComputer)}
-            {showGuessStatus && renderStatusText(player.id, hasPlayerGuessedThisRound)}
+            {showGuessStatus &&
+              renderStatusText(player.id, hasPlayerGuessedThisRound)}
           </div>
         </div>
       </div>

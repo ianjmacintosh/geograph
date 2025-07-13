@@ -15,8 +15,12 @@ export function meta() {
 }
 
 // Helper function to calculate available computer slots
-function calculateComputerSlots(currentGame: { settings: { maxPlayers: number }; players: unknown[] }): number {
-  const availableSlots = currentGame.settings.maxPlayers - currentGame.players.length;
+function calculateComputerSlots(currentGame: {
+  settings: { maxPlayers: number };
+  players: unknown[];
+}): number {
+  const availableSlots =
+    currentGame.settings.maxPlayers - currentGame.players.length;
   return Math.min(3, availableSlots);
 }
 

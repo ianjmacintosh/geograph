@@ -16,7 +16,7 @@ export function meta() {
 // Helper function to setup animations with cleanup
 function setupAnimations(
   setAnimateIn: (value: boolean) => void,
-  setShowConfetti: (value: boolean) => void
+  setShowConfetti: (value: boolean) => void,
 ) {
   const animationTimeout = setTimeout(() => setAnimateIn(true), 100);
   const confettiStartTimeout = setTimeout(() => setShowConfetti(true), 800);
@@ -91,7 +91,11 @@ export default function Results() {
 
             <div className="space-y-4">
               {finalResults.playerScores.map((player, index) => (
-                <PlayerResultRow key={player.playerId} player={player} index={index} />
+                <PlayerResultRow
+                  key={player.playerId}
+                  player={player}
+                  index={index}
+                />
               ))}
             </div>
           </div>

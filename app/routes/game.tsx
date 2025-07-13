@@ -23,21 +23,30 @@ export function meta() {
 
 // Helper function to get current round info
 function getCurrentRoundInfo(currentGame: Game | null) {
-  const currentRound = currentGame?.rounds?.[currentGame.rounds.length - 1] || null;
+  const currentRound =
+    currentGame?.rounds?.[currentGame.rounds.length - 1] || null;
   const roundNumber = currentGame?.rounds?.length || 0;
   return { currentRound, roundNumber };
 }
 
 // Helper function to check game state
-function checkGameState(currentGame: Game | null, currentRound: GameRound | null, playerId: string) {
+function checkGameState(
+  currentGame: Game | null,
+  currentRound: GameRound | null,
+  playerId: string,
+) {
   const isHost = currentGame ? playerId === currentGame.hostId : false;
-  const hasPlayerGuessed = currentRound?.guesses?.some((g) => g.playerId === playerId) || false;
+  const hasPlayerGuessed =
+    currentRound?.guesses?.some((g) => g.playerId === playerId) || false;
   const showResults = currentRound?.completed || false;
   return { isHost, hasPlayerGuessed, showResults };
 }
 
 // Helper function to create leave game handler
-function createLeaveGameHandler(leaveGame: () => void, navigate: (path: string) => void) {
+function createLeaveGameHandler(
+  leaveGame: () => void,
+  navigate: (path: string) => void,
+) {
   return () => {
     leaveGame();
     navigate("/");
@@ -49,7 +58,11 @@ export default function Game() {
   const navigate = useNavigate();
 
   const { currentRound, roundNumber } = getCurrentRoundInfo(currentGame);
-  const { isHost, hasPlayerGuessed, showResults } = checkGameState(currentGame, currentRound, playerId);
+  const { isHost, hasPlayerGuessed, showResults } = checkGameState(
+    currentGame,
+    currentRound,
+    playerId,
+  );
 
   // Modal state
   const [isScoreboardModalOpen, setIsScoreboardModalOpen] = useState(false);
@@ -77,10 +90,8 @@ export default function Game() {
     onConfirmGuess: confirmCurrentGuess,
   });
 
-  const { hasPlayerGuessedThisRound, getPlayerScores, getLeaderInfo } = useGameScoring(
-    currentGame,
-    currentRound,
-  );
+  const { hasPlayerGuessedThisRound, getPlayerScores, getLeaderInfo } =
+    useGameScoring(currentGame, currentRound);
 
   useGameNavigation(currentGame);
 
@@ -98,9 +109,10 @@ export default function Game() {
 
   // Calculate leader information for persistent header
   const { playerScores, leader, leaderName, leaderScore } = getLeaderInfo();
-  const currentPlayerScore = playerScores.find((p) => p.id === playerId)?.totalScore || 0;
+  const currentPlayerScore =
+    playerScores.find((p) => p.id === playerId)?.totalScore || 0;
   const isCurrentPlayerLeader = leader?.id === playerId;
-  
+
   const handleLeaveGame = createLeaveGameHandler(leaveGame, navigate);
 
   if (!currentGame || !currentRound) {

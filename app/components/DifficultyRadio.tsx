@@ -22,10 +22,13 @@ function getDifficultyLabel(difficulty: string): string {
   }
 }
 
-export function DifficultyRadio({ currentGame, updateSettings }: DifficultyRadioProps) {
+export function DifficultyRadio({
+  currentGame,
+  updateSettings,
+}: DifficultyRadioProps) {
   const difficulties = [
     "easy",
-    "medium", 
+    "medium",
     "hard",
     "brazilian_capitals",
     "us_capitals",
@@ -38,10 +41,7 @@ export function DifficultyRadio({ currentGame, updateSettings }: DifficultyRadio
       </label>
       <div className="space-y-2">
         {difficulties.map((difficulty) => (
-          <label
-            key={difficulty}
-            className="flex items-center cursor-pointer"
-          >
+          <label key={difficulty} className="flex items-center cursor-pointer">
             <input
               type="radio"
               name="difficulty"
@@ -49,7 +49,8 @@ export function DifficultyRadio({ currentGame, updateSettings }: DifficultyRadio
               checked={currentGame.settings.cityDifficulty === difficulty}
               onChange={(e) =>
                 updateSettings({
-                  cityDifficulty: e.target.value as typeof difficulties[number],
+                  cityDifficulty: e.target
+                    .value as (typeof difficulties)[number],
                 })
               }
               className="mr-3 text-blue-600 focus:ring-blue-500"

@@ -7,13 +7,17 @@ interface LobbyHeaderProps {
   onShowQRCode: () => void;
 }
 
-export function LobbyHeader({ currentGame, onLeaveGame, onShowQRCode }: LobbyHeaderProps) {
+export function LobbyHeader({
+  currentGame,
+  onLeaveGame,
+  onShowQRCode,
+}: LobbyHeaderProps) {
   const [copySuccess, setCopySuccess] = useState(false);
 
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(
-        `${window.location.origin}/join/${currentGame.code}`
+        `${window.location.origin}/join/${currentGame.code}`,
       );
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);

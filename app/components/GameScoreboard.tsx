@@ -34,7 +34,8 @@ function PlayerRow({
   currentRound: GameRound | null;
   hasPlayerGuessedThisRound: (playerId: string) => boolean;
 }) {
-  const showGuessStatus = !showResults && currentRound && !currentRound.completed;
+  const showGuessStatus =
+    !showResults && currentRound && !currentRound.completed;
   const hasGuessed = hasPlayerGuessedThisRound(player.id);
 
   return (
