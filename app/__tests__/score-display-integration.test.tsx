@@ -36,7 +36,36 @@ vi.mock("../data/cities", () => ({
   }),
 }));
 
-describe.skip("Score Display Integration", () => {
+// Helper functions to reduce complexity
+function createIntegrationTestGame(): GameType {
+  return {
+    id: "1",
+    code: "123456",
+    hostId: "player1",
+    players: [
+      { id: "player1", name: "Human Player", isComputer: false, score: 0 },
+      { id: "player2", name: "Computer Player", isComputer: true, score: 0, accuracy: 0.5 },
+    ],
+    rounds: [],
+    status: "playing" as const,
+    settings: {
+      maxPlayers: 8,
+      roundTimeLimit: 30000,
+      totalRounds: 3,
+      cityDifficulty: "easy" as const,
+    },
+    createdAt: Date.now(),
+  };
+}
+
+function setupIntegrationMocks(game: GameType) {
+  mockUseGame.mockReturnValue({
+    currentGame: game,
+    playerId: "player1",
+  });
+}
+
+describe.skip("Score Display Integration - Core", () => {
   let mockGame: GameType;
 
   beforeEach(() => {
