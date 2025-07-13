@@ -11,27 +11,48 @@ export function meta(_: Route.MetaArgs) {
   ];
 }
 
+// Helper function to validate join form
+function validateJoinForm(playerName: string, isValidCode: boolean): string | null {
+  if (!playerName.trim()) {
+    return "Please enter your name";
+  }
+  if (!isValidCode) {
+    return "Invalid game code";
+  }
+  return null;
+}
+
+// Helper function to get connection status display
+function getConnectionStatus(connectionStatus: string) {
+  switch (connectionStatus) {
+    case "connected":
+      return { text: "🟢 Connected to server", className: "text-green-600" };
+    case "connecting":
+      return { text: "🟡 Connecting to server...", className: "text-yellow-600" };
+    case "disconnected":
+      return { text: "🔴 Disconnected from server", className: "text-red-600" };
+    case "error":
+      return { text: "❌ Connection error", className: "text-red-600" };
+    default:
+      return null;
+  }
+}
+
 export default function Join() {
   const { gameCode } = useParams<{ gameCode: string }>();
   const [playerName, setPlayerName] = useState("");
-  const { joinGame, isLoading, error, currentGame, connectionStatus } =
-    useGame();
+  const { joinGame, isLoading, error, currentGame, connectionStatus } = useGame();
   const navigate = useNavigate();
 
   // Validate game code from URL
   const isValidCode = gameCode && isValidGameCode(gameCode);
 
   const handleJoinGame = () => {
-    if (!playerName.trim()) {
-      alert("Please enter your name");
+    const validationError = validateJoinForm(playerName, !!isValidCode);
+    if (validationError) {
+      alert(validationError);
       return;
     }
-
-    if (!isValidCode) {
-      alert("Invalid game code");
-      return;
-    }
-
     joinGame(gameCode!, playerName.trim());
   };
 
@@ -109,19 +130,10 @@ export default function Join() {
         </div>
 
         <div className="mt-8 text-center text-sm">
-          {connectionStatus === "connected" && (
-            <p className="text-green-600">🟢 Connected to server</p>
-          )}
-          {connectionStatus === "connecting" && (
-            <p className="text-yellow-600">🟡 Connecting to server...</p>
-          )}
-          {connectionStatus === "disconnected" && (
-            <p className="text-red-600">🔴 Disconnected from server</p>
-          )}
-          {connectionStatus === "error" && (
-            <p className="text-red-600">❌ Connection error</p>
-          )}
-
+          {(() => {
+            const status = getConnectionStatus(connectionStatus);
+            return status ? <p className={status.className}>{status.text}</p> : null;
+          })()}
           {error && <p className="text-red-600 mt-2">⚠️ {error}</p>}
         </div>
       </div>

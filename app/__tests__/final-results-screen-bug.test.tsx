@@ -100,43 +100,92 @@ vi.mock("../utils/game", () => ({
   generateComputerGuess: vi.fn(() => ({ lat: 41.0, lng: -73.0 })),
 }));
 
+// Test helper functions to reduce complexity
+function createSingleRoundGame(): GameType {
+  return {
+    id: "1",
+    code: "123456",
+    hostId: "player1",
+    players: [
+      { id: "player1", name: "Human Player", isComputer: false, score: 0 },
+      {
+        id: "player2",
+        name: "Computer1",
+        isComputer: true,
+        score: 0,
+        accuracy: 0.5,
+      },
+    ],
+    rounds: [],
+    status: "playing" as const,
+    settings: {
+      maxPlayers: 8,
+      roundTimeLimit: 30000,
+      totalRounds: 1,
+      cityDifficulty: "easy" as const,
+    },
+    createdAt: Date.now(),
+  };
+}
+
+function setupMockGame(game: GameType) {
+  mockUseGame.mockReturnValue({
+    currentGame: game,
+    clearGame: vi.fn(),
+    finishGame: mockFinishGame,
+  });
+}
+
+function createRoundWithGuesses() {
+  return {
+    id: "round1",
+    city: {
+      id: "1",
+      name: "New York",
+      country: "USA",
+      lat: 40.7128,
+      lng: -74.006,
+      population: 8000000,
+      difficulty: "easy" as const,
+    },
+    guesses: [
+      {
+        playerId: "player1",
+        lat: 40.0,
+        lng: -74.0,
+        distance: 100,
+        placementPoints: 2,
+        bonusPoints: 5,
+        totalPoints: 7,
+        placement: 1,
+        timestamp: Date.now(),
+      },
+      {
+        playerId: "player2",
+        lat: 41.0,
+        lng: -73.0,
+        distance: 150,
+        placementPoints: 1,
+        bonusPoints: 2,
+        totalPoints: 3,
+        placement: 2,
+        timestamp: Date.now(),
+      },
+    ],
+    completed: true,
+    startTime: Date.now(),
+    endTime: Date.now() + 30000,
+  };
+}
+
 describe.skip("Final Results Screen Navigation Bug", () => {
   let mockGame: GameType;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Create a single-round game to test completion flow
-    mockGame = {
-      id: "1",
-      code: "123456",
-      hostId: "player1",
-      players: [
-        { id: "player1", name: "Human Player", isComputer: false, score: 0 },
-        {
-          id: "player2",
-          name: "Computer1",
-          isComputer: true,
-          score: 0,
-          accuracy: 0.5,
-        },
-      ],
-      rounds: [],
-      status: "playing" as const,
-      settings: {
-        maxPlayers: 8,
-        roundTimeLimit: 30000,
-        totalRounds: 1, // Single round for quick testing
-        cityDifficulty: "easy" as const,
-      },
-      createdAt: Date.now(),
-    };
-
-    mockUseGame.mockReturnValue({
-      currentGame: mockGame,
-      clearGame: vi.fn(),
-      finishGame: mockFinishGame,
-    });
+    mockGame = createSingleRoundGame();
+    setupMockGame(mockGame);
   });
 
   it("should navigate to final results screen after completing all rounds", async () => {

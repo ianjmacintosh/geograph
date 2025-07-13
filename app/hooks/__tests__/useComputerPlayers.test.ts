@@ -63,14 +63,23 @@ const mockInitialRound: GameRound = {
   startTime: Date.now(),
 };
 
-describe("useComputerPlayers", () => {
+// Helper functions to reduce complexity
+function setupCommonMocks() {
+  vi.useFakeTimers();
+  return {
+    mockSetCurrentRound: vi.fn(),
+    mockOnComputerGuessesCompleteRound: vi.fn(),
+  };
+}
+
+describe("useComputerPlayers - Basic Tests", () => {
   let mockSetCurrentRound: ReturnType<typeof vi.fn>;
   let mockOnComputerGuessesCompleteRound: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    mockSetCurrentRound = vi.fn();
-    mockOnComputerGuessesCompleteRound = vi.fn();
+    const mocks = setupCommonMocks();
+    mockSetCurrentRound = mocks.mockSetCurrentRound;
+    mockOnComputerGuessesCompleteRound = mocks.mockOnComputerGuessesCompleteRound;
   });
 
   afterEach(() => {
@@ -161,6 +170,22 @@ describe("useComputerPlayers", () => {
     const newRound = functionalUpdate(mockInitialRound);
     expect(newRound.guesses.length).toBe(1);
     expect(newRound.guesses[0].playerId).toBe(computerPlayer1.id);
+  });
+
+});
+
+describe("useComputerPlayers - Advanced Tests", () => {
+  let mockSetCurrentRound: ReturnType<typeof vi.fn>;
+  let mockOnComputerGuessesCompleteRound: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    const mocks = setupCommonMocks();
+    mockSetCurrentRound = mocks.mockSetCurrentRound;
+    mockOnComputerGuessesCompleteRound = mocks.mockOnComputerGuessesCompleteRound;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("should make multiple computer players guess", () => {

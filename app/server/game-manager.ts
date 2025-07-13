@@ -327,58 +327,59 @@ export class GameManager {
     }
   }
 
-  private endRound(gameId: string, roundId: string) {
-    const game = this.db.getGameById(gameId);
-    if (!game) return;
-
-    const round = game.rounds.find((r) => r.id === roundId);
-    if (!round || round.completed) return;
-
-    // Generate guesses for any computer players who haven't guessed yet
+  // Helper method to generate computer guesses for players who haven't guessed
+  private generateMissingComputerGuesses(game: Game, round: GameRound): void {
     const playersWhoGuessed = round.guesses.map((g) => g.playerId);
     const computerPlayersWhoNeedToGuess = game.players.filter(
       (p) => p.isComputer && !playersWhoGuessed.includes(p.id),
     );
 
-    if (computerPlayersWhoNeedToGuess.length > 0) {
-      console.log(
-        `⏰ Timer expired - generating guesses for ${computerPlayersWhoNeedToGuess.length} computer players`,
-      );
+    if (computerPlayersWhoNeedToGuess.length === 0) return;
 
-      for (const player of computerPlayersWhoNeedToGuess) {
-        const computerGuessPos = generateComputerGuess(
-          round.city,
-          player.accuracy || 0.5,
-        );
-        const distance = calculateDistance(
-          computerGuessPos.lat,
-          computerGuessPos.lng,
-          round.city.lat,
-          round.city.lng,
-        );
-        const bonusPoints = calculateBonusPoints(distance);
+    console.log(
+      `⏰ Timer expired - generating guesses for ${computerPlayersWhoNeedToGuess.length} computer players`,
+    );
 
-        const guess: Guess = {
-          playerId: player.id,
-          lat: computerGuessPos.lat,
-          lng: computerGuessPos.lng,
-          distance,
-          placementPoints: 0,
-          bonusPoints,
-          totalPoints: bonusPoints,
-          placement: 0,
-          timestamp: Date.now(),
-        };
-
-        this.db.addGuess(roundId, guess);
-        round.guesses.push(guess);
-        console.log(
-          `⏰ Computer player ${player.name} auto-guessed (${distance.toFixed(0)}km away)`,
-        );
-      }
+    for (const player of computerPlayersWhoNeedToGuess) {
+      this.generateSingleComputerGuess(player, round);
     }
+  }
 
-    // Calculate placements and update scores
+  // Helper method to generate a single computer guess
+  private generateSingleComputerGuess(player: Player, round: GameRound): void {
+    const computerGuessPos = generateComputerGuess(
+      round.city,
+      player.accuracy || 0.5,
+    );
+    const distance = calculateDistance(
+      computerGuessPos.lat,
+      computerGuessPos.lng,
+      round.city.lat,
+      round.city.lng,
+    );
+    const bonusPoints = calculateBonusPoints(distance);
+
+    const guess: Guess = {
+      playerId: player.id,
+      lat: computerGuessPos.lat,
+      lng: computerGuessPos.lng,
+      distance,
+      placementPoints: 0,
+      bonusPoints,
+      totalPoints: bonusPoints,
+      placement: 0,
+      timestamp: Date.now(),
+    };
+
+    this.db.addGuess(round.id, guess);
+    round.guesses.push(guess);
+    console.log(
+      `⏰ Computer player ${player.name} auto-guessed (${distance.toFixed(0)}km away)`,
+    );
+  }
+
+  // Helper method to update guess placements and scores
+  private updateGuessPlacements(game: Game, round: GameRound): void {
     const guessesWithDistance = round.guesses.map((g) => ({
       playerId: g.playerId,
       distance: g.distance,
@@ -389,7 +390,6 @@ export class GameManager {
       game.players.length,
     );
 
-    // Update each guess with placement points
     for (const placement of placements) {
       const guess = round.guesses.find(
         (g) => g.playerId === placement.playerId,
@@ -398,38 +398,47 @@ export class GameManager {
         guess.placementPoints = placement.placementPoints;
         guess.placement = placement.placement;
         guess.totalPoints = guess.bonusPoints + guess.placementPoints;
-
-        // Update in database
-        this.db.updateGuess(roundId, guess);
+        this.db.updateGuess(round.id, guess);
       }
     }
+  }
 
-    // Mark round as completed
-    this.db.completeRound(roundId);
-
-    // Clear round timer
-    this.clearRoundTimer(roundId);
-
-    // Notify clients about round end via WebSocket
-    if (this.wsServerInstance) {
-      const updatedGame = this.db.getGameById(gameId);
-      if (updatedGame) {
-        // Ensure game is found before sending
-        this.wsServerInstance.revealRoundResults(gameId, {
-          game: updatedGame,
-          round: round, // Ensure 'round' is the correct, updated round object
-          completed: true,
-        });
-      } else {
-        console.warn(
-          `GameManager: Game ${gameId} not found after round end, cannot send WS update.`,
-        );
-      }
-    } else {
+  // Helper method to notify clients about round completion
+  private notifyRoundCompletion(gameId: string, round: GameRound): void {
+    if (!this.wsServerInstance) {
       console.warn(
         "GameManager: WebSocket server instance not set. Cannot send ROUND_RESULTS.",
       );
+      return;
     }
+
+    const updatedGame = this.db.getGameById(gameId);
+    if (updatedGame) {
+      this.wsServerInstance.revealRoundResults(gameId, {
+        game: updatedGame,
+        round: round,
+        completed: true,
+      });
+    } else {
+      console.warn(
+        `GameManager: Game ${gameId} not found after round end, cannot send WS update.`,
+      );
+    }
+  }
+
+  private endRound(gameId: string, roundId: string) {
+    const game = this.db.getGameById(gameId);
+    if (!game) return;
+
+    const round = game.rounds.find((r) => r.id === roundId);
+    if (!round || round.completed) return;
+
+    this.generateMissingComputerGuesses(game, round);
+    this.updateGuessPlacements(game, round);
+    
+    this.db.completeRound(roundId);
+    this.clearRoundTimer(roundId);
+    this.notifyRoundCompletion(gameId, round);
 
     console.log(`🏁 Round ${roundId} completed for game ${gameId}`);
   }

@@ -23,38 +23,55 @@ const requestHandler = createRequestListener({
   mode: process.env.NODE_ENV || "production",
 });
 
+// Helper function to determine if request is for WebSocket
+function isWebSocketRequest(url) {
+  return url?.startsWith("/ws");
+}
+
+// Helper function to determine if request is for static assets
+function isStaticAssetRequest(url) {
+  return (
+    url?.startsWith("/assets/") ||
+    url === "/favicon.ico" ||
+    url === "/world-map.svg"
+  );
+}
+
+// Helper function to get content type for static assets
+function getContentType(url) {
+  if (url.endsWith(".js")) return "application/javascript";
+  if (url.endsWith(".css")) return "text/css";
+  if (url.endsWith(".svg")) return "image/svg+xml";
+  if (url.endsWith(".ico")) return "image/x-icon";
+  return "text/plain";
+}
+
+// Helper function to handle static asset requests
+async function handleStaticAsset(req, res) {
+  try {
+    const filePath = join(process.cwd(), "build/client", req.url);
+    const content = await readFile(filePath);
+    const contentType = getContentType(req.url);
+    
+    res.writeHead(200, { "Content-Type": contentType });
+    res.end(content);
+    return true;
+  } catch {
+    res.writeHead(404);
+    res.end("Not found");
+    return true;
+  }
+}
+
 // Create HTTP server with React Router
 const httpServer = createServer(async (req, res) => {
-  // Handle WebSocket upgrade requests
-  if (req.url?.startsWith("/ws")) {
+  if (isWebSocketRequest(req.url)) {
     return; // Let WebSocket server handle this
   }
 
-  // Handle static assets
-  if (
-    req.url?.startsWith("/assets/") ||
-    req.url === "/favicon.ico" ||
-    req.url === "/world-map.svg"
-  ) {
-    try {
-      const filePath = join(process.cwd(), "build/client", req.url);
-      const content = await readFile(filePath);
-
-      // Set appropriate content type
-      let contentType = "text/plain";
-      if (req.url.endsWith(".js")) contentType = "application/javascript";
-      else if (req.url.endsWith(".css")) contentType = "text/css";
-      else if (req.url.endsWith(".svg")) contentType = "image/svg+xml";
-      else if (req.url.endsWith(".ico")) contentType = "image/x-icon";
-
-      res.writeHead(200, { "Content-Type": contentType });
-      res.end(content);
-      return;
-    } catch {
-      res.writeHead(404);
-      res.end("Not found");
-      return;
-    }
+  if (isStaticAssetRequest(req.url)) {
+    await handleStaticAsset(req, res);
+    return;
   }
 
   // Handle all other requests with React Router

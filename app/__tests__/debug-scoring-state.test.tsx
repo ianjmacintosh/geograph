@@ -156,26 +156,34 @@ describe.skip("Debug Scoring State", () => {
       guessCount: number;
     }> = [];
 
+    // Helper function to get guess count from map element
+    const getGuessCount = (): number => {
+      const mapElement = document.querySelector('[data-testid="map-click"]');
+      if (!mapElement) return 0;
+      
+      const match = mapElement.textContent?.match(/\((\d+) guesses\)/);
+      return match ? parseInt(match[1]) : 0;
+    };
+
+    // Helper function to get player score
+    const getPlayerScore = (playerId: string): string => {
+      const element = document.querySelector(`[data-testid="player-score-${playerId}"]`);
+      return element?.textContent || "0";
+    };
+
+    // Helper function to collect all scores
+    const collectScores = () => {
+      return {
+        player1: getPlayerScore("player1"),
+        player2: getPlayerScore("player2"),
+        player3: getPlayerScore("player3"),
+      };
+    };
+
     const trackScores = (event: string) => {
       try {
-        const mapElement = document.querySelector('[data-testid="map-click"]');
-        const guessCount = mapElement
-          ? parseInt(
-              mapElement.textContent?.match(/\((\d+) guesses\)/)?.[1] || "0",
-            )
-          : 0;
-
-        const scores = {
-          player1:
-            document.querySelector('[data-testid="player-score-player1"]')
-              ?.textContent || "0",
-          player2:
-            document.querySelector('[data-testid="player-score-player2"]')
-              ?.textContent || "0",
-          player3:
-            document.querySelector('[data-testid="player-score-player3"]')
-              ?.textContent || "0",
-        };
+        const guessCount = getGuessCount();
+        const scores = collectScores();
 
         scoreTracker.push({
           time: Date.now(),
