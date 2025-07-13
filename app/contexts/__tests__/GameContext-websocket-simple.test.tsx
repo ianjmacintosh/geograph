@@ -242,6 +242,41 @@ describe("GameContext WebSocket - Basic Tests", () => {
     );
   });
 
+  it("should handle server ping messages without forwarding to game logic", () => {
+    const { result } = renderHook(() => useGame(), {
+      wrapper: createWrapper(),
+    });
+
+    // Simulate successful connection
+    act(() => {
+      mockWebSocket.readyState = 1; // OPEN
+      if (mockWebSocket.onopen) {
+        mockWebSocket.onopen(new Event("open"));
+      }
+    });
+
+    // Clear previous sends
+    mockWebSocket.send.mockClear();
+
+    // Simulate receiving ping message from server
+    act(() => {
+      if (mockWebSocket.onmessage) {
+        mockWebSocket.onmessage(
+          new MessageEvent("message", {
+            data: JSON.stringify({ type: "ping" }),
+          }),
+        );
+      }
+    });
+
+    // Should respond with pong and not affect game state
+    expect(mockWebSocket.send).toHaveBeenCalledWith(
+      JSON.stringify({ type: "pong" }),
+    );
+    expect(result.current.connectionStatus).toBe("connected");
+    expect(result.current.error).toBeNull();
+  });
+
   it("should clean up resources on unmount", () => {
     // Spy on removeEventListener before rendering
     const documentRemoveEventListenerSpy = vi.spyOn(

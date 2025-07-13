@@ -103,7 +103,15 @@ export function useWebSocketConnection({
       wsRef.current.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data);
-          // Handle heartbeat responses
+          // Handle heartbeat messages - filter them out before passing to game logic
+          if (message.type === "ping") {
+            console.log("💓 Server ping received, sending pong");
+            // Respond to server ping with pong
+            if (wsRef.current?.readyState === WebSocket.OPEN) {
+              wsRef.current.send(JSON.stringify({ type: "pong" }));
+            }
+            return;
+          }
           if (message.type === "pong") {
             console.log("💓 Heartbeat pong received");
             return;

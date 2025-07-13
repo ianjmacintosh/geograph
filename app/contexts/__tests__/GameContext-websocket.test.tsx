@@ -467,6 +467,35 @@ describe("GameContext WebSocket - Heartbeat", () => {
       expect(result.current.connectionStatus).toBe("connected");
     });
 
+    it("should handle server ping messages and respond with pong", () => {
+      renderHook(() => useGame(), {
+        wrapper: createWrapper(),
+      });
+
+      act(() => {
+        simulateWebSocketOpen();
+      });
+
+      // Clear previous sends (like initial connection messages)
+      mockWebSocket.send.mockClear();
+
+      // Simulate receiving ping message from server
+      act(() => {
+        if (mockWebSocket.onmessage) {
+          mockWebSocket.onmessage(
+            new MessageEvent("message", {
+              data: JSON.stringify({ type: "ping" }),
+            }),
+          );
+        }
+      });
+
+      // Should respond with pong
+      expect(mockWebSocket.send).toHaveBeenCalledWith(
+        JSON.stringify({ type: "pong" }),
+      );
+    });
+
     it("should stop heartbeat when disconnected", () => {
       renderHook(() => useGame(), {
         wrapper: createWrapper(),
