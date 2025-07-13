@@ -18,34 +18,34 @@ const mockWebSocketConstructor = vi.fn(() => mockWebSocket);
 
 // Setup environment mocks
 const setupEnvironment = () => {
-  // Mock window object
-  Object.defineProperty(globalThis, "window", {
-    value: {
-      location: {
-        hostname: "localhost",
-        protocol: "http:",
-        host: "localhost:5173",
-      },
-      WebSocket: mockWebSocketConstructor,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    },
-    writable: true,
-  });
+  // Mock WebSocket constructor on global
+  global.WebSocket = mockWebSocketConstructor as any;
 
-  // Mock document object
-  Object.defineProperty(globalThis, "document", {
-    value: {
-      visibilityState: "visible",
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    },
-    writable: true,
-  });
-
-  // Mock WebSocket constructor
-  Object.defineProperty(globalThis, "WebSocket", {
+  // Mock window.WebSocket
+  Object.defineProperty(window, "WebSocket", {
     value: mockWebSocketConstructor,
+    writable: true,
+  });
+
+  // Mock WebSocket constants
+  Object.defineProperty(global.WebSocket, "CONNECTING", { value: 0 });
+  Object.defineProperty(global.WebSocket, "OPEN", { value: 1 });
+  Object.defineProperty(global.WebSocket, "CLOSING", { value: 2 });
+  Object.defineProperty(global.WebSocket, "CLOSED", { value: 3 });
+
+  // Mock window location
+  Object.defineProperty(window, "location", {
+    value: {
+      hostname: "localhost",
+      protocol: "http:",
+      host: "localhost:5173",
+    },
+    writable: true,
+  });
+
+  // Mock document properties (jsdom should provide document, but we can mock specific properties)
+  Object.defineProperty(document, "visibilityState", {
+    value: "visible",
     writable: true,
   });
 };
@@ -59,7 +59,7 @@ function createWrapper() {
   return Wrapper;
 }
 
-describe.skip("GameContext WebSocket - Basic Tests", () => {
+describe("GameContext WebSocket - Basic Tests", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     setupEnvironment();
@@ -154,19 +154,23 @@ describe.skip("GameContext WebSocket - Basic Tests", () => {
   });
 
   it("should register page visibility event listeners", () => {
+    // Spy on addEventListener before rendering
+    const documentAddEventListenerSpy = vi.spyOn(document, "addEventListener");
+    const windowAddEventListenerSpy = vi.spyOn(window, "addEventListener");
+
     renderHook(() => useGame(), { wrapper: createWrapper() });
 
-    const document = globalThis.document as any;
-    const window = globalThis.window as any;
-
-    expect(document.addEventListener).toHaveBeenCalledWith(
+    expect(documentAddEventListenerSpy).toHaveBeenCalledWith(
       "visibilitychange",
       expect.any(Function),
     );
-    expect(window.addEventListener).toHaveBeenCalledWith(
+    expect(windowAddEventListenerSpy).toHaveBeenCalledWith(
       "pageshow",
       expect.any(Function),
     );
+
+    documentAddEventListenerSpy.mockRestore();
+    windowAddEventListenerSpy.mockRestore();
   });
 
   it("should send messages when connected", () => {
@@ -239,19 +243,29 @@ describe.skip("GameContext WebSocket - Basic Tests", () => {
   });
 
   it("should clean up resources on unmount", () => {
+    // Spy on removeEventListener before rendering
+    const documentRemoveEventListenerSpy = vi.spyOn(
+      document,
+      "removeEventListener",
+    );
+    const windowRemoveEventListenerSpy = vi.spyOn(
+      window,
+      "removeEventListener",
+    );
+
     const { unmount } = renderHook(() => useGame(), {
       wrapper: createWrapper(),
     });
-
-    const document = globalThis.document as any;
-    const window = globalThis.window as any;
 
     act(() => {
       unmount();
     });
 
     expect(mockWebSocket.close).toHaveBeenCalled();
-    expect(document.removeEventListener).toHaveBeenCalled();
-    expect(window.removeEventListener).toHaveBeenCalled();
+    expect(documentRemoveEventListenerSpy).toHaveBeenCalled();
+    expect(windowRemoveEventListenerSpy).toHaveBeenCalled();
+
+    documentRemoveEventListenerSpy.mockRestore();
+    windowRemoveEventListenerSpy.mockRestore();
   });
 });

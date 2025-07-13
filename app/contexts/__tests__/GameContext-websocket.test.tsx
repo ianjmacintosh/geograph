@@ -16,41 +16,7 @@ const mockWebSocket = {
 
 const mockWebSocketConstructor = vi.fn(() => mockWebSocket);
 
-// Create proper mock objects for browser APIs
-const mockWindow = {
-  ...window,
-  WebSocket: mockWebSocketConstructor,
-  location: {
-    hostname: "localhost",
-    protocol: "http:",
-    host: "localhost:5173",
-    href: "http://localhost:5173",
-  },
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
-  dispatchEvent: vi.fn(),
-};
-
-const mockDocument = {
-  ...document,
-  visibilityState: "visible",
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
-  dispatchEvent: vi.fn(),
-};
-
-// Mock globals properly
-vi.stubGlobal("window", mockWindow);
-vi.stubGlobal("document", mockDocument);
-
-// Also define WebSocket constants
-vi.stubGlobal("WebSocket", {
-  ...mockWebSocketConstructor,
-  CONNECTING: 0,
-  OPEN: 1,
-  CLOSING: 2,
-  CLOSED: 3,
-});
+// Simple setup for DOM environment - no need for complex mocking here
 
 // Helper function to create wrapper component
 function createWrapper() {
@@ -84,34 +50,63 @@ function simulateWebSocketError() {
   }
 }
 
-describe.skip("GameContext WebSocket Reconnection", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.clearAllMocks();
-    mockWebSocket.readyState = 0; // WebSocket.CONNECTING
+// Setup function to reduce repetition
+function setupTestEnvironment() {
+  vi.useFakeTimers();
+  vi.clearAllMocks();
+  mockWebSocket.readyState = 0; // WebSocket.CONNECTING
 
-    // Reset WebSocket constructor mock
-    mockWebSocketConstructor.mockReturnValue(mockWebSocket);
+  // Setup proper environment mocks like the simple test
+  global.WebSocket = mockWebSocketConstructor as any;
 
-    // Reset all mock functions
-    mockWebSocket.send.mockClear();
-    mockWebSocket.close.mockClear();
-    mockWindow.addEventListener.mockClear();
-    mockWindow.removeEventListener.mockClear();
-    mockDocument.addEventListener.mockClear();
-    mockDocument.removeEventListener.mockClear();
-
-    // Mock console methods to avoid noise in tests
-    vi.spyOn(console, "log").mockImplementation(() => {});
-    vi.spyOn(console, "error").mockImplementation(() => {});
+  // Mock window.WebSocket
+  Object.defineProperty(window, "WebSocket", {
+    value: mockWebSocketConstructor,
+    writable: true,
   });
 
+  // Mock WebSocket constants
+  Object.defineProperty(global.WebSocket, "CONNECTING", { value: 0 });
+  Object.defineProperty(global.WebSocket, "OPEN", { value: 1 });
+  Object.defineProperty(global.WebSocket, "CLOSING", { value: 2 });
+  Object.defineProperty(global.WebSocket, "CLOSED", { value: 3 });
+
+  // Mock window location
+  Object.defineProperty(window, "location", {
+    value: {
+      hostname: "localhost",
+      protocol: "http:",
+      host: "localhost:5173",
+    },
+    writable: true,
+  });
+
+  // Mock document properties
+  Object.defineProperty(document, "visibilityState", {
+    value: "visible",
+    writable: true,
+  });
+
+  // Reset WebSocket constructor mock
+  mockWebSocketConstructor.mockReturnValue(mockWebSocket);
+
+  // Reset all mock functions
+  mockWebSocket.send.mockClear();
+  mockWebSocket.close.mockClear();
+
+  // Mock console methods to avoid noise in tests
+  vi.spyOn(console, "log").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => {});
+}
+
+describe("GameContext WebSocket - Initial Connection", () => {
+  beforeEach(setupTestEnvironment);
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
-  describe("Initial Connection", () => {
+  describe("Basic Connection", () => {
     it("should connect to WebSocket on mount", () => {
       renderHook(() => useGame(), { wrapper: createWrapper() });
 
@@ -133,10 +128,18 @@ describe.skip("GameContext WebSocket Reconnection", () => {
       expect(result.current.connectionStatus).toBe("connected");
     });
   });
+});
 
-  describe("Progressive Backoff Reconnection", () => {
+describe("GameContext WebSocket - Progressive Backoff", () => {
+  beforeEach(setupTestEnvironment);
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  describe("Reconnection Logic", () => {
     it("should attempt immediate reconnection on first disconnect", () => {
-      const { result } = renderHook(() => useGame(), {
+      renderHook(() => useGame(), {
         wrapper: createWrapper(),
       });
 
@@ -161,7 +164,7 @@ describe.skip("GameContext WebSocket Reconnection", () => {
     });
 
     it("should use progressive delays for subsequent reconnection attempts", () => {
-      const { result } = renderHook(() => useGame(), {
+      renderHook(() => useGame(), {
         wrapper: createWrapper(),
       });
 
@@ -171,13 +174,17 @@ describe.skip("GameContext WebSocket Reconnection", () => {
         simulateWebSocketClose();
       });
 
-      vi.clearAllMocks();
-
-      // First reconnection attempt (0ms delay)
+      // First reconnection attempt (0ms delay) - should happen immediately
       act(() => {
         vi.advanceTimersByTime(0);
-        simulateWebSocketClose(); // Fail immediately
       });
+
+      // Now simulate that first reconnection failing immediately
+      act(() => {
+        simulateWebSocketClose();
+      });
+
+      vi.clearAllMocks();
 
       // Second reconnection attempt (100ms delay)
       act(() => {
@@ -209,7 +216,7 @@ describe.skip("GameContext WebSocket Reconnection", () => {
     });
 
     it("should cap reconnection delay at 10 seconds", () => {
-      const { result } = renderHook(() => useGame(), {
+      renderHook(() => useGame(), {
         wrapper: createWrapper(),
       });
 
@@ -226,8 +233,16 @@ describe.skip("GameContext WebSocket Reconnection", () => {
       expect(mockWebSocketConstructor).toHaveBeenCalled();
     });
   });
+});
 
-  describe("Circuit Breaker", () => {
+describe("GameContext WebSocket - Circuit Breaker", () => {
+  beforeEach(setupTestEnvironment);
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  describe("Connection Limits", () => {
     it("should stop reconnection attempts after 10 failures in 5-minute window", () => {
       const { result } = renderHook(() => useGame(), {
         wrapper: createWrapper(),
@@ -255,7 +270,7 @@ describe.skip("GameContext WebSocket Reconnection", () => {
     });
 
     it("should reset circuit breaker after 5-minute window", () => {
-      const { result } = renderHook(() => useGame(), {
+      renderHook(() => useGame(), {
         wrapper: createWrapper(),
       });
 
@@ -284,62 +299,83 @@ describe.skip("GameContext WebSocket Reconnection", () => {
       expect(mockWebSocketConstructor).toHaveBeenCalled();
     });
   });
+});
 
-  describe("Page Visibility API Integration", () => {
-    beforeEach(() => {
-      // Mock addEventListener/removeEventListener
-      vi.spyOn(document, "addEventListener");
-      vi.spyOn(document, "removeEventListener");
-      vi.spyOn(window, "addEventListener");
-      vi.spyOn(window, "removeEventListener");
-    });
+describe("GameContext WebSocket - Page Visibility", () => {
+  beforeEach(setupTestEnvironment);
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
 
+  describe("Visibility Events", () => {
     it("should register visibility change event listeners", () => {
+      // Spy on addEventListener before rendering
+      const documentAddEventListenerSpy = vi.spyOn(
+        document,
+        "addEventListener",
+      );
+      const windowAddEventListenerSpy = vi.spyOn(window, "addEventListener");
+
       renderHook(() => useGame(), { wrapper: createWrapper() });
 
-      expect(document.addEventListener).toHaveBeenCalledWith(
+      expect(documentAddEventListenerSpy).toHaveBeenCalledWith(
         "visibilitychange",
         expect.any(Function),
       );
-      expect(window.addEventListener).toHaveBeenCalledWith(
+      expect(windowAddEventListenerSpy).toHaveBeenCalledWith(
         "pageshow",
         expect.any(Function),
       );
+
+      documentAddEventListenerSpy.mockRestore();
+      windowAddEventListenerSpy.mockRestore();
     });
 
     it("should attempt immediate reconnection when page becomes visible", () => {
+      // This test verifies the page visibility integration is working.
+      // Since the previous test already verifies that event listeners are registered,
+      // we can simplify this test to focus on the behavior rather than the exact mechanism.
+
       const { result } = renderHook(() => useGame(), {
         wrapper: createWrapper(),
       });
 
-      // Simulate disconnection
+      // Establish connection then disconnect
       act(() => {
         simulateWebSocketOpen();
         simulateWebSocketClose();
       });
 
+      expect(result.current.isConnected).toBe(false);
+
+      // Clear the mock calls from initial setup
       vi.clearAllMocks();
 
-      // Simulate page becoming visible
-      mockDocument.visibilityState = "visible";
+      // Simulate a page visibility change by dispatching the event
+      // This tests that the visibility API integration works end-to-end
+      Object.defineProperty(document, "visibilityState", {
+        value: "visible",
+        writable: true,
+      });
 
-      // Get the actual visibility change handler from the mock calls
-      const visibilityChangeHandler =
-        mockDocument.addEventListener.mock.calls.find(
-          ([event]) => event === "visibilitychange",
-        )?.[1];
+      act(() => {
+        // Trigger visibility change event directly
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
 
-      if (visibilityChangeHandler) {
-        act(() => {
-          visibilityChangeHandler();
-        });
-      }
-
+      // Should attempt reconnection when page becomes visible
       expect(mockWebSocketConstructor).toHaveBeenCalled();
     });
 
     it("should not reconnect when page is hidden", () => {
-      const { result } = renderHook(() => useGame(), {
+      // Spy on addEventListener to capture handlers
+      const documentAddEventListenerSpy = vi.spyOn(
+        document,
+        "addEventListener",
+      );
+
+      renderHook(() => useGame(), {
         wrapper: createWrapper(),
       });
 
@@ -352,28 +388,42 @@ describe.skip("GameContext WebSocket Reconnection", () => {
       vi.clearAllMocks();
 
       // Simulate page becoming hidden
-      mockDocument.visibilityState = "hidden";
+      Object.defineProperty(document, "visibilityState", {
+        value: "hidden",
+        writable: true,
+      });
 
-      // Get the actual visibility change handler from the mock calls
+      // Get the actual visibility change handler from the spy calls
       const visibilityChangeHandler =
-        mockDocument.addEventListener.mock.calls.find(
+        documentAddEventListenerSpy.mock.calls.find(
           ([event]) => event === "visibilitychange",
         )?.[1];
 
       if (visibilityChangeHandler) {
         act(() => {
-          visibilityChangeHandler();
+          (visibilityChangeHandler as EventListener)(
+            new Event("visibilitychange"),
+          );
         });
       }
 
       // Should not attempt immediate reconnection when hidden
       expect(mockWebSocketConstructor).not.toHaveBeenCalled();
+      documentAddEventListenerSpy.mockRestore();
     });
   });
+});
 
-  describe("Heartbeat Monitoring", () => {
+describe("GameContext WebSocket - Heartbeat", () => {
+  beforeEach(setupTestEnvironment);
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  describe("Health Monitoring", () => {
     it("should send periodic ping messages when connected", () => {
-      const { result } = renderHook(() => useGame(), {
+      renderHook(() => useGame(), {
         wrapper: createWrapper(),
       });
 
@@ -418,7 +468,7 @@ describe.skip("GameContext WebSocket Reconnection", () => {
     });
 
     it("should stop heartbeat when disconnected", () => {
-      const { result } = renderHook(() => useGame(), {
+      renderHook(() => useGame(), {
         wrapper: createWrapper(),
       });
 
@@ -437,8 +487,16 @@ describe.skip("GameContext WebSocket Reconnection", () => {
       expect(mockWebSocket.send).not.toHaveBeenCalled();
     });
   });
+});
 
-  describe("Connection State Management", () => {
+describe("GameContext WebSocket - State Management", () => {
+  beforeEach(setupTestEnvironment);
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  describe("Connection States", () => {
     it("should update connection status through all states", () => {
       const { result } = renderHook(() => useGame(), {
         wrapper: createWrapper(),
@@ -474,7 +532,7 @@ describe.skip("GameContext WebSocket Reconnection", () => {
     });
 
     it("should prevent multiple simultaneous connections", () => {
-      const { result } = renderHook(() => useGame(), {
+      renderHook(() => useGame(), {
         wrapper: createWrapper(),
       });
 
@@ -497,7 +555,7 @@ describe.skip("GameContext WebSocket Reconnection", () => {
 
   describe("Game State Reconnection", () => {
     it("should send RECONNECT message when connection is restored with existing game", () => {
-      const { result } = renderHook(() => useGame(), {
+      renderHook(() => useGame(), {
         wrapper: createWrapper(),
       });
 
@@ -589,6 +647,16 @@ describe.skip("GameContext WebSocket Reconnection", () => {
 
   describe("Cleanup", () => {
     it("should clean up resources on unmount", () => {
+      // Spy on removeEventListener before rendering
+      const documentRemoveEventListenerSpy = vi.spyOn(
+        document,
+        "removeEventListener",
+      );
+      const windowRemoveEventListenerSpy = vi.spyOn(
+        window,
+        "removeEventListener",
+      );
+
       const { unmount } = renderHook(() => useGame(), {
         wrapper: createWrapper(),
       });
@@ -604,14 +672,17 @@ describe.skip("GameContext WebSocket Reconnection", () => {
       });
 
       expect(mockWebSocket.close).toHaveBeenCalled();
-      expect(document.removeEventListener).toHaveBeenCalledWith(
+      expect(documentRemoveEventListenerSpy).toHaveBeenCalledWith(
         "visibilitychange",
         expect.any(Function),
       );
-      expect(window.removeEventListener).toHaveBeenCalledWith(
+      expect(windowRemoveEventListenerSpy).toHaveBeenCalledWith(
         "pageshow",
         expect.any(Function),
       );
+
+      documentRemoveEventListenerSpy.mockRestore();
+      windowRemoveEventListenerSpy.mockRestore();
     });
   });
 });
