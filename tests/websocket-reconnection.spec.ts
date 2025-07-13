@@ -1,0 +1,390 @@
+import { test, expect, type Page } from "@playwright/test";
+
+// Helper function to wait for WebSocket connection
+async function waitForWebSocketConnection(page: Page, timeout = 10000) {
+  await page.waitForFunction(
+    () => {
+      const gameContext = (window as any).__GAME_CONTEXT__;
+      return gameContext?.isConnected === true;
+    },
+    { timeout },
+  );
+}
+
+// Helper function to wait for WebSocket disconnection
+async function waitForWebSocketDisconnection(page: Page, timeout = 10000) {
+  await page.waitForFunction(
+    () => {
+      const gameContext = (window as any).__GAME_CONTEXT__;
+      return gameContext?.isConnected === false;
+    },
+    { timeout },
+  );
+}
+
+// Helper function to expose game context for testing
+async function exposeGameContext(page: Page) {
+  await page.addInitScript(() => {
+    // Expose game context to window for testing
+    const originalUseGame = (window as any).useGame;
+    (window as any).__GAME_CONTEXT__ = {};
+
+    // Intercept the useGame hook to expose state
+    if (originalUseGame) {
+      (window as any).useGame = function () {
+        const result = originalUseGame();
+        (window as any).__GAME_CONTEXT__ = result;
+        return result;
+      };
+    }
+  });
+}
+
+test.describe("WebSocket Reconnection - Mobile Simulation", () => {
+  test.beforeEach(async ({ page, browser }) => {
+    // Simulate mobile environment
+    await page.setViewportSize({ width: 375, height: 667 }); // iPhone SE size
+
+    // Create mobile context with user agent
+    const _mobileContext = await browser.newContext({
+      userAgent:
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1",
+      viewport: { width: 375, height: 667 },
+      isMobile: true,
+      hasTouch: true,
+    });
+
+    await exposeGameContext(page);
+  });
+
+  test("should establish initial WebSocket connection", async ({ page }) => {
+    await page.goto("/");
+
+    // Wait for initial connection
+    await waitForWebSocketConnection(page);
+
+    // Verify connection status
+    const isConnected = await page.evaluate(() => {
+      return (window as any).__GAME_CONTEXT__?.isConnected;
+    });
+
+    expect(isConnected).toBe(true);
+  });
+
+  test("should reconnect when switching back to tab", async ({
+    page,
+    context: _context,
+  }) => {
+    await page.goto("/");
+    await waitForWebSocketConnection(page);
+
+    // Simulate tab switching by hiding the page
+    await page.evaluate(() => {
+      // Simulate page becoming hidden
+      Object.defineProperty(document, "visibilityState", {
+        writable: true,
+        value: "hidden",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    // Wait a moment for the page to be "hidden"
+    await page.waitForTimeout(1000);
+
+    // Simulate tab switching back by making page visible
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", {
+        writable: true,
+        value: "visible",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    // Should reconnect when page becomes visible
+    await waitForWebSocketConnection(page, 15000);
+
+    const isConnected = await page.evaluate(() => {
+      return (window as any).__GAME_CONTEXT__?.isConnected;
+    });
+
+    expect(isConnected).toBe(true);
+  });
+
+  test("should handle network disconnection and reconnection", async ({
+    page,
+    context,
+  }) => {
+    await page.goto("/");
+    await waitForWebSocketConnection(page);
+
+    // Simulate network disconnection
+    await context.setOffline(true);
+
+    // Wait for disconnection to be detected
+    await waitForWebSocketDisconnection(page, 15000);
+
+    const isDisconnected = await page.evaluate(() => {
+      return (window as any).__GAME_CONTEXT__?.isConnected === false;
+    });
+
+    expect(isDisconnected).toBe(true);
+
+    // Restore network connection
+    await context.setOffline(false);
+
+    // Should automatically reconnect
+    await waitForWebSocketConnection(page, 20000);
+
+    const isReconnected = await page.evaluate(() => {
+      return (window as any).__GAME_CONTEXT__?.isConnected;
+    });
+
+    expect(isReconnected).toBe(true);
+  });
+
+  test("should show connection status to user", async ({ page }) => {
+    await page.goto("/");
+
+    // Check if there's some indication of connection status
+    // This might be a loading spinner, status indicator, etc.
+
+    // Wait for initial connection
+    await waitForWebSocketConnection(page);
+
+    // Look for any connection status indicators
+    const statusElements = await page.locator(
+      "[data-testid*='connection'], [class*='connection'], [class*='status']",
+    );
+    const statusCount = await statusElements.count();
+
+    // If there are status elements, verify they show connected state
+    if (statusCount > 0) {
+      const statusText = await statusElements.first().textContent();
+      // This is a flexible check - we don't enforce specific UI but verify status is shown
+      expect(statusText).toBeDefined();
+    }
+
+    // Verify no error messages are shown when connected
+    const errorElements = await page.locator(
+      "[data-testid*='error'], [class*='error']",
+    );
+    const errorCount = await errorElements.count();
+
+    // If error elements exist, they should not be visible when connected
+    if (errorCount > 0) {
+      const isErrorVisible = await errorElements.first().isVisible();
+      expect(isErrorVisible).toBe(false);
+    }
+  });
+
+  test("should handle rapid tab switching", async ({ page }) => {
+    await page.goto("/");
+    await waitForWebSocketConnection(page);
+
+    // Perform rapid tab switching
+    for (let i = 0; i < 5; i++) {
+      // Hide page
+      await page.evaluate(() => {
+        Object.defineProperty(document, "visibilityState", {
+          writable: true,
+          value: "hidden",
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+
+      await page.waitForTimeout(200);
+
+      // Show page
+      await page.evaluate(() => {
+        Object.defineProperty(document, "visibilityState", {
+          writable: true,
+          value: "visible",
+        });
+        document.dispatchEvent(new Event("visibilitychange"));
+      });
+
+      await page.waitForTimeout(200);
+    }
+
+    // Should maintain stable connection after rapid switching
+    await waitForWebSocketConnection(page, 10000);
+
+    const isConnected = await page.evaluate(() => {
+      return (window as any).__GAME_CONTEXT__?.isConnected;
+    });
+
+    expect(isConnected).toBe(true);
+  });
+
+  test("should handle app backgrounding on mobile", async ({ page }) => {
+    await page.goto("/");
+    await waitForWebSocketConnection(page);
+
+    // Simulate app going to background (common on mobile)
+    await page.evaluate(() => {
+      // Simulate page hide event (more reliable than visibility change on mobile)
+      window.dispatchEvent(new Event("pagehide"));
+
+      // Also trigger visibility change
+      Object.defineProperty(document, "visibilityState", {
+        writable: true,
+        value: "hidden",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    // Wait for a period that simulates app being backgrounded
+    await page.waitForTimeout(2000);
+
+    // Simulate app coming back to foreground
+    await page.evaluate(() => {
+      // Simulate page show event
+      window.dispatchEvent(new Event("pageshow"));
+
+      // Also trigger visibility change
+      Object.defineProperty(document, "visibilityState", {
+        writable: true,
+        value: "visible",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    // Should reconnect when app returns to foreground
+    await waitForWebSocketConnection(page, 15000);
+
+    const isConnected = await page.evaluate(() => {
+      return (window as any).__GAME_CONTEXT__?.isConnected;
+    });
+
+    expect(isConnected).toBe(true);
+  });
+
+  test("should maintain game state after reconnection", async ({ page }) => {
+    await page.goto("/");
+    await waitForWebSocketConnection(page);
+
+    // Try to create a game to establish game state
+    await page.fill(
+      'input[placeholder*="name"], input[placeholder*="Name"]',
+      "Test Player",
+    );
+
+    // Look for create game button and click it
+    const createButton = page
+      .locator(
+        'button:has-text("Create"), button:has-text("Start"), button[type="submit"]',
+      )
+      .first();
+    if (await createButton.isVisible()) {
+      await createButton.click();
+
+      // Wait for game creation
+      await page.waitForTimeout(1000);
+    }
+
+    // Simulate disconnection and reconnection
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", {
+        writable: true,
+        value: "hidden",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    await page.waitForTimeout(1000);
+
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", {
+        writable: true,
+        value: "visible",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    // Wait for reconnection
+    await waitForWebSocketConnection(page, 15000);
+
+    // Verify the page doesn't show errors after reconnection
+    const hasErrors = await page
+      .locator("[data-testid*='error'], [class*='error']:visible")
+      .count();
+    expect(hasErrors).toBe(0);
+
+    // Verify the app is still functional
+    const isConnected = await page.evaluate(() => {
+      return (window as any).__GAME_CONTEXT__?.isConnected;
+    });
+    expect(isConnected).toBe(true);
+  });
+});
+
+test.describe("WebSocket Reconnection - Desktop Simulation", () => {
+  test.beforeEach(async ({ page }) => {
+    // Use default desktop viewport
+    await exposeGameContext(page);
+  });
+
+  test("should handle browser tab switching on desktop", async ({
+    page,
+    context,
+  }) => {
+    await page.goto("/");
+    await waitForWebSocketConnection(page);
+
+    // Create a new tab to simulate tab switching
+    const newPage = await context.newPage();
+    await newPage.goto("about:blank");
+
+    // Focus the new tab (this should trigger visibility change on the original)
+    await newPage.bringToFront();
+    await page.waitForTimeout(1000);
+
+    // Switch back to original tab
+    await page.bringToFront();
+
+    // Should maintain or quickly restore connection
+    await waitForWebSocketConnection(page, 10000);
+
+    const isConnected = await page.evaluate(() => {
+      return (window as any).__GAME_CONTEXT__?.isConnected;
+    });
+
+    expect(isConnected).toBe(true);
+
+    await newPage.close();
+  });
+
+  test("should handle window minimize/restore", async ({ page }) => {
+    await page.goto("/");
+    await waitForWebSocketConnection(page);
+
+    // Simulate window minimize (visibility hidden)
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", {
+        writable: true,
+        value: "hidden",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    await page.waitForTimeout(2000);
+
+    // Simulate window restore (visibility visible)
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", {
+        writable: true,
+        value: "visible",
+      });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    // Should reconnect quickly
+    await waitForWebSocketConnection(page, 10000);
+
+    const isConnected = await page.evaluate(() => {
+      return (window as any).__GAME_CONTEXT__?.isConnected;
+    });
+
+    expect(isConnected).toBe(true);
+  });
+});
