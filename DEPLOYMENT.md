@@ -22,6 +22,7 @@
 ### Step 2: Upload Code to Server
 
 **Option A: Git Clone (Recommended)**
+
 ```bash
 # On your Linode server
 sudo mkdir -p /opt/geograph
@@ -30,6 +31,7 @@ git clone https://github.com/ianjmacintosh/geograph.git /opt/geograph
 ```
 
 **Option B: SCP Upload**
+
 ```bash
 # From your local machine
 scp -r /path/to/geograph imacinto@66.228.47.210:/tmp/
@@ -48,12 +50,14 @@ chmod +x deploy/deploy.sh
 **⚠️ Troubleshooting Common Issues:**
 
 If you encounter "dubious ownership" git errors:
+
 ```bash
 # Fix repository ownership (script creates 'geograph' user)
 sudo chown -R geograph:geograph /opt/geograph
 ```
 
 If build fails with "react-router: not found":
+
 ```bash
 # Install all dependencies (including dev dependencies)
 sudo -u geograph bash -c "cd /opt/geograph && npm ci"
@@ -61,8 +65,9 @@ sudo -u geograph bash -c "cd /opt/geograph && npm run build"
 ```
 
 The script will:
+
 - ✅ Install Node.js 20, Nginx, PM2
-- ✅ Create application user and directories  
+- ✅ Create application user and directories
 - ✅ Install dependencies and build app
 - ✅ Configure Nginx reverse proxy
 - ✅ Set up PM2 process management
@@ -84,12 +89,14 @@ sudo certbot renew --dry-run
 ### Step 5: Verify Deployment
 
 1. **Check services:**
+
    ```bash
    sudo -u geograph pm2 status
    sudo systemctl status nginx
    ```
 
 2. **Check logs:**
+
    ```bash
    sudo -u geograph pm2 logs
    sudo tail -f /var/log/nginx/access.log
@@ -102,11 +109,12 @@ sudo certbot renew --dry-run
 ## 📊 Monitoring on Nanode 1GB
 
 ### System Resources
+
 ```bash
 # Check memory usage
 free -h
 
-# Check disk usage  
+# Check disk usage
 df -h
 
 # Check CPU usage
@@ -119,6 +127,7 @@ sudo -u geograph pm2 monit
 ### Performance Tips
 
 1. **Monitor memory:**
+
    ```bash
    # Apps will auto-restart if memory exceeds limits
    # WebSocket server: 200MB limit
@@ -126,6 +135,7 @@ sudo -u geograph pm2 monit
    ```
 
 2. **Database cleanup:**
+
    ```bash
    # Games older than 6 hours are auto-cleaned
    # Adjust in production.env if needed
@@ -139,6 +149,7 @@ sudo -u geograph pm2 monit
 ## 🔧 Maintenance Commands
 
 ### App Management
+
 ```bash
 # Restart applications
 sudo -u geograph pm2 restart all
@@ -155,6 +166,7 @@ sudo -u geograph pm2 restart all
 ```
 
 ### Nginx Management
+
 ```bash
 # Test config
 sudo nginx -t
@@ -167,6 +179,7 @@ sudo systemctl restart nginx
 ```
 
 ### Database Backup
+
 ```bash
 # Backup database
 sudo cp /var/lib/geograph/geograph.db /var/backups/geograph-$(date +%Y%m%d).db
@@ -196,6 +209,7 @@ sudo -u geograph pm2 restart all
    - Check expiry: `sudo certbot certificates`
 
 ### Log Locations
+
 - **App logs**: `sudo -u geograph pm2 logs`
 - **Nginx logs**: `/var/log/nginx/`
 - **System logs**: `sudo journalctl -u nginx`

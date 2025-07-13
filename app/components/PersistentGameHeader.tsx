@@ -1,8 +1,8 @@
-import React, { memo } from 'react';
-import GameTimer from './GameHeader/GameTimer';
-import PlayerScore from './GameHeader/PlayerScore';
-import LeaderInfo from './GameHeader/LeaderInfo';
-import type { Game, GameRound } from '../types/game';
+import React, { memo } from "react";
+import GameTimer from "./GameHeader/GameTimer";
+import PlayerScore from "./GameHeader/PlayerScore";
+import LeaderInfo from "./GameHeader/LeaderInfo";
+import type { Game, GameRound } from "../types/game";
 
 interface PersistentGameHeaderProps {
   currentGame: Game;
@@ -26,7 +26,7 @@ export const PersistentGameHeader = memo(function PersistentGameHeader({
   leaderName,
   leaderScore,
   isCurrentPlayerLeader,
-  isAwaitingConfirmation,
+  isAwaitingConfirmation: _isAwaitingConfirmation,
   onShowScoreboard,
 }: PersistentGameHeaderProps) {
   const showResults = currentRound?.completed || false;

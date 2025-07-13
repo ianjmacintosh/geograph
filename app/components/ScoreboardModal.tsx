@@ -1,7 +1,7 @@
-import React, { memo } from 'react';
-import ScoreboardHeader from './Scoreboard/ScoreboardHeader';
-import ScoreboardList from './Scoreboard/ScoreboardList';
-import type { Game } from '../types/game';
+import React, { memo } from "react";
+import ScoreboardHeader from "./Scoreboard/ScoreboardHeader";
+import ScoreboardList from "./Scoreboard/ScoreboardList";
+import type { Game } from "../types/game";
 
 interface ScoreboardModalProps {
   isOpen: boolean;
@@ -34,7 +34,7 @@ export const ScoreboardModal = memo(function ScoreboardModal({
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
@@ -57,7 +57,9 @@ export const ScoreboardModal = memo(function ScoreboardModal({
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(roundNumber / currentGame.settings.totalRounds) * 100}%` }}
+              style={{
+                width: `${(roundNumber / currentGame.settings.totalRounds) * 100}%`,
+              }}
             ></div>
           </div>
         </div>

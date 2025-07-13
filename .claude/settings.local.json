@@ -1,27 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run typecheck:*)",
-      "Bash(curl:*)",
-      "WebFetch(domain:github.com)",
-      "Bash(git commit:*)",
-      "Bash(git checkout:*)",
-      "Bash(npm install:*)",
-      "Bash(npm test:*)",
-      "Bash(git add:*)",
-      "Bash(git push:*)",
-      "Bash(git fetch:*)",
-      "Bash(grep:*)",
-      "Bash(ls:*)",
-      "Bash(railway whoami:*)",
-      "Bash(railway status:*)",
-      "Bash(railway link:*)",
-      "Bash(railway projects:*)",
-      "Bash(railway:*)",
-      "Bash(timeout:*)",
-      "Bash(node:*)",
-      "Bash(npm run build:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npm run lint:*)"
     ],
     "deny": []
   }

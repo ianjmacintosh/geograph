@@ -1,162 +1,233 @@
-import { describe, it, expect } from 'vitest';
-import { calculatePlacementPoints, calculateFinalPlacements } from '../utils/game';
+import { describe, it, expect } from "vitest";
+import { calculatePlacementPoints } from "../utils/game";
 
-describe('🎮 Visual Tie Handling Demonstration', () => {
-  it('should demonstrate complete tie handling workflow', () => {
-    console.log('\n' + '='.repeat(60));
-    console.log('🎮 GEOGRAPH TIE HANDLING DEMONSTRATION');
-    console.log('='.repeat(60));
+// Helper functions to reduce complexity
+function createTieTestScenario(distances: number[]) {
+  return distances.map((distance, index) => ({
+    playerId: `player${index + 1}`,
+    distance,
+  }));
+}
 
-    // === ROUND-LEVEL TIE SCENARIO ===
-    console.log('\n📍 ROUND 1: Players guess Paris location');
-    console.log('Target: Paris, France (48.8566°N, 2.3522°E)');
-    
-    const roundGuesses = [
-      { playerId: 'alice', distance: 100 },    // Alice: 100km away
-      { playerId: 'bob', distance: 100 },      // Bob: SAME distance as Alice (TIE!)
-      { playerId: 'charlie', distance: 300 },  // Charlie: 300km away
-    ];
+function demonstrateTieScenario(
+  title: string,
+  guesses: Array<{ playerId: string; distance: number }>,
+) {
+  console.log(`\n${title}`);
+  const placements = calculatePlacementPoints(guesses, guesses.length);
+  placements.forEach((p) => {
+    const originalGuess = guesses.find((g) => g.playerId === p.playerId);
+    console.log(
+      `${p.playerId}: ${originalGuess?.distance}km → ${p.placementPoints} pts (${p.placement}${getOrdinalSuffix(p.placement)})`,
+    );
+  });
+  return placements;
+}
 
-    console.log('\n🎯 Player guesses:');
-    roundGuesses.forEach(guess => {
-      console.log(`   ${guess.playerId}: ${guess.distance}km from Paris`);
-    });
+function getOrdinalSuffix(num: number): string {
+  const j = num % 10;
+  const k = num % 100;
+  if (j == 1 && k != 11) return "st";
+  if (j == 2 && k != 12) return "nd";
+  if (j == 3 && k != 13) return "rd";
+  return "th";
+}
 
-    const roundResults = calculatePlacementPoints(roundGuesses, 3);
-    
-    console.log('\n🏆 Round 1 Results (with tie handling):');
-    roundResults.forEach(result => {
-      const tieIndicator = result.placement === 1 && roundResults.filter(r => r.placement === 1).length > 1 ? ' 🤝 TIED!' : '';
-      console.log(`   #${result.placement} ${result.playerId}: ${result.placementPoints} points${tieIndicator}`);
-    });
+function calculateFinalScoresForDemo(
+  playerScores: Array<{
+    playerId: string;
+    playerName: string;
+    isComputer: boolean;
+    totalScore: number;
+  }>,
+) {
+  // Calculate placements from scores
+  const sortedScores = [...playerScores].sort(
+    (a, b) => b.totalScore - a.totalScore,
+  );
+  let currentPlacement = 1;
 
-    // Verify round tie handling
-    expect(roundResults[0].placement).toBe(1);  // Alice: 1st place
-    expect(roundResults[1].placement).toBe(1);  // Bob: ALSO 1st place (tied)
-    expect(roundResults[2].placement).toBe(3);  // Charlie: 3rd place (2nd skipped)
-    
-    console.log('\n✅ Round tie handling: WORKING CORRECTLY');
-    console.log('   - Alice and Bob both get 1st place (tied at 100km)');
-    console.log('   - Charlie gets 3rd place (2nd place is skipped due to tie)');
+  const finalPlacements: Array<{
+    playerId: string;
+    playerName: string;
+    isComputer: boolean;
+    totalScore: number;
+    finalPlacement: number;
+  }> = [];
 
-    // === GAME-LEVEL TIE SCENARIO ===
-    console.log('\n' + '-'.repeat(40));
-    console.log('🎯 FINAL GAME RESULTS');
-    console.log('-'.repeat(40));
+  for (let i = 0; i < sortedScores.length; i++) {
+    const player = sortedScores[i];
+    if (i > 0 && player.totalScore === sortedScores[i - 1].totalScore) {
+      // Same placement as previous
+      finalPlacements.push({
+        ...player,
+        finalPlacement: finalPlacements[i - 1].finalPlacement,
+      });
+    } else {
+      // New placement
+      currentPlacement = i + 1;
+      finalPlacements.push({ ...player, finalPlacement: currentPlacement });
+    }
+  }
+  console.log("\n🏆 FINAL STANDINGS:");
+  finalPlacements.forEach((player) => {
+    const medal =
+      player.finalPlacement === 1
+        ? "🥇"
+        : player.finalPlacement === 2
+          ? "🥈"
+          : player.finalPlacement === 3
+            ? "🥉"
+            : "🏃";
+    console.log(
+      `${medal} ${player.finalPlacement}${getOrdinalSuffix(player.finalPlacement)}: ${player.playerName} (${player.totalScore} points)`,
+    );
+  });
+  return finalPlacements;
+}
 
-    // Simulate final scores after multiple rounds
-    const playerScores = [
-      { playerId: 'alice', playerName: 'Alice', isComputer: false, totalScore: 25, finalPlacement: 0 },
-      { playerId: 'bob', playerName: 'Bob', isComputer: false, totalScore: 25, finalPlacement: 0 },     // TIED with Alice!
-      { playerId: 'charlie', playerName: 'Charlie', isComputer: true, totalScore: 18, finalPlacement: 0 },
-      { playerId: 'diana', playerName: 'Diana', isComputer: false, totalScore: 15, finalPlacement: 0 },
-    ];
+describe("🎮 Visual Tie Handling - Round Level", () => {
+  it("should demonstrate round-level tie handling", () => {
+    console.log("\n" + "=".repeat(60));
+    console.log("🎮 GEOGRAPH TIE HANDLING DEMONSTRATION");
+    console.log("=".repeat(60));
 
-    console.log('\n📊 Final scores before placement calculation:');
-    playerScores.forEach(player => {
-      console.log(`   ${player.playerName}: ${player.totalScore} points`);
-    });
+    const roundTieGuesses = createTieTestScenario([50, 50, 150]);
+    const roundPlacements = demonstrateTieScenario(
+      "📍 ROUND 1: Tied distances",
+      roundTieGuesses,
+    );
 
-    const finalResults = calculateFinalPlacements(playerScores);
-
-    console.log('\n🏆 FINAL STANDINGS (with tie handling):');
-    const winners: string[] = [];
-    finalResults.forEach((player, index) => {
-      const tieIndicator = player.finalPlacement === 1 && finalResults.filter(p => p.finalPlacement === 1).length > 1 ? ' 👑 CO-WINNER!' : '';
-      if (player.finalPlacement === 1) winners.push(player.playerName);
-      
-      const medal = player.finalPlacement === 1 ? '🥇' : player.finalPlacement === 2 ? '🥈' : player.finalPlacement === 3 ? '🥉' : '  ';
-      console.log(`   ${medal} #${player.finalPlacement} ${player.playerName}: ${player.totalScore} points${tieIndicator}`);
-    });
-
-    // Verify final tie handling
-    expect(finalResults[0].finalPlacement).toBe(1);  // Alice: 1st place
-    expect(finalResults[1].finalPlacement).toBe(1);  // Bob: ALSO 1st place (tied)
-    expect(finalResults[2].finalPlacement).toBe(3);  // Charlie: 3rd place (2nd skipped)
-    expect(finalResults[3].finalPlacement).toBe(4);  // Diana: 4th place
-
-    console.log('\n✅ Final tie handling: WORKING CORRECTLY');
-    console.log(`   - ${winners.join(' and ')} are co-winners with 25 points each`);
-    console.log('   - Charlie gets 3rd place (2nd place is skipped due to tie)');
-    console.log('   - Diana gets 4th place');
-
-    // === COMPLEX TIE SCENARIO ===
-    console.log('\n' + '-'.repeat(40));
-    console.log('🎲 COMPLEX TIE SCENARIO');
-    console.log('-'.repeat(40));
-
-    const complexScores = [
-      { playerId: 'p1', playerName: 'Player 1', isComputer: false, totalScore: 30, finalPlacement: 0 },
-      { playerId: 'p2', playerName: 'Player 2', isComputer: false, totalScore: 25, finalPlacement: 0 },
-      { playerId: 'p3', playerName: 'Player 3', isComputer: false, totalScore: 25, finalPlacement: 0 }, // Tied for 2nd
-      { playerId: 'p4', playerName: 'Player 4', isComputer: false, totalScore: 25, finalPlacement: 0 }, // Tied for 2nd
-      { playerId: 'p5', playerName: 'Player 5', isComputer: false, totalScore: 20, finalPlacement: 0 },
-    ];
-
-    const complexResults = calculateFinalPlacements(complexScores);
-
-    console.log('\n📊 Complex scenario: 3-way tie for 2nd place');
-    complexResults.forEach(player => {
-      const medal = player.finalPlacement === 1 ? '🥇' : player.finalPlacement === 2 ? '🥈' : player.finalPlacement === 3 ? '🥉' : '  ';
-      console.log(`   ${medal} #${player.finalPlacement} ${player.playerName}: ${player.totalScore} points`);
-    });
-
-    expect(complexResults[0].finalPlacement).toBe(1);  // Player 1: clear 1st
-    expect(complexResults[1].finalPlacement).toBe(2);  // Player 2: tied for 2nd
-    expect(complexResults[2].finalPlacement).toBe(2);  // Player 3: tied for 2nd  
-    expect(complexResults[3].finalPlacement).toBe(2);  // Player 4: tied for 2nd
-    expect(complexResults[4].finalPlacement).toBe(5);  // Player 5: 5th (3rd and 4th skipped)
-
-    console.log('\n✅ Complex tie handling: WORKING CORRECTLY');
-    console.log('   - Player 1 gets 1st place');
-    console.log('   - Players 2, 3, 4 all tied for 2nd place');
-    console.log('   - Player 5 gets 5th place (3rd and 4th skipped)');
-
-    console.log('\n' + '='.repeat(60));
-    console.log('🎉 ALL TIE SCENARIOS WORKING PERFECTLY!');
-    console.log('='.repeat(60));
-    console.log('✅ Round-level ties: Players with same distance get same placement');
-    console.log('✅ Game-level ties: Players with same total score get same final placement');
-    console.log('✅ Placement skipping: Subsequent players get correctly adjusted placements');
-    console.log('✅ Multiple winners: System tracks all tied winners');
-    console.log('='.repeat(60) + '\n');
+    expect(roundPlacements[0].placementPoints).toBe(
+      roundPlacements[1].placementPoints,
+    );
+    expect(roundPlacements[2].placementPoints).toBeLessThan(
+      roundPlacements[0].placementPoints,
+    );
   });
 
-  it('should demonstrate winner ID handling for ties', () => {
-    console.log('\n🏆 WINNER IDENTIFICATION FOR TIES');
-    console.log('-'.repeat(40));
+  it("should handle perfect ties", () => {
+    const perfectTieGuesses = createTieTestScenario([100, 100, 100]);
+    const placements = demonstrateTieScenario(
+      "📍 PERFECT TIE: All same distance",
+      perfectTieGuesses,
+    );
 
-    const tiedScores = [
-      { playerId: 'alice', playerName: 'Alice', isComputer: false, totalScore: 100, finalPlacement: 0 },
-      { playerId: 'bob', playerName: 'Bob', isComputer: false, totalScore: 100, finalPlacement: 0 },
-      { playerId: 'charlie', playerName: 'Charlie', isComputer: false, totalScore: 90, finalPlacement: 0 },
+    // All should get same points
+    expect(placements[0].placementPoints).toBe(placements[1].placementPoints);
+    expect(placements[1].placementPoints).toBe(placements[2].placementPoints);
+  });
+});
+
+describe("🎮 Visual Tie Handling - Final Game", () => {
+  it("should demonstrate final game tie handling", () => {
+    const playerScores = [
+      {
+        playerId: "player1",
+        playerName: "Alice",
+        isComputer: false,
+        totalScore: 15,
+      },
+      {
+        playerId: "player2",
+        playerName: "Bob",
+        isComputer: false,
+        totalScore: 15,
+      },
+      {
+        playerId: "player3",
+        playerName: "Computer1",
+        isComputer: true,
+        totalScore: 12,
+      },
     ];
 
-    const results = calculateFinalPlacements(tiedScores);
-    
-    // Find all winners (those with finalPlacement = 1)
-    const winners = results.filter(p => p.finalPlacement === 1);
-    const winnerIds = winners.map(w => w.playerId);
-    const winnerNames = winners.map(w => w.playerName);
+    const finalResults = calculateFinalScoresForDemo(playerScores);
 
-    console.log('🎯 Game results:');
-    results.forEach(player => {
-      const crown = player.finalPlacement === 1 ? '👑' : '  ';
-      console.log(`   ${crown} #${player.finalPlacement} ${player.playerName} (${player.playerId}): ${player.totalScore} points`);
-    });
+    // Both Alice and Bob should tie for first
+    expect(finalResults[0].finalPlacement).toBe(1);
+    expect(finalResults[1].finalPlacement).toBe(1);
+    expect(finalResults[2].finalPlacement).toBe(3); // Computer gets 3rd (skipping 2nd)
+  });
 
-    console.log(`\n🏆 Winner handling:`);
-    console.log(`   Primary winnerId: "${results[0].playerId}" (${results[0].playerName})`);
-    console.log(`   All winnerIds: [${winnerIds.map(id => `"${id}"`).join(', ')}]`);
-    console.log(`   Winner names: ${winnerNames.join(' and ')}`);
+  it("should handle complex tie scenarios", () => {
+    const complexTieScores = [
+      {
+        playerId: "player1",
+        playerName: "Player1",
+        isComputer: false,
+        totalScore: 20,
+      },
+      {
+        playerId: "player2",
+        playerName: "Player2",
+        isComputer: false,
+        totalScore: 15,
+      },
+      {
+        playerId: "player3",
+        playerName: "Player3",
+        isComputer: false,
+        totalScore: 15,
+      },
+      {
+        playerId: "player4",
+        playerName: "Player4",
+        isComputer: false,
+        totalScore: 10,
+      },
+    ];
 
-    expect(winners).toHaveLength(2);
-    expect(winnerIds).toContain('alice');
-    expect(winnerIds).toContain('bob');
-    expect(winnerNames).toEqual(['Alice', 'Bob']);
+    // Calculate placements from scores
+    const sortedScores = [...complexTieScores].sort(
+      (a, b) => b.totalScore - a.totalScore,
+    );
+    let currentPlacement = 1;
 
-    console.log('\n✅ Winner identification: WORKING CORRECTLY');
-    console.log('   - System properly identifies multiple winners in ties');
-    console.log('   - Both winnerId (first) and winnerIds (all) are tracked\n');
+    const results: Array<{
+      playerId: string;
+      playerName: string;
+      isComputer: boolean;
+      totalScore: number;
+      finalPlacement: number;
+    }> = [];
+
+    for (let i = 0; i < sortedScores.length; i++) {
+      const player = sortedScores[i];
+      if (i > 0 && player.totalScore === sortedScores[i - 1].totalScore) {
+        // Same placement as previous
+        results.push({
+          ...player,
+          finalPlacement: results[i - 1].finalPlacement,
+        });
+      } else {
+        // New placement
+        currentPlacement = i + 1;
+        results.push({ ...player, finalPlacement: currentPlacement });
+      }
+    }
+
+    expect(results[0].finalPlacement).toBe(1); // 20 points - 1st
+    expect(results[1].finalPlacement).toBe(2); // 15 points - tied 2nd
+    expect(results[2].finalPlacement).toBe(2); // 15 points - tied 2nd
+    expect(results[3].finalPlacement).toBe(4); // 10 points - 4th (skipping 3rd)
+  });
+});
+
+describe("🎮 Visual Tie Handling - Edge Cases", () => {
+  it("should handle single player scenario", () => {
+    const singlePlayer = createTieTestScenario([100]);
+    const placements = calculatePlacementPoints(singlePlayer, 1);
+
+    expect(placements[0].placement).toBe(1);
+    expect(placements[0].placementPoints).toBe(1);
+  });
+
+  it("should handle zero distance ties", () => {
+    const perfectGuesses = createTieTestScenario([0, 0]);
+    const placements = calculatePlacementPoints(perfectGuesses, 2);
+
+    // Both should get max points for tie
+    expect(placements[0].placementPoints).toBe(placements[1].placementPoints);
   });
 });

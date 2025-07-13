@@ -1,17 +1,25 @@
-import { renderHook, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { useGameTimer, type UseGameTimerProps } from '../useGameTimer';
-import type { GameRound } from '../../types/game';
+import { renderHook, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { useGameTimer, type UseGameTimerProps } from "../useGameTimer";
+import type { GameRound } from "../../types/game";
 
 const mockCurrentRound: GameRound = {
-  id: 'round1',
-  city: { id: 'city1', name: 'Test City', country: 'Test Country', lat: 0, lng: 0, population: 100000, difficulty: 'easy' },
+  id: "round1",
+  city: {
+    id: "city1",
+    name: "Test City",
+    country: "Test Country",
+    lat: 0,
+    lng: 0,
+    population: 100000,
+    difficulty: "easy",
+  },
   guesses: [],
   completed: false,
   startTime: Date.now(),
 };
 
-describe('useGameTimer', () => {
+describe("useGameTimer", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -20,26 +28,26 @@ describe('useGameTimer', () => {
     vi.restoreAllMocks();
   });
 
-  it('should initialize timeLeft to roundTimeLimit in seconds', () => {
+  it("should initialize timeLeft to roundTimeLimit in seconds", () => {
     const { result } = renderHook(() =>
       useGameTimer({
         currentRound: mockCurrentRound,
         showResults: false,
         roundTimeLimit: 30000, // 30 seconds
         onTimerEnd: vi.fn(),
-      })
+      }),
     );
     expect(result.current).toBe(30);
   });
 
-  it('should countdown timeLeft every second', () => {
+  it("should countdown timeLeft every second", () => {
     const { result } = renderHook(() =>
       useGameTimer({
         currentRound: mockCurrentRound,
         showResults: false,
         roundTimeLimit: 5000, // 5 seconds
         onTimerEnd: vi.fn(),
-      })
+      }),
     );
     expect(result.current).toBe(5);
     act(() => {
@@ -52,7 +60,7 @@ describe('useGameTimer', () => {
     expect(result.current).toBe(1);
   });
 
-  it('should call onTimerEnd when timeLeft reaches 0', () => {
+  it("should call onTimerEnd when timeLeft reaches 0", () => {
     const onTimerEndMock = vi.fn();
     const { result } = renderHook(() =>
       useGameTimer({
@@ -60,7 +68,7 @@ describe('useGameTimer', () => {
         showResults: false,
         roundTimeLimit: 2000, // 2 seconds
         onTimerEnd: onTimerEndMock,
-      })
+      }),
     );
     expect(result.current).toBe(2);
     act(() => {
@@ -70,14 +78,14 @@ describe('useGameTimer', () => {
     expect(onTimerEndMock).toHaveBeenCalledTimes(1);
   });
 
-  it('should not countdown if showResults is true', () => {
+  it("should not countdown if showResults is true", () => {
     const { result } = renderHook(() =>
       useGameTimer({
         currentRound: mockCurrentRound,
         showResults: true, // Results are shown
         roundTimeLimit: 5000,
         onTimerEnd: vi.fn(),
-      })
+      }),
     );
     const initialTime = result.current; // Should be 5 initially
     act(() => {
@@ -86,14 +94,14 @@ describe('useGameTimer', () => {
     expect(result.current).toBe(initialTime); // Time should not have changed
   });
 
-  it('should not countdown if currentRound is null', () => {
-     const { result } = renderHook(() =>
+  it("should not countdown if currentRound is null", () => {
+    const { result } = renderHook(() =>
       useGameTimer({
         currentRound: null, // No current round
         showResults: false,
         roundTimeLimit: 5000,
         onTimerEnd: vi.fn(),
-      })
+      }),
     );
     const initialTime = result.current; // Should be 5
     act(() => {
@@ -102,7 +110,7 @@ describe('useGameTimer', () => {
     expect(result.current).toBe(initialTime);
   });
 
-  it('should reset timeLeft when currentRound ID changes and not showing results', () => {
+  it("should reset timeLeft when currentRound ID changes and not showing results", () => {
     const { result, rerender } = renderHook(
       (props: UseGameTimerProps) => useGameTimer(props),
       {
@@ -112,7 +120,7 @@ describe('useGameTimer', () => {
           roundTimeLimit: 10000, // 10s
           onTimerEnd: vi.fn(),
         },
-      }
+      },
     );
     expect(result.current).toBe(10);
     act(() => {
@@ -120,7 +128,7 @@ describe('useGameTimer', () => {
     });
     expect(result.current).toBe(7);
 
-    const newRound: GameRound = { ...mockCurrentRound, id: 'round2' };
+    const newRound: GameRound = { ...mockCurrentRound, id: "round2" };
     rerender({
       currentRound: newRound,
       showResults: false,
@@ -130,7 +138,7 @@ describe('useGameTimer', () => {
     expect(result.current).toBe(15); // Should reset to new round's time limit
   });
 
-  it('should not call onTimerEnd multiple times if already at 0', () => {
+  it("should not call onTimerEnd multiple times if already at 0", () => {
     const onTimerEndMock = vi.fn();
     const { result } = renderHook(() =>
       useGameTimer({
@@ -138,7 +146,7 @@ describe('useGameTimer', () => {
         showResults: false,
         roundTimeLimit: 1000, // 1 second
         onTimerEnd: onTimerEndMock,
-      })
+      }),
     );
     act(() => {
       vi.advanceTimersByTime(1000); // Timer reaches 0, onTimerEnd called
@@ -153,15 +161,15 @@ describe('useGameTimer', () => {
     expect(onTimerEndMock).toHaveBeenCalledTimes(1); // Should not be called again
   });
 
-  it('should clear interval on unmount', () => {
-    const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
+  it("should clear interval on unmount", () => {
+    const clearIntervalSpy = vi.spyOn(global, "clearInterval");
     const { unmount } = renderHook(() =>
       useGameTimer({
         currentRound: mockCurrentRound,
         showResults: false,
         roundTimeLimit: 5000,
         onTimerEnd: vi.fn(),
-      })
+      }),
     );
     unmount();
     expect(clearIntervalSpy).toHaveBeenCalled();
