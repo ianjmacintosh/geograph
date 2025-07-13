@@ -111,8 +111,8 @@ test.describe("WebSocket Ping Message Handling", () => {
     await expect(pingWarning).not.toBeVisible();
 
     // Should still be able to interact with the application
-    const createGameButton = page.locator("button:has-text('Create Game')");
-    await expect(createGameButton).toBeVisible();
+    const playButton = page.locator("button:has-text('Play')");
+    await expect(playButton).toBeVisible();
   });
 
   test("should handle ping/pong cycle without UI warnings - quick test", async ({

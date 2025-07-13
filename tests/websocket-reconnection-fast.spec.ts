@@ -69,9 +69,7 @@ test.describe("WebSocket Reconnection - Essential Tests", () => {
     await expect(page.locator("text=⚠️ Unknown message type: ping")).not.toBeVisible();
     await expect(page.locator("text=⚠️ Unknown message type: pong")).not.toBeVisible();
 
-    // Should be able to interact with the app (check for game creation UI)
-    await expect(
-      page.locator("button").filter({ hasText: /create/i })
-    ).toBeVisible();
+    // Should be able to interact with the app (check for play button)
+    await expect(page.locator("button:has-text('Play')")).toBeVisible();
   });
 });
