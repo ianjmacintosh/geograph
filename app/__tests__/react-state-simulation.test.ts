@@ -70,7 +70,7 @@ describe("React State Simulation - Sequential Updates", () => {
       createSimulationPlayer("player3"),
     ];
 
-    let gameState = { guesses: [] };
+    const gameState = { guesses: [] as any[] };
 
     // Player 1 guesses
     const guess1 = createSimulationGuess("player1", 100);

@@ -138,7 +138,7 @@ describe.skip("Flickering Detection Test - Refactored", () => {
     const guess1 = createMockGuess("player1", 50);
     const guess2 = createMockGuess("player2", 150);
 
-    mockRound.guesses = [guess1, guess2];
+    mockRound.guesses = [guess1, guess2] as any;
 
     // Simulate placement calculation
     guess1.placementPoints = 2; // First place

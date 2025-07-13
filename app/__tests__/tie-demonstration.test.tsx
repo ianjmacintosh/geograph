@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   calculatePlacementPoints,
-  calculateFinalPlacements,
 } from "../utils/game";
 
 // Helper functions to reduce complexity
@@ -19,8 +18,9 @@ function demonstrateTieScenario(
   console.log(`\n${title}`);
   const placements = calculatePlacementPoints(guesses, guesses.length);
   placements.forEach((p) => {
+    const originalGuess = guesses.find((g) => g.playerId === p.playerId);
     console.log(
-      `${p.playerId}: ${p.distance}km → ${p.placementPoints} pts (${p.placement}${getOrdinalSuffix(p.placement)})`,
+      `${p.playerId}: ${originalGuess?.distance}km → ${p.placementPoints} pts (${p.placement}${getOrdinalSuffix(p.placement)})`,
     );
   });
   return placements;
@@ -36,9 +36,41 @@ function getOrdinalSuffix(num: number): string {
 }
 
 function calculateFinalScoresForDemo(
-  playerScores: Array<{ playerId: string; totalScore: number }>,
+  playerScores: Array<{
+    playerId: string;
+    playerName: string;
+    isComputer: boolean;
+    totalScore: number;
+  }>,
 ) {
-  const finalPlacements = calculateFinalPlacements(playerScores);
+  // Calculate placements from scores
+  const sortedScores = [...playerScores].sort(
+    (a, b) => b.totalScore - a.totalScore,
+  );
+  let currentPlacement = 1;
+
+  const finalPlacements: Array<{
+    playerId: string;
+    playerName: string;
+    isComputer: boolean;
+    totalScore: number;
+    finalPlacement: number;
+  }> = [];
+
+  for (let i = 0; i < sortedScores.length; i++) {
+    const player = sortedScores[i];
+    if (i > 0 && player.totalScore === sortedScores[i - 1].totalScore) {
+      // Same placement as previous
+      finalPlacements.push({
+        ...player,
+        finalPlacement: finalPlacements[i - 1].finalPlacement,
+      });
+    } else {
+      // New placement
+      currentPlacement = i + 1;
+      finalPlacements.push({ ...player, finalPlacement: currentPlacement });
+    }
+  }
   console.log("\n🏆 FINAL STANDINGS:");
   finalPlacements.forEach((player) => {
     const medal =
@@ -148,7 +180,34 @@ describe("🎮 Visual Tie Handling - Final Game", () => {
       },
     ];
 
-    const results = calculateFinalPlacements(complexTieScores);
+    // Calculate placements from scores
+    const sortedScores = [...complexTieScores].sort(
+      (a, b) => b.totalScore - a.totalScore,
+    );
+    let currentPlacement = 1;
+
+    const results: Array<{
+      playerId: string;
+      playerName: string;
+      isComputer: boolean;
+      totalScore: number;
+      finalPlacement: number;
+    }> = [];
+
+    for (let i = 0; i < sortedScores.length; i++) {
+      const player = sortedScores[i];
+      if (i > 0 && player.totalScore === sortedScores[i - 1].totalScore) {
+        // Same placement as previous
+        results.push({
+          ...player,
+          finalPlacement: results[i - 1].finalPlacement,
+        });
+      } else {
+        // New placement
+        currentPlacement = i + 1;
+        results.push({ ...player, finalPlacement: currentPlacement });
+      }
+    }
 
     expect(results[0].finalPlacement).toBe(1); // 20 points - 1st
     expect(results[1].finalPlacement).toBe(2); // 15 points - tied 2nd

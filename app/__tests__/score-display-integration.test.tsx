@@ -37,43 +37,173 @@ vi.mock("../data/cities", () => ({
 }));
 
 // Helper functions to reduce complexity
+function createIntegrationTestGame(): GameType {
+  return {
+    id: "1",
+    code: "123456",
+    hostId: "player1",
+    players: [
+      { id: "player1", name: "Human Player", isComputer: false, score: 0 },
+      {
+        id: "player2",
+        name: "Computer1",
+        isComputer: true,
+        score: 0,
+        accuracy: 0.5,
+      },
+      {
+        id: "player3",
+        name: "Computer2",
+        isComputer: true,
+        score: 0,
+        accuracy: 0.7,
+      },
+    ],
+    rounds: [],
+    status: "playing" as const,
+    settings: {
+      maxPlayers: 8,
+      roundTimeLimit: 30000,
+      totalRounds: 3,
+      cityDifficulty: "easy" as const,
+    },
+    createdAt: Date.now(),
+  };
+}
+
+function createMockRoundWithScores(): GameRound {
+  return {
+    id: "round1",
+    city: {
+      id: "1",
+      name: "Test City",
+      country: "Test Country",
+      lat: 40.7128,
+      lng: -74.006,
+      population: 1000000,
+      difficulty: "easy" as const,
+    },
+    guesses: [
+      {
+        playerId: "player1",
+        lat: 40.7128,
+        lng: -74.006,
+        distance: 0,
+        placementPoints: 3,
+        bonusPoints: 5,
+        totalPoints: 8,
+        placement: 1,
+        timestamp: Date.now(),
+      },
+      {
+        playerId: "player2",
+        lat: 41.0,
+        lng: -73.0,
+        distance: 150,
+        placementPoints: 2,
+        bonusPoints: 2,
+        totalPoints: 4,
+        placement: 2,
+        timestamp: Date.now(),
+      },
+      {
+        playerId: "player3",
+        lat: 39.0,
+        lng: -75.0,
+        distance: 300,
+        placementPoints: 1,
+        bonusPoints: 2,
+        totalPoints: 3,
+        placement: 3,
+        timestamp: Date.now(),
+      },
+    ],
+    completed: false,
+    startTime: Date.now(),
+  };
+}
+
+function createMockRoundWithoutScores(): GameRound {
+  return {
+    id: "round1",
+    city: {
+      id: "1",
+      name: "Test City",
+      country: "Test Country",
+      lat: 40.7128,
+      lng: -74.006,
+      population: 1000000,
+      difficulty: "easy" as const,
+    },
+    guesses: [
+      {
+        playerId: "player1",
+        lat: 40.7128,
+        lng: -74.006,
+        distance: 0,
+        placementPoints: 0,
+        bonusPoints: 5,
+        totalPoints: 0,
+        placement: 0,
+        timestamp: Date.now(),
+      },
+    ],
+    completed: false,
+    startTime: Date.now(),
+  };
+}
+
+function createScoreDisplayComponent(mockRound: GameRound) {
+  const ScoreDisplayComponent = () => {
+    const { currentGame } = mockUseGame();
+    const [currentRound] = vi.mocked([mockRound]);
+
+    if (!currentGame || !currentRound) return <div>Loading...</div>;
+
+    const getPlayerScores = () => {
+      return currentGame.players
+        .map((player: any) => {
+          let totalScore = 0;
+
+          if (currentRound) {
+            const playerGuess = currentRound.guesses.find(
+              (g) => g.playerId === player.id,
+            );
+            if (playerGuess && playerGuess.totalPoints > 0) {
+              totalScore += playerGuess.totalPoints;
+            }
+          }
+
+          return { ...player, totalScore };
+        })
+        .sort((a: any, b: any) => b.totalScore - a.totalScore);
+    };
+
+    const playerScores = getPlayerScores();
+
+    return (
+      <div>
+        <h2>Scoreboard</h2>
+        {playerScores.map((player: any) => (
+          <div key={player.id}>
+            <span>{player.name}</span>
+            <span data-testid={`player-score-${player.id}`}>
+              {player.totalScore}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  return ScoreDisplayComponent;
+}
 
 describe.skip("Score Display Integration - Core", () => {
   let mockGame: GameType;
 
   beforeEach(() => {
-    mockGame = {
-      id: "1",
-      code: "123456",
-      hostId: "player1",
-      players: [
-        { id: "player1", name: "Human Player", isComputer: false, score: 0 },
-        {
-          id: "player2",
-          name: "Computer1",
-          isComputer: true,
-          score: 0,
-          accuracy: 0.5,
-        },
-        {
-          id: "player3",
-          name: "Computer2",
-          isComputer: true,
-          score: 0,
-          accuracy: 0.7,
-        },
-      ],
-      rounds: [],
-      status: "playing" as const,
-      settings: {
-        maxPlayers: 8,
-        roundTimeLimit: 30000,
-        totalRounds: 3,
-        cityDifficulty: "easy" as const,
-      },
-      createdAt: Date.now(),
-    };
-
+    mockGame = createIntegrationTestGame();
     mockUseGame.mockReturnValue({
       currentGame: mockGame,
       clearGame: vi.fn(),
@@ -94,104 +224,8 @@ describe.skip("Score Display Integration - Core", () => {
   });
 
   it("should display scores correctly when round has calculated points", () => {
-    // Create a mock round with calculated scores
-    const mockRound: GameRound = {
-      id: "round1",
-      city: {
-        id: "1",
-        name: "Test City",
-        country: "Test Country",
-        lat: 40.7128,
-        lng: -74.006,
-        population: 1000000,
-        difficulty: "easy" as const,
-      },
-      guesses: [
-        {
-          playerId: "player1",
-          lat: 40.7128,
-          lng: -74.006,
-          distance: 0,
-          placementPoints: 3,
-          bonusPoints: 5,
-          totalPoints: 8,
-          placement: 1,
-          timestamp: Date.now(),
-        },
-        {
-          playerId: "player2",
-          lat: 41.0,
-          lng: -73.0,
-          distance: 150,
-          placementPoints: 2,
-          bonusPoints: 2,
-          totalPoints: 4,
-          placement: 2,
-          timestamp: Date.now(),
-        },
-        {
-          playerId: "player3",
-          lat: 39.0,
-          lng: -75.0,
-          distance: 300,
-          placementPoints: 1,
-          bonusPoints: 2,
-          totalPoints: 3,
-          placement: 3,
-          timestamp: Date.now(),
-        },
-      ],
-      completed: false,
-      startTime: Date.now(),
-    };
-
-    // Mock the Game component with a current round that has calculated scores
-    const GameWithRound = () => {
-      const { currentGame } = mockUseGame();
-      const [currentRound] = vi.mocked([mockRound]);
-
-      if (!currentGame || !currentRound) return <div>Loading...</div>;
-
-      // Simulate the getPlayerScores function logic
-      const getPlayerScores = () => {
-        return currentGame.players
-          .map((player: any) => {
-            let totalScore = 0;
-
-            // Add scores from current round if it has calculated placement points
-            if (currentRound) {
-              const playerGuess = currentRound.guesses.find(
-                (g) => g.playerId === player.id,
-              );
-              if (playerGuess && playerGuess.totalPoints > 0) {
-                totalScore += playerGuess.totalPoints;
-              }
-            }
-
-            return {
-              ...player,
-              totalScore,
-            };
-          })
-          .sort((a: any, b: any) => b.totalScore - a.totalScore);
-      };
-
-      const playerScores = getPlayerScores();
-
-      return (
-        <div>
-          <h2>Scoreboard</h2>
-          {playerScores.map((player: any) => (
-            <div key={player.id}>
-              <span>{player.name}</span>
-              <span data-testid={`player-score-${player.id}`}>
-                {player.totalScore}
-              </span>
-            </div>
-          ))}
-        </div>
-      );
-    };
+    const mockRound = createMockRoundWithScores();
+    const GameWithRound = createScoreDisplayComponent(mockRound);
 
     render(
       <MemoryRouter initialEntries={["/game"]}>
@@ -199,89 +233,14 @@ describe.skip("Score Display Integration - Core", () => {
       </MemoryRouter>,
     );
 
-    // Verify scores are displayed correctly
     expect(screen.getByTestId("player-score-player1")).toHaveTextContent("8");
     expect(screen.getByTestId("player-score-player2")).toHaveTextContent("4");
     expect(screen.getByTestId("player-score-player3")).toHaveTextContent("3");
   });
 
   it("should not display scores when round has no calculated points", () => {
-    // Create a mock round with no calculated scores (intermediate state)
-    const mockRound: GameRound = {
-      id: "round1",
-      city: {
-        id: "1",
-        name: "Test City",
-        country: "Test Country",
-        lat: 40.7128,
-        lng: -74.006,
-        population: 1000000,
-        difficulty: "easy" as const,
-      },
-      guesses: [
-        {
-          playerId: "player1",
-          lat: 40.7128,
-          lng: -74.006,
-          distance: 0,
-          placementPoints: 0, // Not calculated yet
-          bonusPoints: 5,
-          totalPoints: 0, // Not calculated yet
-          placement: 0, // Not calculated yet
-          timestamp: Date.now(),
-        },
-      ],
-      completed: false,
-      startTime: Date.now(),
-    };
-
-    // Mock the Game component with a current round that has no calculated scores
-    const GameWithIncompleteRound = () => {
-      const { currentGame } = mockUseGame();
-      const [currentRound] = vi.mocked([mockRound]);
-
-      if (!currentGame || !currentRound) return <div>Loading...</div>;
-
-      // Simulate the getPlayerScores function logic
-      const getPlayerScores = () => {
-        return currentGame.players
-          .map((player: any) => {
-            let totalScore = 0;
-
-            // Add scores from current round if it has calculated placement points
-            if (currentRound) {
-              const playerGuess = currentRound.guesses.find(
-                (g) => g.playerId === player.id,
-              );
-              if (playerGuess && playerGuess.totalPoints > 0) {
-                totalScore += playerGuess.totalPoints;
-              }
-            }
-
-            return {
-              ...player,
-              totalScore,
-            };
-          })
-          .sort((a: any, b: any) => b.totalScore - a.totalScore);
-      };
-
-      const playerScores = getPlayerScores();
-
-      return (
-        <div>
-          <h2>Scoreboard</h2>
-          {playerScores.map((player: any) => (
-            <div key={player.id}>
-              <span>{player.name}</span>
-              <span data-testid={`player-score-${player.id}`}>
-                {player.totalScore}
-              </span>
-            </div>
-          ))}
-        </div>
-      );
-    };
+    const mockRound = createMockRoundWithoutScores();
+    const GameWithIncompleteRound = createScoreDisplayComponent(mockRound);
 
     render(
       <MemoryRouter initialEntries={["/game"]}>
@@ -289,7 +248,6 @@ describe.skip("Score Display Integration - Core", () => {
       </MemoryRouter>,
     );
 
-    // Scores should remain at 0 since totalPoints is 0
     expect(screen.getByTestId("player-score-player1")).toHaveTextContent("0");
     expect(screen.getByTestId("player-score-player2")).toHaveTextContent("0");
     expect(screen.getByTestId("player-score-player3")).toHaveTextContent("0");
