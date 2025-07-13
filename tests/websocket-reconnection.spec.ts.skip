@@ -1,43 +1,26 @@
 import { test, expect, type Page } from "@playwright/test";
 
-// Helper function to wait for WebSocket connection
-async function waitForWebSocketConnection(page: Page, timeout = 10000) {
-  await page.waitForFunction(
-    () => {
-      const gameContext = (window as any).__GAME_CONTEXT__;
-      return gameContext?.isConnected === true;
-    },
-    { timeout },
-  );
-}
-
-// Helper function to wait for WebSocket disconnection
-async function waitForWebSocketDisconnection(page: Page, timeout = 10000) {
-  await page.waitForFunction(
-    () => {
-      const gameContext = (window as any).__GAME_CONTEXT__;
-      return gameContext?.isConnected === false;
-    },
-    { timeout },
-  );
-}
-
-// Helper function to expose game context for testing
-async function exposeGameContext(page: Page) {
-  await page.addInitScript(() => {
-    // Expose game context to window for testing
-    const originalUseGame = (window as any).useGame;
-    (window as any).__GAME_CONTEXT__ = {};
-
-    // Intercept the useGame hook to expose state
-    if (originalUseGame) {
-      (window as any).useGame = function () {
-        const result = originalUseGame();
-        (window as any).__GAME_CONTEXT__ = result;
-        return result;
-      };
-    }
+// Helper function to wait for WebSocket connection using UI indicators
+async function waitForWebSocketConnection(page: Page, timeout = 15000) {
+  await expect(page.locator("text=🟢 Connected to server")).toBeVisible({
+    timeout,
   });
+}
+
+// Helper function to wait for WebSocket disconnection using UI indicators
+async function waitForWebSocketDisconnection(page: Page, timeout = 10000) {
+  // Wait for any disconnection indicator (not connected, reconnecting, etc.)
+  await expect(
+    page.locator("text=🟢 Connected to server")
+  ).not.toBeVisible({
+    timeout,
+  });
+}
+
+// Helper function to prepare page for testing (simplified)
+async function preparePageForTesting(page: Page) {
+  // No need to expose internal state - we'll use UI indicators
+  // This is more reliable and matches how users interact with the app
 }
 
 test.describe("WebSocket Reconnection - Mobile Simulation", () => {
@@ -54,7 +37,7 @@ test.describe("WebSocket Reconnection - Mobile Simulation", () => {
       hasTouch: true,
     });
 
-    await exposeGameContext(page);
+    await preparePageForTesting(page);
   });
 
   test("should establish initial WebSocket connection", async ({ page }) => {
@@ -321,7 +304,7 @@ test.describe("WebSocket Reconnection - Mobile Simulation", () => {
 test.describe("WebSocket Reconnection - Desktop Simulation", () => {
   test.beforeEach(async ({ page }) => {
     // Use default desktop viewport
-    await exposeGameContext(page);
+    await preparePageForTesting(page);
   });
 
   test("should handle browser tab switching on desktop", async ({

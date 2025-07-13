@@ -157,6 +157,17 @@ export class GameWebSocketServer {
         this.handleUpdateSettings(ws, message.payload);
         break;
 
+      case "ping":
+        // Handle client ping by responding with pong
+        console.log("💓 Client ping received, sending pong");
+        this.sendMessage(ws, "pong");
+        break;
+
+      case "pong":
+        // Handle client pong response to our ping
+        console.log("💓 Client pong received");
+        break;
+
       default:
         console.warn(`⚠️ Unknown message type: ${message.type}`);
         this.sendError(ws, `Unknown message type: ${message.type}`);
