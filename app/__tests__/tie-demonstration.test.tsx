@@ -1,7 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  calculatePlacementPoints,
-} from "../utils/game";
+import { calculatePlacementPoints } from "../utils/game";
 
 // Helper functions to reduce complexity
 function createTieTestScenario(distances: number[]) {
