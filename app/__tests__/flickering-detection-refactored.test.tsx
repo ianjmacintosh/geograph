@@ -125,7 +125,6 @@ describe.skip("Flickering Detection Test - Refactored", () => {
   });
 
   it("should detect score flickering in initial guess state", () => {
-    const mockRound = createMockRound();
     const guess = createMockGuess("player1", 50);
     
     // Simulate the problematic scenario where guesses start with totalPoints: 0

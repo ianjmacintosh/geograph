@@ -136,47 +136,6 @@ function setupMockGame(game: GameType) {
   });
 }
 
-function createRoundWithGuesses() {
-  return {
-    id: "round1",
-    city: {
-      id: "1",
-      name: "New York",
-      country: "USA",
-      lat: 40.7128,
-      lng: -74.006,
-      population: 8000000,
-      difficulty: "easy" as const,
-    },
-    guesses: [
-      {
-        playerId: "player1",
-        lat: 40.0,
-        lng: -74.0,
-        distance: 100,
-        placementPoints: 2,
-        bonusPoints: 5,
-        totalPoints: 7,
-        placement: 1,
-        timestamp: Date.now(),
-      },
-      {
-        playerId: "player2",
-        lat: 41.0,
-        lng: -73.0,
-        distance: 150,
-        placementPoints: 1,
-        bonusPoints: 2,
-        totalPoints: 3,
-        placement: 2,
-        timestamp: Date.now(),
-      },
-    ],
-    completed: true,
-    startTime: Date.now(),
-    endTime: Date.now() + 30000,
-  };
-}
 
 describe.skip("Final Results Screen Navigation Bug", () => {
   let mockGame: GameType;

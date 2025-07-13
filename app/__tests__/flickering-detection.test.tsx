@@ -105,10 +105,8 @@ function createMockGuess(playerId: string, distance: number) {
 }
 
 describe.skip("Flickering Detection Test", () => {
-  let mockGame: GameType;
-
   beforeEach(() => {
-    mockGame = createTestScenario();
+    createTestScenario();
   });
 
   it("should detect score flickering during computer guess processing", () => {
