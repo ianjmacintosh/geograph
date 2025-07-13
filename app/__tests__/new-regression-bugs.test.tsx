@@ -97,7 +97,7 @@ describe("New Regression Bugs - Scoring Logic", () => {
     const farGuess = createTestGuess("player3", 1500);
 
     expect(closeGuess.bonusPoints).toBe(5);
-    expect(mediumGuess.bonusPoints).toBe(1);
+    expect(mediumGuess.bonusPoints).toBe(2); // 300km is ≤500, so gets 2 points
     expect(farGuess.bonusPoints).toBe(0);
   });
 
