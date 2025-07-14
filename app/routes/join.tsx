@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import { isValidGameCode } from "../utils/game";
 import { useGame } from "../contexts/GameContext";
+import { ConnectionStatus } from "../components/ConnectionStatus";
 
 export function meta(_: Route.MetaArgs) {
   return [
@@ -23,25 +24,6 @@ function validateJoinForm(
     return "Invalid game code";
   }
   return null;
-}
-
-// Helper function to get connection status display
-function getConnectionStatus(connectionStatus: string) {
-  switch (connectionStatus) {
-    case "connected":
-      return { text: "🟢 Connected to server", className: "text-green-600" };
-    case "connecting":
-      return {
-        text: "🟡 Connecting to server...",
-        className: "text-yellow-600",
-      };
-    case "disconnected":
-      return { text: "🔴 Disconnected from server", className: "text-red-600" };
-    case "error":
-      return { text: "❌ Connection error", className: "text-red-600" };
-    default:
-      return null;
-  }
 }
 
 export default function Join() {
@@ -137,12 +119,7 @@ export default function Join() {
         </div>
 
         <div className="mt-8 text-center text-sm">
-          {(() => {
-            const status = getConnectionStatus(connectionStatus);
-            return status ? (
-              <p className={status.className}>{status.text}</p>
-            ) : null;
-          })()}
+          <ConnectionStatus />
           {error && <p className="text-red-600 mt-2">⚠️ {error}</p>}
         </div>
       </div>

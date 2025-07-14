@@ -124,53 +124,72 @@ export class GameWebSocketServer {
   private handleMessage(ws: AuthenticatedWebSocket, message: WebSocketMessage) {
     console.log(`📩 Received message: ${message.type}`, message.payload);
 
+    // Handle heartbeat messages
+    if (message.type === "ping" || message.type === "pong") {
+      this.handleHeartbeat(ws, message.type);
+      return;
+    }
+
+    // Handle game action messages
+    if (this.handleGameAction(ws, message)) {
+      return;
+    }
+
+    // Unknown message type
+    console.warn(`⚠️ Unknown message type: ${message.type}`);
+    this.sendError(ws, `Unknown message type: ${message.type}`);
+  }
+
+  private handleGameAction(
+    ws: AuthenticatedWebSocket,
+    message: WebSocketMessage,
+  ): boolean {
     switch (message.type) {
       case "CREATE_GAME":
         this.handleCreateGame(ws, message.payload);
-        break;
+        return true;
 
       case "JOIN_GAME":
         this.handleJoinGame(ws, message.payload);
-        break;
+        return true;
 
       case "START_GAME":
         this.handleStartGame(ws);
-        break;
+        return true;
 
       case "ADD_COMPUTER_PLAYERS":
         this.handleAddComputerPlayers(ws, message.payload);
-        break;
+        return true;
 
       case "MAKE_GUESS":
         this.handleMakeGuess(ws, message.payload);
-        break;
+        return true;
 
       case "NEXT_ROUND":
         this.handleNextRound(ws);
-        break;
+        return true;
 
       case "LEAVE_GAME":
         this.handleLeaveGame(ws);
-        break;
+        return true;
 
       case "UPDATE_SETTINGS":
         this.handleUpdateSettings(ws, message.payload);
-        break;
-
-      case "ping":
-        // Handle client ping by responding with pong
-        console.log("💓 Client ping received, sending pong");
-        this.sendMessage(ws, "pong");
-        break;
-
-      case "pong":
-        // Handle client pong response to our ping
-        console.log("💓 Client pong received");
-        break;
+        return true;
 
       default:
-        console.warn(`⚠️ Unknown message type: ${message.type}`);
-        this.sendError(ws, `Unknown message type: ${message.type}`);
+        return false;
+    }
+  }
+
+  private handleHeartbeat(ws: AuthenticatedWebSocket, type: string) {
+    if (type === "ping") {
+      // Handle client ping by responding with pong
+      console.log("💓 Client ping received, sending pong");
+      this.sendMessage(ws, "pong");
+    } else if (type === "pong") {
+      // Handle client pong response to our ping
+      console.log("💓 Client pong received");
     }
   }
 

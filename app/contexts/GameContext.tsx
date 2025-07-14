@@ -176,6 +176,12 @@ const GameContext = createContext<{
 const GameWebSocketContext = createContext<{
   sendMessage: (type: string, payload?: any) => void;
   isConnected: boolean;
+  reconnectionInfo: {
+    isReconnecting: boolean;
+    attempt: number;
+    maxAttempts: number;
+    countdownSeconds: number;
+  };
 } | null>(null);
 
 export function GameProvider({ children }: { children: ReactNode }) {
@@ -323,13 +329,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
   );
 
   // Use custom WebSocket hook for robust reconnection
-  const { connectionStatus, isConnected, sendMessage } = useWebSocketConnection(
-    {
+  const { connectionStatus, isConnected, sendMessage, reconnectionInfo } =
+    useWebSocketConnection({
       wsUrl,
       onMessage: handleWebSocketMessage,
       dispatch,
-    },
-  );
+    });
 
   // Game state reconnection after WebSocket reconnection
   useEffect(() => {
@@ -358,7 +363,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   return (
     <GameContext.Provider value={{ state, dispatch }}>
-      <GameWebSocketContext.Provider value={{ sendMessage, isConnected }}>
+      <GameWebSocketContext.Provider
+        value={{ sendMessage, isConnected, reconnectionInfo }}
+      >
         {children}
       </GameWebSocketContext.Provider>
     </GameContext.Provider>
@@ -380,7 +387,7 @@ export function useGame() {
   }
 
   const { state, dispatch } = context;
-  const { sendMessage, isConnected } = wsContext;
+  const { sendMessage, isConnected, reconnectionInfo } = wsContext;
 
   const createGame = (playerName: string) => {
     if (!isConnected) {
@@ -481,5 +488,6 @@ export function useGame() {
     connectionStatus: state.connectionStatus,
     playerId: state.playerId,
     isConnected,
+    reconnectionInfo,
   };
 }
