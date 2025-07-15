@@ -118,8 +118,8 @@ test.describe("WebSocket Reconnection - Essential Tests", () => {
 
     // Should show reconnection attempt feedback
     // Look for any reconnection messages (attempt 1, 2, etc.)
-    const reconnectionFeedback = page.locator(
-      "text=/🔄.*Reconnecting.*attempt \\d+ of \\d+/",
+    const reconnectionFeedback = page.getByText(
+      /🔄.*Reconnecting.*attempt \d+ of \d+/,
     );
 
     // Wait for reconnection feedback to appear (with extended timeout due to network simulation)
