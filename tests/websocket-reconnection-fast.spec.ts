@@ -97,40 +97,29 @@ test.describe("WebSocket Reconnection - Essential Tests", () => {
       timeout: 15000,
     });
 
-    // Simulate network interruption by evaluating code that closes the WebSocket
+    // Simulate network going offline
+    await page.context().setOffline(true);
+
+    // Also manually trigger the offline event to ensure it's detected
     await page.evaluate(() => {
-      // Access the WebSocket through the global context if available
-      // This is a test-specific approach to simulate connection loss
-      if (window.WebSocket) {
-        const originalWebSocket = window.WebSocket;
-        window.WebSocket = class extends originalWebSocket {
-          constructor(url: string | URL, protocols?: string | string[]) {
-            super(url, protocols);
-            // Close the connection immediately to simulate network loss
-            setTimeout(() => this.close(1006, "Network error"), 100);
-          }
-        } as any;
-      }
+      window.dispatchEvent(new Event('offline'));
     });
 
-    // Refresh the page to trigger a new connection with the modified WebSocket
-    await page.reload();
+    // Wait a moment for offline event to be processed
+    await page.waitForTimeout(1000);
 
-    // Should show reconnection attempt feedback
-    // Look for any reconnection messages (attempt 1, 2, etc.)
-    const reconnectionFeedback = page.getByText(
-      /🔄.*Reconnecting.*attempt \d+ of \d+/,
-    );
+    // Should show reconnection attempts while offline
+    // The app immediately starts reconnecting, so we see the reconnection message
+    await expect(page.getByText(/🔄.*Reconnecting.*attempt \d+ of \d+/)).toBeVisible({
+      timeout: 10000,
+    });
 
-    // Wait for reconnection feedback to appear (with extended timeout due to network simulation)
-    await expect(reconnectionFeedback).toBeVisible({ timeout: 10000 });
+    // Restore network connection
+    await page.context().setOffline(false);
 
-    // Eventually should either reconnect or show specific error
-    // We'll allow both successful reconnection or reaching max attempts
-    await expect(
-      page
-        .locator("text=🟢 Connected to server")
-        .or(page.locator("text=❌ Connection error")),
-    ).toBeVisible({ timeout: 30000 });
+    // Should eventually reconnect successfully
+    await expect(page.locator("text=🟢 Connected to server")).toBeVisible({
+      timeout: 15000,
+    });
   });
 });

@@ -157,6 +157,47 @@ function useConnectionLifecycleEffect({
   ]);
 }
 
+// Network status effect helper
+function useNetworkStatusEffect({
+  wsRef,
+  isConnected,
+  wsUrl,
+  shouldAttemptReconnect,
+  connectWebSocket,
+}: {
+  wsRef: React.MutableRefObject<WebSocket | null>;
+  isConnected: boolean;
+  wsUrl: string | undefined;
+  shouldAttemptReconnect: () => boolean;
+  connectWebSocket: () => void;
+}) {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleOffline = () => {
+      console.log("🌐 Browser went offline - closing WebSocket connection");
+      if (wsRef.current) {
+        wsRef.current.close(1000, "Network offline");
+      }
+    };
+
+    const handleOnline = () => {
+      console.log("🌐 Browser came online - attempting reconnection");
+      if (!isConnected && wsUrl && shouldAttemptReconnect()) {
+        connectWebSocket();
+      }
+    };
+
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, [isConnected, wsUrl, shouldAttemptReconnect, connectWebSocket, wsRef]);
+}
+
 // Connection management helper
 function useConnectionManagement(
   reconnectAttemptsRef: React.MutableRefObject<number>,
@@ -217,19 +258,21 @@ function useConnectionManagement(
 
       let remainingSeconds = Math.ceil(delayMs / 1000);
 
-      if (remainingSeconds <= 0) return;
+      // Even if delay is 0ms, we want to show the reconnection attempt feedback
+      // Only start countdown interval if there's actually time to count down
+      if (remainingSeconds > 0) {
+        countdownIntervalRef.current = setInterval(() => {
+          remainingSeconds--;
+          setReconnectionInfo((prev) => ({
+            ...prev,
+            countdownSeconds: remainingSeconds,
+          }));
 
-      countdownIntervalRef.current = setInterval(() => {
-        remainingSeconds--;
-        setReconnectionInfo((prev) => ({
-          ...prev,
-          countdownSeconds: remainingSeconds,
-        }));
-
-        if (remainingSeconds <= 0) {
-          stopCountdown();
-        }
-      }, 1000);
+          if (remainingSeconds <= 0) {
+            stopCountdown();
+          }
+        }, 1000);
+      }
     },
     [stopCountdown, setReconnectionInfo],
   );
@@ -461,6 +504,15 @@ export function useWebSocketConnection({
     wsRef,
     setConnectionStatus,
     setIsConnected,
+  });
+
+  // Custom effect for handling browser online/offline events
+  useNetworkStatusEffect({
+    wsRef,
+    isConnected,
+    wsUrl,
+    shouldAttemptReconnect,
+    connectWebSocket,
   });
 
   return {
