@@ -22,8 +22,11 @@ test.describe("WebSocket Reconnection UI", () => {
     // 4. Verify "Reconnecting" message is shown
     // The message includes the attempt number, so we use a regex
     await expect(
-      page.locator(/🔄 Connection lost\. Reconnecting.*\(attempt \d+ of \d+\)/)
+      page.locator("text=🔄 Connection lost. Reconnecting"),
     ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/attempt \d+ of \d+/)).toBeVisible({
+      timeout: 10000,
+    });
 
     // 5. Simulate network reconnection
     await context.setOffline(false);
