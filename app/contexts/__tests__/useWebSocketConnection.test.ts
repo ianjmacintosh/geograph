@@ -54,6 +54,22 @@ global.window = {
   removeEventListener: vi.fn(),
 } as any;
 
+// Test helper functions
+const createFailingWebSocket = () => {
+  return class extends MockWebSocket {
+    constructor(url: string) {
+      super(url);
+      this.readyState = MockWebSocket.CLOSED;
+      setTimeout(() => {
+        this.onclose?.(
+          new CloseEvent("close", { code: 1006, reason: "Network error" }),
+        );
+      }, 5);
+    }
+  } as any;
+};
+
+/* eslint-disable max-lines-per-function */
 describe("useWebSocketConnection", () => {
   let mockDispatch: ReturnType<typeof vi.fn>;
   let mockOnMessage: ReturnType<typeof vi.fn>;
@@ -68,6 +84,8 @@ describe("useWebSocketConnection", () => {
     vi.useRealTimers();
     vi.clearAllMocks();
   });
+
+  describe("Basic functionality", () => {
 
   it("should initialize with disconnected state", async () => {
     const { result } = renderHook(() =>
@@ -87,18 +105,7 @@ describe("useWebSocketConnection", () => {
 
   it("should track reconnection attempts", async () => {
     // Mock WebSocket to always fail to ensure we see reconnection state
-    global.WebSocket = class extends MockWebSocket {
-      constructor(url: string) {
-        super(url);
-        // Never actually connect, always fail
-        this.readyState = MockWebSocket.CLOSED;
-        setTimeout(() => {
-          this.onclose?.(
-            new CloseEvent("close", { code: 1006, reason: "Network error" }),
-          );
-        }, 5);
-      }
-    } as any;
+    global.WebSocket = createFailingWebSocket();
 
     const { result } = renderHook(() =>
       useWebSocketConnection({
@@ -205,6 +212,10 @@ describe("useWebSocketConnection", () => {
     expect(result.current.reconnectionInfo).toBeDefined();
   });
 
+  });
+
+  describe("Countdown and timing", () => {
+
   it("should show countdown for delays over 1 second", async () => {
     let connectionAttempts = 0;
 
@@ -255,7 +266,7 @@ describe("useWebSocketConnection", () => {
       }
     } as any;
 
-    const { result } = renderHook(() =>
+    renderHook(() =>
       useWebSocketConnection({
         wsUrl: "ws://localhost:8080",
         onMessage: mockOnMessage,
@@ -325,6 +336,10 @@ describe("useWebSocketConnection", () => {
     expect(result.current.reconnectionInfo.isReconnecting).toBe(false);
   });
 
+  });
+
+  describe("Reconnection scenarios", () => {
+
   it("should handle successful reconnection after failures", async () => {
     let connectionAttempts = 0;
 
@@ -368,6 +383,7 @@ describe("useWebSocketConnection", () => {
     expect(result.current.reconnectionInfo.isReconnecting).toBe(false);
     expect(result.current.reconnectionInfo.attempt).toBe(0);
   });
+  });
 });
 
 describe("useWebSocketConnection - Integration Tests", () => {
@@ -400,10 +416,10 @@ describe("useWebSocketConnection - Integration Tests", () => {
     });
 
     // Should have proper reconnection info structure
-    expect(result.current.reconnectionInfo).toHaveProperty('isReconnecting');
-    expect(result.current.reconnectionInfo).toHaveProperty('attempt');
-    expect(result.current.reconnectionInfo).toHaveProperty('maxAttempts');
-    expect(result.current.reconnectionInfo).toHaveProperty('countdownSeconds');
+    expect(result.current.reconnectionInfo).toHaveProperty("isReconnecting");
+    expect(result.current.reconnectionInfo).toHaveProperty("attempt");
+    expect(result.current.reconnectionInfo).toHaveProperty("maxAttempts");
+    expect(result.current.reconnectionInfo).toHaveProperty("countdownSeconds");
     expect(result.current.reconnectionInfo.maxAttempts).toBe(10);
   });
 
@@ -417,11 +433,11 @@ describe("useWebSocketConnection - Integration Tests", () => {
     );
 
     // Should expose sendMessage function
-    expect(typeof result.current.sendMessage).toBe('function');
-    
+    expect(typeof result.current.sendMessage).toBe("function");
+
     // Should be able to call sendMessage without errors
     expect(() => {
-      result.current.sendMessage('test', { data: 'test' });
+      result.current.sendMessage("test", { data: "test" });
     }).not.toThrow();
   });
 
@@ -465,7 +481,7 @@ describe("useWebSocketConnection - Integration Tests", () => {
     await act(async () => {
       vi.advanceTimersByTime(10);
     });
-    
+
     // Then let it fail and reconnect
     await act(async () => {
       vi.advanceTimersByTime(100);
@@ -474,6 +490,8 @@ describe("useWebSocketConnection - Integration Tests", () => {
     // Should have attempted reconnection
     expect(connectionAttempts).toBeGreaterThan(1);
     // Status should be either disconnected or connecting (depending on timing)
-    expect(["disconnected", "connecting", "error"]).toContain(result.current.connectionStatus);
+    expect(["disconnected", "connecting", "error"]).toContain(
+      result.current.connectionStatus,
+    );
   });
 });
