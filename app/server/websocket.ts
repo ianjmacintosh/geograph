@@ -153,6 +153,14 @@ export class GameWebSocketServer {
         this.handleJoinGame(ws, message.payload);
         return true;
 
+      case "RECONNECT":
+        this.handlePlayerReconnection(
+          ws,
+          message.payload.gameId,
+          message.payload.playerId,
+        );
+        return true;
+
       case "START_GAME":
         this.handleStartGame(ws);
         return true;
@@ -463,11 +471,11 @@ export class GameWebSocketServer {
 
   private handlePlayerReconnection(
     ws: AuthenticatedWebSocket,
-    gameCode: string,
+    gameId: string,
     playerId: string,
   ) {
     try {
-      const game = this.db.getGameByCode(gameCode);
+      const game = this.db.getGameById(gameId);
 
       if (!game) {
         return this.sendError(ws, "Game not found");
@@ -489,7 +497,7 @@ export class GameWebSocketServer {
         playerId,
       });
 
-      console.log(`🔄 ${player.name} reconnected to game ${gameCode}`);
+      console.log(`🔄 ${player.name} reconnected to game ${game.code}`);
     } catch (error) {
       console.error("❌ Error handling reconnection:", error);
       this.sendError(ws, "Reconnection failed");
