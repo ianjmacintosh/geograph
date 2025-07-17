@@ -336,13 +336,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
       dispatch,
     });
 
+  // Track if we've already sent a reconnect message for the current game
+  const hasReconnectedRef = useRef<string | null>(null);
+
   // Game state reconnection after WebSocket reconnection
   useEffect(() => {
     if (
       connectionStatus === "connected" &&
       state.playerId &&
       state.currentGame &&
-      state.currentGame.id
+      state.currentGame.id &&
+      hasReconnectedRef.current !== state.currentGame.id
     ) {
       console.log(
         "🔄 Reconnecting to game state:",
@@ -350,12 +354,20 @@ export function GameProvider({ children }: { children: ReactNode }) {
         "with player:",
         state.playerId,
       );
+      hasReconnectedRef.current = state.currentGame.id;
       sendMessage("RECONNECT", {
         gameId: state.currentGame.id,
         playerId: state.playerId,
       });
     }
   }, [connectionStatus, state.playerId, state.currentGame, sendMessage]);
+
+  // Reset reconnection tracking when game changes or clears
+  useEffect(() => {
+    if (!state.currentGame) {
+      hasReconnectedRef.current = null;
+    }
+  }, [state.currentGame]);
 
   useEffect(() => {
     dispatch({ type: "SET_CONNECTION_STATUS", payload: connectionStatus });
