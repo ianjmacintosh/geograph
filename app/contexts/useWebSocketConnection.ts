@@ -1,6 +1,13 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import type { WebSocketMessage } from "../hooks/useWebSocket";
 
+// Global type declaration for the disconnect function
+declare global {
+  interface Window {
+    disconnectWebSocket?: () => void;
+  }
+}
+
 interface UseWebSocketConnectionProps {
   wsUrl: string | undefined;
   onMessage: (message: WebSocketMessage) => void;
@@ -198,30 +205,19 @@ function useNetworkStatusEffect({
   }, [isConnected, wsUrl, shouldAttemptReconnect, connectWebSocket, wsRef]);
 }
 
-// Connection management helper
-function useConnectionManagement(
-  reconnectAttemptsRef: React.MutableRefObject<number>,
-  lastReconnectWindowRef: React.MutableRefObject<number>,
-  heartbeatIntervalRef: React.MutableRefObject<NodeJS.Timeout | null>,
-  countdownIntervalRef: React.MutableRefObject<NodeJS.Timeout | null>,
-  wsRef: React.MutableRefObject<WebSocket | null>,
-  setReconnectionInfo: React.Dispatch<
-    React.SetStateAction<{
-      isReconnecting: boolean;
-      attempt: number;
-      maxAttempts: number;
-      countdownSeconds: number;
-    }>
-  >,
-) {
-  // Progressive backoff schedule
-  const getReconnectDelay = useCallback((attempt: number): number => {
+// Helper functions for connection management
+function useReconnectDelay() {
+  return useCallback((attempt: number): number => {
     const delays = [0, 100, 300, 1000, 3000, 5000, 10000];
     return delays[Math.min(attempt, delays.length - 1)];
   }, []);
+}
 
-  // Circuit breaker
-  const shouldAttemptReconnect = useCallback((): boolean => {
+function useReconnectCircuitBreaker(
+  reconnectAttemptsRef: React.MutableRefObject<number>,
+  lastReconnectWindowRef: React.MutableRefObject<number>,
+) {
+  return useCallback((): boolean => {
     const now = Date.now();
     const fiveMinutes = 5 * 60 * 1000;
 
@@ -232,7 +228,12 @@ function useConnectionManagement(
 
     return reconnectAttemptsRef.current < 10;
   }, []);
+}
 
+function useTimerControls(
+  heartbeatIntervalRef: React.MutableRefObject<NodeJS.Timeout | null>,
+  countdownIntervalRef: React.MutableRefObject<NodeJS.Timeout | null>,
+) {
   const stopHeartbeat = useCallback(() => {
     if (heartbeatIntervalRef.current) {
       clearInterval(heartbeatIntervalRef.current);
@@ -247,7 +248,22 @@ function useConnectionManagement(
     }
   }, []);
 
-  const startCountdown = useCallback(
+  return { stopHeartbeat, stopCountdown };
+}
+
+function useCountdownTimer(
+  countdownIntervalRef: React.MutableRefObject<NodeJS.Timeout | null>,
+  setReconnectionInfo: React.Dispatch<
+    React.SetStateAction<{
+      isReconnecting: boolean;
+      attempt: number;
+      maxAttempts: number;
+      countdownSeconds: number;
+    }>
+  >,
+  stopCountdown: () => void,
+) {
+  return useCallback(
     (delayMs: number, attemptNumber: number) => {
       setReconnectionInfo({
         isReconnecting: true,
@@ -258,8 +274,6 @@ function useConnectionManagement(
 
       let remainingSeconds = Math.ceil(delayMs / 1000);
 
-      // Even if delay is 0ms, we want to show the reconnection attempt feedback
-      // Only start countdown interval if there's actually time to count down
       if (remainingSeconds > 0) {
         countdownIntervalRef.current = setInterval(() => {
           remainingSeconds--;
@@ -276,8 +290,13 @@ function useConnectionManagement(
     },
     [stopCountdown, setReconnectionInfo],
   );
+}
 
-  const startHeartbeat = useCallback(() => {
+function useHeartbeat(
+  heartbeatIntervalRef: React.MutableRefObject<NodeJS.Timeout | null>,
+  wsRef: React.MutableRefObject<WebSocket | null>,
+) {
+  return useCallback(() => {
     if (heartbeatIntervalRef.current) {
       clearInterval(heartbeatIntervalRef.current);
     }
@@ -289,6 +308,39 @@ function useConnectionManagement(
       }
     }, 30000);
   }, []);
+}
+
+// Connection management helper
+function useConnectionManagement(
+  reconnectAttemptsRef: React.MutableRefObject<number>,
+  lastReconnectWindowRef: React.MutableRefObject<number>,
+  heartbeatIntervalRef: React.MutableRefObject<NodeJS.Timeout | null>,
+  countdownIntervalRef: React.MutableRefObject<NodeJS.Timeout | null>,
+  wsRef: React.MutableRefObject<WebSocket | null>,
+  setReconnectionInfo: React.Dispatch<
+    React.SetStateAction<{
+      isReconnecting: boolean;
+      attempt: number;
+      maxAttempts: number;
+      countdownSeconds: number;
+    }>
+  >,
+) {
+  const getReconnectDelay = useReconnectDelay();
+  const shouldAttemptReconnect = useReconnectCircuitBreaker(
+    reconnectAttemptsRef,
+    lastReconnectWindowRef,
+  );
+  const { stopHeartbeat, stopCountdown } = useTimerControls(
+    heartbeatIntervalRef,
+    countdownIntervalRef,
+  );
+  const startCountdown = useCountdownTimer(
+    countdownIntervalRef,
+    setReconnectionInfo,
+    stopCountdown,
+  );
+  const startHeartbeat = useHeartbeat(heartbeatIntervalRef, wsRef);
 
   return {
     getReconnectDelay,
@@ -298,6 +350,250 @@ function useConnectionManagement(
     startHeartbeat,
     stopHeartbeat,
   };
+}
+
+// Hook for WebSocket message sending
+function useWebSocketSender(wsRef: React.MutableRefObject<WebSocket | null>) {
+  return useCallback((type: string, payload?: any) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type, payload }));
+    } else {
+      console.log("WebSocket not connected - message dropped:", type, payload);
+    }
+  }, []);
+}
+
+// Hook for manual disconnect functionality
+function useManualDisconnect(
+  reconnectTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>,
+  wsRef: React.MutableRefObject<WebSocket | null>,
+  reconnectAttemptsRef: React.MutableRefObject<number>,
+  stopHeartbeat: () => void,
+  stopCountdown: () => void,
+  setReconnectionInfo: React.Dispatch<
+    React.SetStateAction<{
+      isReconnecting: boolean;
+      attempt: number;
+      maxAttempts: number;
+      countdownSeconds: number;
+    }>
+  >,
+  setConnectionStatus: React.Dispatch<React.SetStateAction<string>>,
+  setIsConnected: React.Dispatch<React.SetStateAction<boolean>>,
+  dispatch: React.Dispatch<any>,
+) {
+  return useCallback(() => {
+    console.log("🔌 Manual disconnect requested");
+
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    stopHeartbeat();
+    stopCountdown();
+
+    setReconnectionInfo({
+      isReconnecting: false,
+      attempt: 0,
+      maxAttempts: 10,
+      countdownSeconds: 0,
+    });
+
+    if (wsRef.current) {
+      wsRef.current.close(1000, "Manual disconnect");
+      wsRef.current = null;
+    }
+
+    setConnectionStatus("disconnected");
+    setIsConnected(false);
+    dispatch({ type: "SET_CONNECTION_STATUS", payload: "disconnected" });
+
+    reconnectAttemptsRef.current = 10;
+
+    console.log("✅ WebSocket manually disconnected");
+  }, [
+    stopHeartbeat,
+    stopCountdown,
+    setConnectionStatus,
+    setIsConnected,
+    setReconnectionInfo,
+    dispatch,
+  ]);
+}
+
+// Hook for global window exposure
+function useGlobalExposure(manualDisconnect: () => void) {
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.disconnectWebSocket = manualDisconnect;
+
+      return () => {
+        if (window.disconnectWebSocket === manualDisconnect) {
+          delete window.disconnectWebSocket;
+        }
+      };
+    }
+  }, [manualDisconnect]);
+}
+
+// WebSocket event handlers
+function useWebSocketHandlers(
+  wsRef: React.MutableRefObject<WebSocket | null>,
+  reconnectAttemptsRef: React.MutableRefObject<number>,
+  reconnectTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>,
+  setConnectionStatus: React.Dispatch<React.SetStateAction<string>>,
+  setIsConnected: React.Dispatch<React.SetStateAction<boolean>>,
+  setReconnectionInfo: React.Dispatch<
+    React.SetStateAction<{
+      isReconnecting: boolean;
+      attempt: number;
+      maxAttempts: number;
+      countdownSeconds: number;
+    }>
+  >,
+  dispatch: React.Dispatch<any>,
+  onMessage: (message: any) => void,
+  stopCountdown: () => void,
+  startHeartbeat: () => void,
+  stopHeartbeat: () => void,
+  shouldAttemptReconnect: () => boolean,
+  getReconnectDelay: (attempt: number) => number,
+  startCountdown: (delayMs: number, attemptNumber: number) => void,
+) {
+  const createOpenHandler = useCallback(() => {
+    return () => {
+      console.log("🔗 WebSocket connected successfully");
+      setConnectionStatus("connected");
+      setIsConnected(true);
+
+      if (reconnectAttemptsRef.current > 0) {
+        setConnectionStatus("reconnected");
+        dispatch({ type: "SET_CONNECTION_STATUS", payload: "reconnected" });
+        setTimeout(() => {
+          setConnectionStatus("connected");
+          dispatch({ type: "SET_CONNECTION_STATUS", payload: "connected" });
+        }, 2000);
+      }
+
+      reconnectAttemptsRef.current = 0;
+      setReconnectionInfo({
+        isReconnecting: false,
+        attempt: 0,
+        maxAttempts: 10,
+        countdownSeconds: 0,
+      });
+      stopCountdown();
+      dispatch({ type: "SET_CONNECTION_STATUS", payload: "connected" });
+      startHeartbeat();
+    };
+  }, [
+    setConnectionStatus,
+    setIsConnected,
+    dispatch,
+    setReconnectionInfo,
+    stopCountdown,
+    startHeartbeat,
+  ]);
+
+  const createMessageHandler = useCallback(() => {
+    return (event: MessageEvent) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type === "ping") {
+          console.log("💓 Server ping received, sending pong");
+          if (wsRef.current?.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify({ type: "pong" }));
+          }
+          return;
+        }
+        if (message.type === "pong") {
+          console.log("💓 Heartbeat pong received");
+          return;
+        }
+        onMessage(message);
+      } catch (error) {
+        console.error("Failed to parse WebSocket message:", error);
+      }
+    };
+  }, [onMessage]);
+
+  const createCloseHandler = useCallback(
+    (connectFn: () => void) => {
+      return (event: CloseEvent) => {
+        console.log(
+          `🔌 WebSocket disconnected. Code: ${event.code}, Reason: ${event.reason}, Clean: ${event.wasClean}`,
+        );
+        setConnectionStatus("disconnected");
+        setIsConnected(false);
+        stopHeartbeat();
+        dispatch({ type: "SET_CONNECTION_STATUS", payload: "disconnected" });
+
+        if (shouldAttemptReconnect()) {
+          const delay = getReconnectDelay(reconnectAttemptsRef.current);
+          reconnectAttemptsRef.current++;
+
+          console.log(
+            `🔄 Scheduling reconnection in ${delay}ms (attempt ${reconnectAttemptsRef.current}/10)`,
+          );
+
+          startCountdown(delay, reconnectAttemptsRef.current);
+
+          reconnectTimeoutRef.current = setTimeout(() => {
+            connectFn();
+          }, delay);
+        } else {
+          console.error("❌ Max reconnection attempts reached");
+          setConnectionStatus("error");
+          setReconnectionInfo({
+            isReconnecting: false,
+            attempt: 0,
+            maxAttempts: 10,
+            countdownSeconds: 0,
+          });
+          dispatch({ type: "SET_CONNECTION_STATUS", payload: "error" });
+        }
+      };
+    },
+    [
+      setConnectionStatus,
+      setIsConnected,
+      stopHeartbeat,
+      dispatch,
+      shouldAttemptReconnect,
+      getReconnectDelay,
+      startCountdown,
+      setReconnectionInfo,
+    ],
+  );
+
+  const createErrorHandler = useCallback(() => {
+    return (error: Event) => {
+      console.error("❌ WebSocket error occurred:", error);
+      setConnectionStatus("error");
+      setIsConnected(false);
+      dispatch({ type: "SET_CONNECTION_STATUS", payload: "error" });
+    };
+  }, [setConnectionStatus, setIsConnected, dispatch]);
+
+  const createWebSocketHandlers = useCallback(
+    (connectFn: () => void) => {
+      return {
+        handleOpen: createOpenHandler(),
+        handleMessage: createMessageHandler(),
+        handleClose: createCloseHandler(connectFn),
+        handleError: createErrorHandler(),
+      };
+    },
+    [
+      createOpenHandler,
+      createMessageHandler,
+      createCloseHandler,
+      createErrorHandler,
+    ],
+  );
+
+  return createWebSocketHandlers;
 }
 
 export function useWebSocketConnection({
@@ -337,120 +633,25 @@ export function useWebSocketConnection({
     setReconnectionInfo,
   );
 
-  const sendMessage = useCallback((type: string, payload?: any) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type, payload }));
-    } else {
-      console.log("WebSocket not connected - message dropped:", type, payload);
-    }
-  }, []);
+  const sendMessage = useWebSocketSender(wsRef);
 
-  // WebSocket event handlers
-  const createWebSocketHandlers = useCallback(() => {
-    const handleOpen = () => {
-      console.log("🔗 WebSocket connected successfully");
-      setConnectionStatus("connected");
-      setIsConnected(true);
-
-      if (reconnectAttemptsRef.current > 0) {
-        setConnectionStatus("reconnected");
-        dispatch({ type: "SET_CONNECTION_STATUS", payload: "reconnected" });
-        setTimeout(() => {
-          setConnectionStatus("connected");
-          dispatch({ type: "SET_CONNECTION_STATUS", payload: "connected" });
-        }, 2000);
-      }
-
-      reconnectAttemptsRef.current = 0;
-      setReconnectionInfo({
-        isReconnecting: false,
-        attempt: 0,
-        maxAttempts: 10,
-        countdownSeconds: 0,
-      });
-      stopCountdown();
-      dispatch({ type: "SET_CONNECTION_STATUS", payload: "connected" });
-      startHeartbeat();
-    };
-
-    const handleMessage = (event: MessageEvent) => {
-      try {
-        const message = JSON.parse(event.data);
-        if (message.type === "ping") {
-          console.log("💓 Server ping received, sending pong");
-          if (wsRef.current?.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify({ type: "pong" }));
-          }
-          return;
-        }
-        if (message.type === "pong") {
-          console.log("💓 Heartbeat pong received");
-          return;
-        }
-        onMessage(message);
-      } catch (error) {
-        console.error("Failed to parse WebSocket message:", error);
-      }
-    };
-
-    const handleClose = (event: CloseEvent) => {
-      console.log(
-        `🔌 WebSocket disconnected. Code: ${event.code}, Reason: ${event.reason}, Clean: ${event.wasClean}`,
-      );
-      setConnectionStatus("disconnected");
-      setIsConnected(false);
-      stopHeartbeat();
-      dispatch({ type: "SET_CONNECTION_STATUS", payload: "disconnected" });
-
-      if (shouldAttemptReconnect()) {
-        const delay = getReconnectDelay(reconnectAttemptsRef.current);
-        reconnectAttemptsRef.current++;
-
-        console.log(
-          `🔄 Scheduling reconnection in ${delay}ms (attempt ${reconnectAttemptsRef.current}/10)`,
-        );
-
-        startCountdown(delay, reconnectAttemptsRef.current);
-
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connectWebSocket();
-        }, delay);
-      } else {
-        console.error("❌ Max reconnection attempts reached");
-        setConnectionStatus("error");
-        setReconnectionInfo({
-          isReconnecting: false,
-          attempt: 0,
-          maxAttempts: 10,
-          countdownSeconds: 0,
-        });
-        dispatch({ type: "SET_CONNECTION_STATUS", payload: "error" });
-      }
-    };
-
-    const handleError = (error: Event) => {
-      console.error("❌ WebSocket error occurred:", error);
-      setConnectionStatus("error");
-      setIsConnected(false);
-      dispatch({ type: "SET_CONNECTION_STATUS", payload: "error" });
-    };
-
-    return { handleOpen, handleMessage, handleClose, handleError };
-  }, [
-    onMessage,
-    dispatch,
-    shouldAttemptReconnect,
-    getReconnectDelay,
-    startHeartbeat,
-    stopHeartbeat,
-    startCountdown,
-    stopCountdown,
+  const createWebSocketHandlers = useWebSocketHandlers(
+    wsRef,
+    reconnectAttemptsRef,
+    reconnectTimeoutRef,
     setConnectionStatus,
     setIsConnected,
     setReconnectionInfo,
-  ]);
+    dispatch,
+    onMessage,
+    stopCountdown,
+    startHeartbeat,
+    stopHeartbeat,
+    shouldAttemptReconnect,
+    getReconnectDelay,
+    startCountdown,
+  );
 
-  // Enhanced WebSocket connection with progressive reconnection
   const connectWebSocket = useCallback(() => {
     if (typeof window === "undefined" || !wsUrl) return;
 
@@ -471,7 +672,7 @@ export function useWebSocketConnection({
     try {
       wsRef.current = new WebSocket(wsUrl);
       const { handleOpen, handleMessage, handleClose, handleError } =
-        createWebSocketHandlers();
+        createWebSocketHandlers(connectWebSocket);
 
       wsRef.current.onopen = handleOpen;
       wsRef.current.onmessage = handleMessage;
@@ -484,7 +685,6 @@ export function useWebSocketConnection({
     }
   }, [wsUrl, dispatch, setConnectionStatus, createWebSocketHandlers]);
 
-  // Custom effects for Page Visibility API and lifecycle management
   usePageVisibilityEffect({
     isConnected,
     wsUrl,
@@ -506,7 +706,6 @@ export function useWebSocketConnection({
     setIsConnected,
   });
 
-  // Custom effect for handling browser online/offline events
   useNetworkStatusEffect({
     wsRef,
     isConnected,
@@ -515,10 +714,25 @@ export function useWebSocketConnection({
     connectWebSocket,
   });
 
+  const manualDisconnect = useManualDisconnect(
+    reconnectTimeoutRef,
+    wsRef,
+    reconnectAttemptsRef,
+    stopHeartbeat,
+    stopCountdown,
+    setReconnectionInfo,
+    setConnectionStatus,
+    setIsConnected,
+    dispatch,
+  );
+
+  useGlobalExposure(manualDisconnect);
+
   return {
     connectionStatus,
     isConnected,
     sendMessage,
     reconnectionInfo,
+    manualDisconnect,
   };
 }

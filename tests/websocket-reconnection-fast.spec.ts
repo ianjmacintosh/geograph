@@ -102,7 +102,7 @@ test.describe("WebSocket Reconnection - Essential Tests", () => {
 
     // Also manually trigger the offline event to ensure it's detected
     await page.evaluate(() => {
-      window.dispatchEvent(new Event('offline'));
+      window.dispatchEvent(new Event("offline"));
     });
 
     // Wait a moment for offline event to be processed
@@ -110,7 +110,9 @@ test.describe("WebSocket Reconnection - Essential Tests", () => {
 
     // Should show reconnection attempts while offline
     // The app immediately starts reconnecting, so we see the reconnection message
-    await expect(page.getByText(/🔄.*Reconnecting.*attempt \d+ of \d+/)).toBeVisible({
+    await expect(
+      page.getByText(/🔄.*Reconnecting.*attempt \d+ of \d+/),
+    ).toBeVisible({
       timeout: 10000,
     });
 

@@ -19,7 +19,12 @@ Geograph is a multiplayer geography guessing game where friends can test their g
 
 - No test framework configured yet - check with user before adding tests
 - TypeScript checking available via `npm run typecheck`
-- ALWAYS run linters and tests after completing meaningful development work
+- ALWAYS run linters, formatters, and tests before preparing to commit changes:
+  - npm run format
+  - npm run lint:fix
+  - npm run test
+  - npm run test:e2e
+  - npm run typecheck
 - While linting, also perform type checks (tsc)
 
 ## Architecture Overview
