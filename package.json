@@ -17,7 +17,7 @@
     "typecheck": "react-router typegen && tsc",
     "test": "vitest",
     "test:e2e": "playwright test",
-    "test:ui": "vitest --ui",
+    "test:ui": "playwright test --ui",
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {

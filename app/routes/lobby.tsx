@@ -6,6 +6,7 @@ import { LobbyHeader } from "../components/LobbyHeader";
 import { PlayersList } from "../components/PlayersList";
 import { GameSettingsSection } from "../components/GameSettingsSection";
 import { ScoringInfo } from "../components/ScoringInfo";
+import { ConnectionStatus } from "../components/ConnectionStatus";
 
 export function meta() {
   return [
@@ -115,6 +116,10 @@ export default function Lobby() {
           </div>
 
           <ScoringInfo currentGame={currentGame} />
+
+          <div className="mt-6 text-center text-sm">
+            <ConnectionStatus />
+          </div>
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { isValidGameCode } from "../utils/game";
 import { useGame } from "../contexts/GameContext";
+import { ConnectionStatus } from "../components/ConnectionStatus";
 
 export function meta() {
   return [
@@ -130,18 +131,7 @@ export default function Home() {
         </div>
 
         <div className="mt-8 text-center text-sm">
-          {connectionStatus === "connected" && (
-            <p className="text-green-600">🟢 Connected to server</p>
-          )}
-          {connectionStatus === "connecting" && (
-            <p className="text-yellow-600">🟡 Connecting to server...</p>
-          )}
-          {connectionStatus === "disconnected" && (
-            <p className="text-red-600">🔴 Disconnected from server</p>
-          )}
-          {connectionStatus === "error" && (
-            <p className="text-red-600">❌ Connection error</p>
-          )}
+          <ConnectionStatus />
 
           {error && <p className="text-red-600 mt-2">⚠️ {error}</p>}
 

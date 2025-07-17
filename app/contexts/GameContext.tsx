@@ -6,13 +6,11 @@ import {
   useCallback,
   useMemo,
   useRef,
-  useState,
   type ReactNode,
 } from "react";
 import type { Game, GameState, Player, FinalResults } from "../types/game";
-// Note: useWebSocket import preserved for future development
-// import { useWebSocket, type WebSocketMessage } from "../hooks/useWebSocket";
 import type { WebSocketMessage } from "../hooks/useWebSocket";
+import { useWebSocketConnection } from "./useWebSocketConnection";
 
 type GameAction =
   | { type: "SET_GAME"; payload: Game }
@@ -178,6 +176,12 @@ const GameContext = createContext<{
 const GameWebSocketContext = createContext<{
   sendMessage: (type: string, payload?: any) => void;
   isConnected: boolean;
+  reconnectionInfo: {
+    isReconnecting: boolean;
+    attempt: number;
+    maxAttempts: number;
+    countdownSeconds: number;
+  };
 } | null>(null);
 
 export function GameProvider({ children }: { children: ReactNode }) {
@@ -324,82 +328,34 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [dispatch],
   );
 
-  // Create a simple WebSocket connection without complex React hooks
-  const wsRef = useRef<WebSocket | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState("disconnected");
-  const [isConnected, setIsConnected] = useState(false);
+  // Use custom WebSocket hook for robust reconnection
+  const { connectionStatus, isConnected, sendMessage, reconnectionInfo } =
+    useWebSocketConnection({
+      wsUrl,
+      onMessage: handleWebSocketMessage,
+      dispatch,
+    });
 
-  const sendMessage = useCallback((type: string, payload?: any) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type, payload }));
-    } else {
-      console.log("WebSocket not connected - queuing:", type, payload);
-    }
-  }, []);
-
-  // Simple WebSocket connection management
+  // Game state reconnection after WebSocket reconnection
   useEffect(() => {
-    if (typeof window === "undefined" || !wsUrl) return;
-
-    console.log("🔍 Setting up WebSocket connection to:", wsUrl);
-
-    const connectWebSocket = () => {
-      if (wsRef.current?.readyState === WebSocket.OPEN) return;
-
-      wsRef.current = new WebSocket(wsUrl);
-
-      wsRef.current.onopen = () => {
-        console.log("🔗 WebSocket connected");
-        setConnectionStatus("connected");
-        setIsConnected(true);
-        dispatch({ type: "SET_CONNECTION_STATUS", payload: "connected" });
-      };
-
-      wsRef.current.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data);
-          handleWebSocketMessage(message);
-        } catch (error) {
-          console.error("Failed to parse WebSocket message:", error);
-        }
-      };
-
-      wsRef.current.onclose = () => {
-        console.log("🔌 WebSocket disconnected");
-        setConnectionStatus("disconnected");
-        setIsConnected(false);
-        dispatch({ type: "SET_CONNECTION_STATUS", payload: "disconnected" });
-      };
-
-      wsRef.current.onerror = (error) => {
-        console.error("❌ WebSocket error:", error);
-        setConnectionStatus("error");
-        setIsConnected(false);
-        dispatch({ type: "SET_CONNECTION_STATUS", payload: "error" });
-      };
-    };
-
-    connectWebSocket();
-
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
-    };
-  }, [wsUrl, handleWebSocketMessage, dispatch]);
-
-  // TODO: Implement proper reconnection logic with server support
-  // Handle reconnection logic separately to avoid circular dependencies
-  // useEffect(() => {
-  //   if (connectionStatus === 'connected' && state.playerId && state.currentGame && state.currentGame.id) {
-  //     console.log('🔄 Attempting to reconnect to game:', state.currentGame.id, 'with player:', state.playerId);
-  //     sendMessage('RECONNECT', {
-  //       gameId: state.currentGame.id,
-  //       playerId: state.playerId
-  //     });
-  //   }
-  // }, [connectionStatus, state.playerId, state.currentGame, sendMessage]);
+    if (
+      connectionStatus === "connected" &&
+      state.playerId &&
+      state.currentGame &&
+      state.currentGame.id
+    ) {
+      console.log(
+        "🔄 Reconnecting to game state:",
+        state.currentGame.id,
+        "with player:",
+        state.playerId,
+      );
+      sendMessage("RECONNECT", {
+        gameId: state.currentGame.id,
+        playerId: state.playerId,
+      });
+    }
+  }, [connectionStatus, state.playerId, state.currentGame, sendMessage]);
 
   useEffect(() => {
     dispatch({ type: "SET_CONNECTION_STATUS", payload: connectionStatus });
@@ -407,7 +363,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   return (
     <GameContext.Provider value={{ state, dispatch }}>
-      <GameWebSocketContext.Provider value={{ sendMessage, isConnected }}>
+      <GameWebSocketContext.Provider
+        value={{ sendMessage, isConnected, reconnectionInfo }}
+      >
         {children}
       </GameWebSocketContext.Provider>
     </GameContext.Provider>
@@ -429,7 +387,7 @@ export function useGame() {
   }
 
   const { state, dispatch } = context;
-  const { sendMessage, isConnected } = wsContext;
+  const { sendMessage, isConnected, reconnectionInfo } = wsContext;
 
   const createGame = (playerName: string) => {
     if (!isConnected) {
@@ -530,5 +488,6 @@ export function useGame() {
     connectionStatus: state.connectionStatus,
     playerId: state.playerId,
     isConnected,
+    reconnectionInfo,
   };
 }
