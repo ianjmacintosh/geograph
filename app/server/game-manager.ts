@@ -621,7 +621,8 @@ export class GameManager {
       | "medium"
       | "hard"
       | "brazilian_capitals"
-      | "us_capitals",
+      | "us_capitals"
+      | "us_states",
     usedCityIds: string[],
   ): GameRound {
     const city = getRandomCityByDifficulty(difficulty, usedCityIds);

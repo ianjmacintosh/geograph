@@ -2,11 +2,13 @@ import { useRef, useEffect, useState } from "react";
 import MapMarkers from "./MapMarkers";
 import TargetCityMarker from "./TargetCityMarker";
 import ProvisionalMarker from "./ProvisionalMarker";
+import USStatesBoundaries from "./USStatesBoundaries";
 import useLeafletMap from "./useLeafletMap";
+import type { City } from "../../types/game";
 
 interface WorldMapContainerProps {
   onProvisionalGuess?: (lat: number, lng: number) => void;
-  targetCity?: { lat: number; lng: number; name: string };
+  targetCity?: { lat: number; lng: number; name: string; country: string };
   guesses?: Array<{
     lat: number;
     lng: number;
@@ -16,6 +18,7 @@ interface WorldMapContainerProps {
   provisionalGuessLocation?: { lat: number; lng: number } | null;
   showTarget?: boolean;
   isGuessDisabled?: boolean;
+  gameDifficulty?: City["difficulty"];
 }
 
 // Container for map setup, state, and context
@@ -26,6 +29,7 @@ export default function WorldMapContainer({
   provisionalGuessLocation = null,
   showTarget = false,
   isGuessDisabled = false,
+  gameDifficulty,
 }: WorldMapContainerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
@@ -77,6 +81,16 @@ export default function WorldMapContainer({
         L={L}
         provisionalGuessLocation={provisionalGuessLocation}
       />
+      {/* US States boundaries for us_states mode */}
+      {gameDifficulty === "us_states" && (
+        <USStatesBoundaries
+          map={map}
+          L={L}
+          onStateClick={onProvisionalGuess}
+          isGuessDisabled={isGuessDisabled}
+          targetCity={targetCity}
+        />
+      )}
       {/* Provisional marker and other overlays can be added here as separate components */}
     </div>
   );
