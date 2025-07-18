@@ -61,22 +61,15 @@ export default function USStatesBoundaries({
 
         // Handle state click
         const clickFeature = (e: any) => {
-          if (isGuessDisabled || !onStateClick || !targetCity) return;
+          if (isGuessDisabled || !onStateClick) return;
 
           const feature = e.target.feature;
           const stateName = feature.properties.NAME;
-
-          // For us_states mode, validate if the clicked state matches the target city's state
-          const isCorrectState = stateName === targetCity.country;
-
-          if (isCorrectState) {
-            // Correct state: pass the exact target coordinates for perfect score (0km distance)
-            onStateClick(targetCity.lat, targetCity.lng, stateName);
-          } else {
-            // Incorrect state: pass coordinates very far away for worst score
-            // Use coordinates at the opposite side of the earth
-            onStateClick(-targetCity.lat, targetCity.lng + 180, stateName);
-          }
+          
+          // For state guessing, pass the click coordinates and state name
+          // The game logic will handle whether this is the correct state
+          const clickLatLng = e.latlng;
+          onStateClick(clickLatLng.lat, clickLatLng.lng, stateName);
         };
 
         // Function to bind events to each feature
@@ -116,7 +109,7 @@ export default function USStatesBoundaries({
         geoJsonLayerRef.current = null;
       }
     };
-  }, [map, L, onStateClick, isGuessDisabled]);
+  }, [map, L, onStateClick, isGuessDisabled, targetCity]);
 
   return null; // This component renders directly to the map
 }

@@ -42,7 +42,7 @@ export function GamePlayArea({
             provisionalGuessLocation={provisionalGuessLocation}
             isGuessDisabled={hasPlayerGuessed}
             guesses={[]} // Hide guesses during gameplay
-            showTarget={currentGame.settings.cityDifficulty === "us_states"} // Show target for US States mode
+            showTarget={false} // Hide target during gameplay for all modes
             gameDifficulty={currentGame.settings.cityDifficulty}
           />
 
@@ -100,8 +100,7 @@ export function GamePlayArea({
           <p className="text-sm lg:text-base">
             {currentGame.settings.cityDifficulty === "us_states" ? (
               <>
-                Click on the state where{" "}
-                <strong>{currentRound.city.name}</strong> is located!
+                Click on <strong>{currentRound.city.name}</strong> on the map!
               </>
             ) : currentGame.settings.cityDifficulty === "us_capitals" ? (
               <>
