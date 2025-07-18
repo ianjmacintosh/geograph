@@ -229,13 +229,38 @@ export class GameManager {
     }
 
     // Calculate distance and points
-    const distance = calculateDistance(
-      lat,
-      lng,
-      currentRound.city.lat,
-      currentRound.city.lng,
-    );
-    const bonusPoints = calculateBonusPoints(distance);
+    let distance: number;
+    let bonusPoints: number;
+    
+    if (game.settings.cityDifficulty === "us_states") {
+      // For us_states mode, we need binary scoring based on state boundaries
+      // For now, use distance as a proxy - if very close to state center, consider it correct
+      const distanceToStateCenter = calculateDistance(
+        lat,
+        lng,
+        currentRound.city.lat,
+        currentRound.city.lng,
+      );
+      
+      // If within reasonable distance of state center, consider it correct (0 distance)
+      // Otherwise, give max penalty distance
+      if (distanceToStateCenter <= 500) { // 500km threshold - generous for large states
+        distance = 0; // Perfect score
+        bonusPoints = 5; // Max bonus points
+      } else {
+        distance = 20000; // Max penalty distance
+        bonusPoints = 0; // No bonus points
+      }
+    } else {
+      // Normal distance-based scoring for other modes
+      distance = calculateDistance(
+        lat,
+        lng,
+        currentRound.city.lat,
+        currentRound.city.lng,
+      );
+      bonusPoints = calculateBonusPoints(distance);
+    }
 
     const guess: Guess = {
       playerId,
