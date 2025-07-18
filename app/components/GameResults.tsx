@@ -92,6 +92,7 @@ export function GameResults({
               });
             })()}
             showTarget={true}
+            gameDifficulty={currentGame.settings.cityDifficulty}
           />
         </div>
       </div>

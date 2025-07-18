@@ -86,11 +86,33 @@ export function generateComputerGuess(
     hard: 0.2, // 20% accuracy for obscure cities
     brazilian_capitals: 0.4, // 40% accuracy for Brazilian state capitals
     us_capitals: 0.4, // 40% accuracy for US state capitals
+    us_states: 0.6, // 60% accuracy for US state guessing
   };
 
   const difficultyMultiplier = difficultyMultipliers[city.difficulty];
   const effectiveAccuracy = accuracy * difficultyMultiplier;
 
+  // Special handling for us_states mode
+  if (city.difficulty === "us_states") {
+    // For us_states mode, computer either gets it right or wrong (binary outcome)
+    const isCorrectGuess = Math.random() < effectiveAccuracy;
+
+    if (isCorrectGuess) {
+      // Correct state: return exact city coordinates for perfect score
+      return {
+        lat: city.lat,
+        lng: city.lng,
+      };
+    } else {
+      // Incorrect state: return coordinates far away for bad score
+      return {
+        lat: -city.lat,
+        lng: city.lng + 180,
+      };
+    }
+  }
+
+  // Original logic for other difficulties
   // Much larger potential errors - up to 30 degrees off for worst accuracy
   const maxOffsetDegrees = (1 - effectiveAccuracy) * 30;
 

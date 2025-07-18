@@ -5,7 +5,8 @@
       "Bash(npm run test:*)",
       "Bash(npx playwright test:*)",
       "Bash(npm run format:check:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "WebFetch(domain:leafletjs.com)"
     ],
     "deny": []
   }

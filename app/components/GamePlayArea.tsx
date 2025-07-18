@@ -42,7 +42,8 @@ export function GamePlayArea({
             provisionalGuessLocation={provisionalGuessLocation}
             isGuessDisabled={hasPlayerGuessed}
             guesses={[]} // Hide guesses during gameplay
-            showTarget={false} // Hide target during gameplay
+            showTarget={false} // Hide target during gameplay for all modes
+            gameDifficulty={currentGame.settings.cityDifficulty}
           />
 
           {/* Confirm Button positioned at bottom of map */}
@@ -97,11 +98,27 @@ export function GamePlayArea({
       {!isAwaitingConfirmation && !hasPlayerGuessed && currentRound && (
         <div className="text-center text-gray-600 mt-3 lg:mt-4">
           <p className="text-sm lg:text-base">
-            Click on the map to guess where{" "}
-            <strong>
-              {currentRound.city.name}, {currentRound.city.country}
-            </strong>{" "}
-            is located!
+            {currentGame.settings.cityDifficulty === "us_states" ? (
+              <>
+                Click on <strong>{currentRound.city.name}</strong> on the map!
+              </>
+            ) : currentGame.settings.cityDifficulty === "us_capitals" ? (
+              <>
+                Click on the state to guess where{" "}
+                <strong>
+                  {currentRound.city.name}, {currentRound.city.country}
+                </strong>{" "}
+                is located!
+              </>
+            ) : (
+              <>
+                Click on the map to guess where{" "}
+                <strong>
+                  {currentRound.city.name}, {currentRound.city.country}
+                </strong>{" "}
+                is located!
+              </>
+            )}
           </p>
         </div>
       )}

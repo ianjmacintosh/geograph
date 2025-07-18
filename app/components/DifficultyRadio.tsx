@@ -17,6 +17,8 @@ function getDifficultyLabel(difficulty: string): string {
       return "Brazilian State Capitals";
     case "us_capitals":
       return "US State Capitals";
+    case "us_states":
+      return "US States - Guess which state the city is in";
     default:
       return difficulty;
   }
@@ -32,6 +34,7 @@ export function DifficultyRadio({
     "hard",
     "brazilian_capitals",
     "us_capitals",
+    "us_states",
   ] as const;
 
   return (
